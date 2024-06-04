@@ -86,12 +86,17 @@ public class Jdbc {
                     Spliterator<Map<String, Object>> spliterator = Spliterators.spliteratorUnknownSize(supplier, Spliterator.ORDERED);
                     return StreamSupport.stream(spliterator, false)
                             .map(RowResult::new)
-                            .onClose(() -> closeIt(log, stmt, connection));
+                            .onClose(() -> {
+                                System.out.println("executeQuery closeIt 0");
+                                closeIt(log, stmt, connection);
+                            });
                 } catch (Exception sqle) {
+                    System.out.println("executeQuery closeIt 1: " + sqle.getMessage());
                     closeIt(log, stmt);
                     throw sqle;
                 }
             } catch(Exception sqle) {
+                System.out.println("executeQuery closeIt 2: " + sqle.getMessage());
                 closeIt(log, connection);
                 throw sqle;
             }
@@ -121,15 +126,19 @@ public class Jdbc {
                 try {
                     for (int i = 0; i < params.length; i++) stmt.setObject(i + 1, params[i]);
                     int updateCount = stmt.executeUpdate();
+                    System.out.println("executeUpdate BEFORE closeIt 0");
                     closeIt(log, stmt, connection);
+                    System.out.println("executeUpdate AFTER closeIt 0");
                     Map<String, Object> result = MapUtil.map("count", updateCount);
                     return Stream.of(result)
                             .map(RowResult::new);
                 } catch(Exception sqle) {
+                    System.out.println("executeUpdate closeIt 1 " + sqle.getMessage());
                     closeIt(log,stmt);
                     throw sqle;
                 }
             } catch(Exception sqle) {
+                System.out.println("executeUpdate closeIt 2" + sqle.getMessage());
                 closeIt(log,connection);
                 throw sqle;
             }
@@ -144,10 +153,12 @@ public class Jdbc {
     static void closeIt(Log log, AutoCloseable...closeables) {
         for (AutoCloseable c : closeables) {
             try {
+                System.out.println("AutoCloseable is null " + c);
                 if (c!=null) {
                     c.close();
                 }
             } catch (Exception e) {
+                System.out.println("Exception closeIt " + String.format("Error closing %s: %s", c.getClass().getSimpleName(), c));
                 log.warn(String.format("Error closing %s: %s", c.getClass().getSimpleName(), c),e);
                 // ignore
             }

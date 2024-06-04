@@ -1,5 +1,7 @@
 package apoc.load;
 
+import apoc.periodic.Periodic;
+import apoc.text.Strings;
 import apoc.util.TestUtil;
 import apoc.util.Util;
 import org.junit.AfterClass;
@@ -8,9 +10,11 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.neo4j.test.rule.DbmsRule;
 import org.neo4j.test.rule.ImpermanentDbmsRule;
+import org.testcontainers.containers.Container;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Map;
 
@@ -32,14 +36,71 @@ public class PostgresJdbcTest extends AbstractJdbcTest {
     public static void setUp() throws Exception {
         postgress = new PostgreSQLContainer().withInitScript("init_postgres.sql");
         postgress.start();
-        TestUtil.registerProcedure(db,Jdbc.class);
+        TestUtil.registerProcedure(db, Jdbc.class, Periodic.class, Strings.class);
         db.executeTransactionally("CALL apoc.load.driver('org.postgresql.Driver')");
+        db.executeTransactionally("WITH range(0, 100) as list UNWIND list as l CREATE (n:MyNode{id: l})");
     }
 
     @AfterClass
     public static void tearDown() throws SQLException {
         postgress.stop();
         db.shutdown();
+    }
+
+    @Test
+    public void testPeriodicIterateIssue4074() throws IOException, InterruptedException {
+        Container.ExecResult execResult = postgress.execInContainer("select client_addr, state from pg_stat_activity");
+        System.out.println("getStdout=" + execResult.getStdout() + " getStderr=" + execResult.getStderr());
+
+        String query = """
+                CALL apoc.periodic.iterate("MATCH (n:MyNode) return n", "WITH n,
+                 'insert into nodes (my_id) values [n.id]' AS sql CALL apoc.load.jdbcUpdate($url1,sql, [], { schema: 'test', credentials: { user: '$user', password: '$password' } }) YIELD row AS row2 return row2,n", 
+                 {batchsize: 10,parallel: true,config1: $config, url1: $url}) yield batches,total,timeTaken,committedOperations,failedOperations,failedBatches,retries,errorMessages, operations, failedParams, updateStatistics return batches,total,timeTaken, committedOperations,failedOperations,failedBatches,retries,errorMessages,operations,failedParams, updateStatistics
+                """
+                    .replace("$url1", postgress.getJdbcUrl())
+                    .replace("$user", postgress.getUsername())
+                    .replace("$password", postgress.getPassword());
+        System.out.println(query);
+        testCall(db, query, Util.map("url", postgress.getJdbcUrl(),
+                "config", Util.map("schema", "test",
+                        "credentials", Util.map("user", postgress.getUsername(), "password", postgress.getPassword()))),
+                (row) -> {
+                    System.out.println(row);
+
+                });
+
+        Container.ExecResult execResult1 = postgress.execInContainer("select client_addr, state from pg_stat_activity");
+        System.out.println("getStdout=" + execResult1.getStdout() + " getStderr=" + execResult1.getStderr());
+    }
+
+    @Test
+    public void testPeriodicIterateIssue4074_1() throws IOException, InterruptedException {
+//        Container.ExecResult execResult = postgress.execInContainer("-c 'max_connections=200'");
+//        postgress.setCommand("postgres", "-c", "max_connections=1000");
+//        System.out.println("getStdout=" + execResult.getStdout() + " getStderr=" + execResult.getStderr());
+
+//        String query = """
+//                CALL apoc.periodic.iterate("MATCH (n:MyNode) return n", "WITH n,
+//                                 'insert into nodes (my_id) values (' + n.id + ')' AS sql CALL apoc.load.jdbcUpdate('jdbc:postgresql://localhost:PORT/test?loggerLevel=OFF',sql, [], { schema: 'test', credentials: { user: 'test', password: 'test' } }) YIELD row AS row2 return row2,n",\s
+//                                 {batchsize: 10,parallel: true}) yield batches,total,timeTaken,committedOperations,failedOperations,failedBatches,retries,errorMessages, operations, failedParams, updateStatistics return batches,total,timeTaken, committedOperations,failedOperations,failedBatches,retries,errorMessages,operations,failedParams, updateStatistics
+//                """
+//                .replace("PORT", String.valueOf(postgress.getMappedPort(5432)));
+
+        String query = """
+                CALL apoc.periodic.iterate("MATCH (n:MyNode) return n", "WITH n, apoc.text.format('insert into nodes (my_id) values (\\\\'%d\\\\')',[n.id]) AS sql CALL apoc.load.jdbcUpdate('jdbc:postgresql://test:test@localhost:PORT/test',sql) YIELD row AS row2 return row2,n", {batchsize: 10,parallel: true})  yield batches,total,timeTaken,committedOperations,failedOperations,failedBatches,retries,errorMessages, operations, failedParams, updateStatistics return batches,total,timeTaken, committedOperations,failedOperations,failedBatches,retries,errorMessages,operations,failedParams, updateStatistics
+                """
+                .replace("PORT", "50534");
+//                        .replace("PORT", String.valueOf(postgress.getMappedPort(5432)));
+
+        System.out.println(query);
+        testCall(db, query, Map.of(),
+                (row) -> {
+                    System.out.println(row);
+
+                });
+
+        Container.ExecResult execResult1 = postgress.execInContainer("select client_addr, state from pg_stat_activity");
+        System.out.println("getStdout=" + execResult1.getStdout() + " getStderr=" + execResult1.getStderr());
     }
 
     @Test
