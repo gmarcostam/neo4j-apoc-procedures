@@ -144,4 +144,20 @@ public class PromptIT {
                 });
     }
 
+    @Test
+    public void topKTest() {
+        testCall(db, """
+                CALL apoc.ml.topK($question, $topK, {apiKey: $apiKey})
+                """,
+                Map.of(
+                        "question", "Some text",
+                        "topK", "2",
+                        "apiKey", OPENAI_KEY
+                ),
+                (r) -> {
+                    System.out.println(r);
+                }
+        );
+    }
+
 }

@@ -8,7 +8,9 @@ import apoc.util.collection.Iterators;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.jetbrains.annotations.NotNull;
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.QueryExecutionException;
+import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.security.URLAccessChecker;
 import org.neo4j.internal.kernel.api.procs.ProcedureCallContext;
@@ -128,7 +130,7 @@ public class Prompt {
     public Stream<TopKResult> topK(@Name("question") String question, @Name("topK") String topK, @Name(value = "conf", defaultValue = "{}") Map<String, Object> conf) {
         String entityType = (String) conf.getOrDefault("entityType", "node");
         if (entityType.equals("node")) {
-            // TODO 
+            // TODO
             /*
             1. eseguire questa query e tornare node e score
                 // Get text embedding for the question
@@ -138,17 +140,36 @@ public class Prompt {
                 WITH text, embedding
                 CALL db.index.vector.queryNodes($vector_index, $topK, embedding) YIELD node, score
                 RETURN node, score;
-                
-                
+
+
              2. tornare il risultato mettendolo in Stream.of( new TopKResult(score, node, null) )
              */
-            
+            String query = """
+                    CALL apoc.ml.openai.embedding([$question],NULL , {})
+                    YIELD index, text, embedding
+                    WITH text, embedding, index
+                    CALL db.index.vector.queryNodes(index, $topK, embedding) YIELD node, score
+                    RETURN node, score;
+                    """;
+
+            Map<String, Object> resMap = db.executeTransactionally(query, Map.of("question", question, "topK", topK), Iterators::single);
+            return Stream.of(new TopKResult((double) resMap.get("score"), (Node) resMap.get("node"), null));
         } else {
             // TODO
             // 1. simile alla query di sopra ma con CALL db.index.vector.queryRelationships($vector_index, $topK, embedding) YIELD relationship, score
             //      invece di queryNodes(..)
 
             // 2. tornare il risultato mettendolo in Stream.of( new TopKResult(score, null, rel) )
+            String query = """
+                    CALL apoc.ml.openai.embedding([$question],NULL , {})
+                    YIELD index, text, embedding
+                    WITH text, embedding, index
+                    CALL db.index.vector.queryRelationships(index, $topK, embedding) YIELD relationship, score
+                    RETURN relationship, score;
+                    """;
+
+            Map<String, Object> resMap = db.executeTransactionally(query, Map.of("question", question, "topK", topK), Iterators::single);
+            return Stream.of(new TopKResult((double) resMap.get("score"), null, (Relationship) resMap.get("node")));
         }
     }
 
