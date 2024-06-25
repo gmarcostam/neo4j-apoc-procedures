@@ -75,4 +75,20 @@ public class ExtendedTestUtil {
             }
         }, (v) -> v, timeout, TimeUnit.SECONDS);
     }
+
+    public static Object readValue(String json) {
+        try {
+            return JsonUtil.OBJECT_MAPPER.readValue(json, Object.class);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static Object readValue(byte[] json) {
+        try {
+            return JsonUtil.OBJECT_MAPPER.readValue(json, Object.class);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
