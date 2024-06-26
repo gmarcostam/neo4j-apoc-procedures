@@ -251,7 +251,6 @@ CALL apoc.ml.openai.chat([{"role": "user", "content": "Explain the importance of
 ----
 
 
-
 == Query with natural language
 
 This procedure `apoc.ml.query` takes a question in natural language and returns the results of that query.
@@ -522,8 +521,8 @@ It uses the `chat/completions` API which is https://platform.openai.com/docs/api
 .Query call
 [source,cypher]
 ----
-CALL apoc.ml.fromQueries(['MATCH (n:Movie) RETURN n', 'MATCH (n:Person) RETURN n'], 
-    {apiKey: <apiKey>}) 
+CALL apoc.ml.fromQueries(['MATCH (n:Movie) RETURN n', 'MATCH (n:Person) RETURN n'],
+    {apiKey: <apiKey>})
 YIELD value
 RETURN *
 ----
@@ -544,8 +543,8 @@ RETURN *
 .Query call with path
 [source,cypher]
 ----
-CALL apoc.ml.fromQueries(['MATCH (n:Movie) RETURN n', 'MATCH p=(n:Movie)--() RETURN p'], 
-    {apiKey: <apiKey>}) 
+CALL apoc.ml.fromQueries(['MATCH (n:Movie) RETURN n', 'MATCH p=(n:Movie)--() RETURN p'],
+    {apiKey: <apiKey>})
 YIELD value
 RETURN *
 ----
@@ -556,7 +555,7 @@ RETURN *
 +---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 +---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| "models relationships in the movie industry, connecting :Person nodes to :Movie nodes. 
+| "models relationships in the movie industry, connecting :Person nodes to :Movie nodes.
     It represents actors, directors, writers, producers, and reviewers connected to movies they are involved with.
     Similar to a social network graph but specialized for the entertainment industry.
     Each relationship type corresponds to common roles in movie production and reviewing.
@@ -592,7 +591,7 @@ RETURN *
 
 == Query with Retrieval-augmented generation (RAG) technique
 
-This procedure `apoc.ml.rag` takes a list of paths or a vector index name, relevant attributes and a natural language question 
+This procedure `apoc.ml.rag` takes a list of paths or a vector index name, relevant attributes and a natural language question
 to create a prompt implementing a Retrieval-augmented generation (RAG) technique.
 
 See https://aws.amazon.com/what-is/retrieval-augmented-generation/[here] for more info about the RAG process.
@@ -620,7 +619,7 @@ It uses the `chat/completions` API which is https://platform.openai.com/docs/api
 | embeddings | to search similar embeddings stored into a node vector index (in case of `embeddings: "NODE"`) or relationship vector index (in case of `embeddings: "REL"`) | no, default `"FALSE"`
 | topK | number of neighbors to find for each node (in case of `embeddings: "NODE"`) or relationships (in case of `embeddings: "REL"`) | no, default `40`
 | apiKey | OpenAI API key | in case `apoc.openai.key` is not defined
-| prompt | the base prompt to be augmented with the context | no, default is: 
+| prompt | the base prompt to be augmented with the context | no, default is:
 
 "You are a customer service agent that helps a customer with answering questions about a service.
 Use the following context to answer the `user question` at the end.
@@ -629,7 +628,7 @@ If you don't know the answer, just say \`Sorry, I don't know`, don't try to make
 |===
 
 
-Using the apoc.ml.rag procedure we can reduce AI hallucinations (i.e. false or misleading responses), 
+Using the apoc.ml.rag procedure we can reduce AI hallucinations (i.e. false or misleading responses),
 providing relevant and up-to-date information to our procedure via the 1st parameter.
 
 For example, by executing the following procedure (with the `gpt-3.5-turbo` model, last updated in January 2022)
@@ -650,7 +649,7 @@ CALL apoc.ml.openai.chat([
 | The gold medal in curling at the 2022 Winter Olympics was won by the Swedish men's team and the Russian women's team.
 |===
 
-So, we can use the RAG technique to provide real results. 
+So, we can use the RAG technique to provide real results.
 For example with the given dataset (with data taken from https://en.wikipedia.org/wiki/Curling_at_the_2022_Winter_Olympics[this wikipedia page]):
 
 .wikipedia dataset
@@ -673,9 +672,9 @@ we can execute:
 ----
 MATCH path=(:Athlete)-[:HAS_MEDAL]->(Discipline)
 WITH collect(path) AS paths
-CALL apoc.ml.rag(paths, 
-  ["name", "country", "medal", "title", "year"], 
-  "Which athletes won the gold medal in mixed doubles's curling  at the 2022 Winter Olympics?", 
+CALL apoc.ml.rag(paths,
+  ["name", "country", "medal", "title", "year"],
+  "Which athletes won the gold medal in mixed doubles's curling  at the 2022 Winter Olympics?",
   {apiKey: $apiKey}
 ) YIELD value
 RETURN value
@@ -695,9 +694,9 @@ or:
 ----
 MATCH path=(:Athlete)-[:HAS_MEDAL]->(Discipline)
 WITH collect(path) AS paths
-CALL apoc.ml.rag(paths, 
-  ["name", "country", "medal", "title", "year"], 
-  "Which athletes won the silver medal in mixed doubles's curling  at the 2022 Winter Olympics?", 
+CALL apoc.ml.rag(paths,
+  ["name", "country", "medal", "title", "year"],
+  "Which athletes won the silver medal in mixed doubles's curling  at the 2022 Winter Olympics?",
   {apiKey: $apiKey}
 ) YIELD value
 RETURN value
@@ -714,9 +713,9 @@ We can also pass a string query returning paths/relationships/nodes, for example
 
 [source,cypher]
 ----
-CALL apoc.ml.rag("MATCH path=(:Athlete)-[:HAS_MEDAL]->(Discipline) WITH collect(path) AS paths", 
-  ["name", "country", "medal", "title", "year"], 
-  "Which athletes won the gold medal in mixed doubles's curling  at the 2022 Winter Olympics?", 
+CALL apoc.ml.rag("MATCH path=(:Athlete)-[:HAS_MEDAL]->(Discipline) WITH collect(path) AS paths",
+  ["name", "country", "medal", "title", "year"],
+  "Which athletes won the gold medal in mixed doubles's curling  at the 2022 Winter Olympics?",
   {apiKey: $apiKey}
 ) YIELD value
 RETURN value
@@ -746,9 +745,9 @@ and some (:RagEmbedding) nodes with the `text` properties, we can execute:
 
 [source,cypher]
 ----
-CALL apoc.ml.rag("rag-embeddings", 
-  ["text"], 
-  "Which athletes won the gold medal in mixed doubles's curling  at the 2022 Winter Olympics?", 
+CALL apoc.ml.rag("rag-embeddings",
+  ["text"],
+  "Which athletes won the gold medal in mixed doubles's curling  at the 2022 Winter Olympics?",
   {apiKey: $apiKey, embeddings: "NODE", topK: 20}
 ) YIELD value
 RETURN value
@@ -771,10 +770,20 @@ and some [:RagEmbedding] relationships with the `text` properties, we can execut
 
 [source,cypher]
 ----
-CALL apoc.ml.rag("rag-rel-embeddings", 
-  ["text"], 
-  "Which athletes won the gold medal in mixed doubles's curling  at the 2022 Winter Olympics?", 
+CALL apoc.ml.rag("rag-rel-embeddings",
+  ["text"],
+  "Which athletes won the gold medal in mixed doubles's curling  at the 2022 Winter Olympics?",
   {apiKey: $apiKey, embeddings: "REL", topK: 20}
 ) YIELD value
+RETURN value
+----
+
+It is possible to execute vectordb with apoc.ml.rag as follow, for example with Qdrant database:
+
+[source,cypher]
+----
+CALL apoc.vectordb.qdrant.getAndUpdate($host, $collection, [<id1>, <id2>], $conf) YIELD node, metadata, id, vector
+WITH collect(node) as paths
+CALL apoc.ml.rag(paths, $attributes, $question, $confPrompt) YIELD value
 RETURN value
 ----
