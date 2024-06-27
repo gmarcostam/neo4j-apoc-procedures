@@ -2,19 +2,23 @@ package apoc.vectordb;
 
 import apoc.util.TestUtil;
 import apoc.util.Util;
+import org.apache.commons.lang3.time.StopWatch;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.neo4j.dbms.api.DatabaseManagementService;
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Result;
 import org.neo4j.test.TestDatabaseManagementServiceBuilder;
 import org.testcontainers.milvus.MilvusContainer;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 import static apoc.util.MapUtil.map;
 import static apoc.util.TestUtil.testCall;
@@ -23,22 +27,25 @@ import static apoc.vectordb.VectorDbHandler.Type.MILVUS;
 import static apoc.vectordb.VectorDbTestUtil.EntityType.FALSE;
 import static apoc.vectordb.VectorDbTestUtil.EntityType.NODE;
 import static apoc.vectordb.VectorDbTestUtil.EntityType.REL;
+import static apoc.vectordb.VectorDbTestUtil.SIZE_PERFORMANCE;
 import static apoc.vectordb.VectorDbTestUtil.assertBerlinResult;
 import static apoc.vectordb.VectorDbTestUtil.assertLondonResult;
 import static apoc.vectordb.VectorDbTestUtil.assertNodesCreated;
 import static apoc.vectordb.VectorDbTestUtil.assertReadOnlyProcWithMappingResults;
 import static apoc.vectordb.VectorDbTestUtil.assertRelsCreated;
 import static apoc.vectordb.VectorDbTestUtil.dropAndDeleteAll;
+import static apoc.vectordb.VectorDbTestUtil.generateFakeData;
+import static apoc.vectordb.VectorDbTestUtil.stopWatchLog;
 import static apoc.vectordb.VectorEmbeddingConfig.ALL_RESULTS_KEY;
 import static apoc.vectordb.VectorEmbeddingConfig.FIELDS_KEY;
 import static apoc.vectordb.VectorEmbeddingConfig.MAPPING_KEY;
-import static apoc.vectordb.VectorMappingConfig.MODE_KEY;
 import static apoc.vectordb.VectorMappingConfig.EMBEDDING_KEY;
 import static apoc.vectordb.VectorMappingConfig.ENTITY_KEY;
 import static apoc.vectordb.VectorMappingConfig.METADATA_KEY;
+import static apoc.vectordb.VectorMappingConfig.MODE_KEY;
+import static apoc.vectordb.VectorMappingConfig.MappingMode;
 import static apoc.vectordb.VectorMappingConfig.NODE_LABEL;
 import static apoc.vectordb.VectorMappingConfig.REL_TYPE;
-import static apoc.vectordb.VectorMappingConfig.MappingMode;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -427,6 +434,77 @@ public class MilvusTest {
                 });
 
         assertNodesCreated(db);
+    }
+
+    @Ignore
+    @Test
+    public void performanceTest() {
+        StopWatch watch = new StopWatch();
+        watch.start();
+
+        String collection = "performance_col";
+        testCall(db, "CALL apoc.vectordb.milvus.createCollection($host, $collection, 'COSINE', 4)",
+                map("host", HOST, "collection", collection),
+                r -> {
+                    Map value = (Map) r.get("value");
+                    assertEquals(200L, value.get("code"));
+                });
+        stopWatchLog(watch, "apoc.vectordb.milvus.createCollection");
+
+        List<Map<String, Object>> data = generateFakeData(VectorDbHandler.Type.MILVUS.name());
+
+        watch.start();
+        testCall(db,
+                "CALL apoc.vectordb.milvus.upsert($host, $collection, $data)",
+                map("host", HOST, "collection", collection, "data", data),
+                r -> {
+                    Map value = (Map) r.get("value");
+                    assertEquals(200L, value.get("code"));
+                });
+        stopWatchLog(watch, "apoc.vectordb.milvus.upsert");
+
+        watch.start();
+        testResult(db, "CALL apoc.vectordb.milvus.get($host, $collection, $ids, $conf) ",
+                map(
+                        "host", HOST,
+                        "collection", collection,
+                        "conf", map(FIELDS_KEY, FIELDS),
+                        "ids", IntStream.range(0, SIZE_PERFORMANCE).mapToObj(Long::valueOf).toList()
+                ),
+                Result::resultAsString);
+
+        stopWatchLog(watch, "apoc.vectordb.milvus.get");
+
+        watch.start();
+        testResult(db,
+                """
+                CALL apoc.vectordb.milvus.query($host, $collection, [0.2, 0.1, 0.9, 0.7], null, $limit, $conf) YIELD metadata, id, score, vector""",
+                map(
+                        "host", HOST,
+                        "collection", collection,
+                        "conf", map(FIELDS_KEY, FIELDS, ALL_RESULTS_KEY, true),
+                        "limit", SIZE_PERFORMANCE
+                ),
+                Result::resultAsString);
+        stopWatchLog(watch, "apoc.vectordb.milvus.query");
+
+        watch.start();
+        testCall(db, "CALL apoc.vectordb.milvus.delete($host, $collection, [3, 4]) ",
+                map("host", HOST, "collection", collection),
+                r -> {
+                    Map value = (Map) r.get("value");
+                    assertEquals(200L, value.get("code"));
+                });
+        stopWatchLog(watch, "apoc.vectordb.milvus.delete");
+
+        watch.start();
+        testCall(db, "CALL apoc.vectordb.milvus.deleteCollection($host, $collection)",
+                map("host", HOST, "collection", collection),
+                r -> {
+                    Map value = (Map) r.get("value");
+                    assertEquals(200L, value.get("code"));
+                });
+        stopWatchLog(watch, "apoc.vectordb.milvus.deleteCollection");
     }
 
 }

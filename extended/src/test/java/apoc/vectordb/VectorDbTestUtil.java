@@ -1,12 +1,17 @@
 package apoc.vectordb;
 
 import apoc.util.MapUtil;
+import org.apache.commons.lang3.time.StopWatch;
 import org.neo4j.graphdb.Entity;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.ResourceIterator;
 import org.neo4j.graphdb.Result;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.stream.IntStream;
 
 import static apoc.util.TestUtil.testResult;
 import static apoc.util.Util.map;
@@ -18,6 +23,8 @@ import static org.junit.Assert.assertTrue;
 public class VectorDbTestUtil {
     
     enum EntityType { NODE, REL, FALSE }
+
+    public static int SIZE_PERFORMANCE = 10000;
     
     public static void dropAndDeleteAll(GraphDatabaseService db) {
         db.executeTransactionally("MATCH (n) DETACH DELETE n");
@@ -99,5 +106,39 @@ public class VectorDbTestUtil {
         assertNotNull(row.get("id"));
 
         assertFalse(r.hasNext());
+    }
+
+    public static void stopWatchLog(StopWatch watch, String operation) {
+        watch.stop();
+        System.out.println("Operation: " + operation  + " | Time spent: " + watch.getTime() + "ms");
+        watch.reset();
+    }
+
+    public static List<Map<String, Object>> generateFakeData(String type) {
+        List<Map<String, Object>> data = new ArrayList<>();
+
+        SIZE_PERFORMANCE = switch (VectorDbHandler.Type.valueOf(type)) {
+            case CHROMA -> 40000;
+            case QDRANT -> 230000;
+            default -> 10000;
+        };
+
+        System.out.println("SIZE_PERFORMANCE = " + SIZE_PERFORMANCE);
+
+        IntStream.range(0, SIZE_PERFORMANCE).forEach(i -> data.add(
+                Map.of(
+                        "id", VectorDbHandler.Type.WEAVIATE.name().equals(type) ? UUID.randomUUID().toString() : i,
+                        "vector", List.of(
+                                Math.random(), Math.random(), Math.random(), Math.random()
+                        ),
+                        "metadata", Map.of("city", "Berlin", "foo", "one")
+                )
+        ));
+
+        return data;
+    }
+
+    public static List<Object> getFakeIds(List<Map<String, Object>> data) {
+        return data.stream().map(x -> x.get("id")).toList();
     }
 }

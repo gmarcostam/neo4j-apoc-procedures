@@ -2,16 +2,19 @@ package apoc.vectordb;
 
 import apoc.util.MapUtil;
 import apoc.util.TestUtil;
+import org.apache.commons.lang3.time.StopWatch;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.neo4j.dbms.api.DatabaseManagementService;
 import org.neo4j.graphdb.Entity;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.ResourceIterator;
+import org.neo4j.graphdb.Result;
 import org.neo4j.test.TestDatabaseManagementServiceBuilder;
 import org.testcontainers.weaviate.WeaviateContainer;
 
@@ -24,8 +27,20 @@ import static apoc.util.TestUtil.testCallEmpty;
 import static apoc.util.TestUtil.testResult;
 import static apoc.util.Util.map;
 import static apoc.vectordb.VectorDbHandler.Type.WEAVIATE;
-import static apoc.vectordb.VectorDbTestUtil.*;
-import static apoc.vectordb.VectorDbTestUtil.EntityType.*;
+import static apoc.vectordb.VectorDbTestUtil.EntityType.FALSE;
+import static apoc.vectordb.VectorDbTestUtil.EntityType.NODE;
+import static apoc.vectordb.VectorDbTestUtil.EntityType.REL;
+import static apoc.vectordb.VectorDbTestUtil.SIZE_PERFORMANCE;
+import static apoc.vectordb.VectorDbTestUtil.assertBerlinResult;
+import static apoc.vectordb.VectorDbTestUtil.assertLondonResult;
+import static apoc.vectordb.VectorDbTestUtil.assertNodesCreated;
+import static apoc.vectordb.VectorDbTestUtil.assertReadOnlyProcWithMappingResults;
+import static apoc.vectordb.VectorDbTestUtil.assertRelsCreated;
+import static apoc.vectordb.VectorDbTestUtil.dropAndDeleteAll;
+import static apoc.vectordb.VectorDbTestUtil.generateFakeData;
+import static apoc.vectordb.VectorDbTestUtil.getAuthHeader;
+import static apoc.vectordb.VectorDbTestUtil.getFakeIds;
+import static apoc.vectordb.VectorDbTestUtil.stopWatchLog;
 import static apoc.vectordb.VectorEmbeddingConfig.ALL_RESULTS_KEY;
 import static apoc.vectordb.VectorEmbeddingConfig.FIELDS_KEY;
 import static apoc.vectordb.VectorEmbeddingConfig.MAPPING_KEY;
@@ -36,7 +51,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
-
 import static org.neo4j.configuration.GraphDatabaseSettings.DEFAULT_DATABASE_NAME;
 import static org.neo4j.configuration.GraphDatabaseSettings.SYSTEM_DATABASE_NAME;
 
@@ -495,5 +509,68 @@ public class WeaviateTest {
                 });
 
         assertNodesCreated(db);
+    }
+
+    @Ignore
+    @Test
+    public void performanceTest() {
+        StopWatch watch = new StopWatch();
+        watch.start();
+
+        String collection = "PerformanceCol";
+        testCall(db, "CALL apoc.vectordb.weaviate.createCollection($host, $collection, 'cosine', 4, $conf)",
+                map("host", HOST, "collection", collection, "conf", ADMIN_HEADER_CONF),
+                r -> {
+                    Map value = (Map) r.get("value");
+                    assertEquals(collection, value.get("class"));
+                });
+        stopWatchLog(watch, "apoc.vectordb.weaviate.createCollection");
+
+        List<Map<String, Object>> data = generateFakeData(VectorDbHandler.Type.WEAVIATE.name());
+
+        watch.start();
+        testResult(db, """
+                        CALL apoc.vectordb.weaviate.upsert($host, $collection, $data, $conf)
+                        """,
+                MapUtil.map("host", HOST,  "collection", collection, "conf", ADMIN_HEADER_CONF, "data", data),
+                Result::resultAsString);
+        stopWatchLog(watch, "apoc.vectordb.weaviate.upsert");
+
+        watch.start();
+        testResult(db, "CALL apoc.vectordb.weaviate.get($host, $collection, $ids, $conf) ",
+                MapUtil.map(
+                        "host", HOST,
+                        "collection", collection,
+                        "conf", map(ALL_RESULTS_KEY, true, HEADERS_KEY, READONLY_AUTHORIZATION),
+                        "ids", getFakeIds(data)
+                ),
+                Result::resultAsString);
+        stopWatchLog(watch, "apoc.vectordb.weaviate.get");
+
+        watch.start();
+        testResult(db,
+                """
+                CALL apoc.vectordb.weaviate.query($host, $collection, [0.2, 0.1, 0.9, 0.7], null, $limit, $conf) YIELD metadata, id, score, vector""",
+                map("host", HOST,
+                        "collection", collection,
+                        "conf", map(ALL_RESULTS_KEY, true, FIELDS_KEY, FIELDS, HEADERS_KEY, ADMIN_AUTHORIZATION),
+                        "limit", SIZE_PERFORMANCE
+                ),
+                Result::resultAsString);
+        stopWatchLog(watch, "apoc.vectordb.weaviate.query");
+
+        watch.start();
+        testResult(db,
+                "CALL apoc.vectordb.weaviate.delete($host, $collection, $ids, $conf)",
+                map("host", HOST, "collection", collection,  "conf", ADMIN_HEADER_CONF, "ids", getFakeIds(data)),
+                Result::resultAsString);
+        stopWatchLog(watch, "apoc.vectordb.weaviate.delete");
+
+        watch.start();
+        testResult(db,
+                "CALL apoc.vectordb.weaviate.deleteCollection($host, $collection, $conf)",
+                map("host", HOST, "collection", collection, "conf", ADMIN_HEADER_CONF),
+                Result::resultAsString);
+        stopWatchLog(watch, "apoc.vectordb.weaviate.deleteCollection");
     }
 }
