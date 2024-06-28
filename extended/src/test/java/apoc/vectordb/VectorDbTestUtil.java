@@ -24,7 +24,7 @@ public class VectorDbTestUtil {
     
     enum EntityType { NODE, REL, FALSE }
 
-    public static int SIZE_PERFORMANCE = 10000;
+    public static int SIZE_PERFORMANCE = 20000;
     
     public static void dropAndDeleteAll(GraphDatabaseService db) {
         db.executeTransactionally("MATCH (n) DETACH DELETE n");
@@ -117,15 +117,7 @@ public class VectorDbTestUtil {
     public static List<Map<String, Object>> generateFakeData(String type) {
         List<Map<String, Object>> data = new ArrayList<>();
 
-        SIZE_PERFORMANCE = switch (VectorDbHandler.Type.valueOf(type)) {
-            case CHROMA -> 40000;
-            case QDRANT -> 230000;
-            default -> 10000;
-        };
-
-        System.out.println("SIZE_PERFORMANCE = " + SIZE_PERFORMANCE);
-
-        IntStream.range(0, SIZE_PERFORMANCE).forEach(i -> data.add(
+        IntStream.range(0, getSizePerformanceVectors(type)).forEach(i -> data.add(
                 Map.of(
                         "id", VectorDbHandler.Type.WEAVIATE.name().equals(type) ? UUID.randomUUID().toString() : i,
                         "vector", List.of(
@@ -136,6 +128,20 @@ public class VectorDbTestUtil {
         ));
 
         return data;
+    }
+
+    public static int getSizePerformanceVectors(String type) {
+        return switch (VectorDbHandler.Type.valueOf(type)) {
+            // we can't increase this value, since there is an upsert limit
+            // see https://github.com/chroma-core/chroma/issues/1049
+            case CHROMA -> 41666;
+            case QDRANT -> 230000;
+            case WEAVIATE -> 100000;
+            // we can't increase this value, since there is a get/query limit
+            // see https://github.com/milvus-io/milvus/issues/19007 and https://github.com/milvus-io/milvus/issues/5115
+            case MILVUS -> 16384;
+            default -> 10000;
+        };
     }
 
     public static List<Object> getFakeIds(List<Map<String, Object>> data) {

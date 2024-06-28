@@ -439,6 +439,16 @@ public class MilvusTest {
     @Ignore
     @Test
     public void performanceTest() {
+        /*
+        Operation: apoc.vectordb.milvus.createCollection | Time spent: 344ms
+        SIZE_PERFORMANCE = 16384
+        Operation: apoc.vectordb.milvus.upsert | Time spent: 1539ms
+        Operation: apoc.vectordb.milvus.get | Time spent: 1576ms
+        Operation: apoc.vectordb.milvus.query | Time spent: 1668ms
+        Operation: apoc.vectordb.milvus.delete | Time spent: 218ms
+        Operation: apoc.vectordb.milvus.deleteCollection | Time spent: 67ms
+         */
+        
         StopWatch watch = new StopWatch();
         watch.start();
 

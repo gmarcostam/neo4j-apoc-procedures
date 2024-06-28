@@ -430,9 +430,12 @@ public class ChromaDbTest {
         assertNodesCreated(db);
     }
 
-    @Ignore
     @Test
     public void performanceTest() {
+        // -- https://github.com/chroma-core/chroma/issues/1049
+        
+        // --                         Server returned HTTP response code: 500 for URL: http://127.0.0.1:56074/api/v1/collections/17728586-678c-4e8a-9d71-fea73f009033/upsert
+        
         StopWatch watch = new StopWatch();
         watch.start();
 
@@ -453,6 +456,15 @@ public class ChromaDbTest {
                         """,
                 map("host", HOST, "collection", COLL_ID.get(), "data", data),
                 r -> assertNull(r.get("value")));
+
+        List<Map<String, Object>> otherData = generateFakeData(VectorDbHandler.Type.CHROMA.name());
+        
+        testCall(db, """
+                        CALL apoc.vectordb.chroma.upsert($host, $collection, $data)
+                        """,
+                map("host", HOST, "collection", COLL_ID.get(), "data", otherData),
+                r -> assertNull(r.get("value")));
+        
         stopWatchLog(watch, "apoc.vectordb.chroma.upsert");
 
         watch.start();
@@ -461,19 +473,16 @@ public class ChromaDbTest {
                         "host", HOST,
                         "collection", COLL_ID.get(),
                         "conf", map(ALL_RESULTS_KEY, true),
-                        "ids", IntStream.range(0, SIZE_PERFORMANCE).mapToObj(String::valueOf).toList()
+                        "ids", IntStream.range(0, SIZE_PERFORMANCE * 2).mapToObj(String::valueOf).toList()
                 ),
                 Result::resultAsString);
         stopWatchLog(watch, "apoc.vectordb.chroma.get");
 
         watch.start();
         testResult(db, """
-                        CALL apoc.vectordb.chroma.query($host, $collection, [0.2, 0.1, 0.9, 0.7], {}, 1, $conf) YIELD metadata, id""",
-                map("host", HOST, "collection", COLL_ID.get(), "conf", map(ALL_RESULTS_KEY, true)),
-                r -> {
-                    Map<String, Object> row = r.next();
-                    assertBerlinResult(row, (String) row.get("id"), FALSE);
-                });
+                        CALL apoc.vectordb.chroma.query($host, $collection, [0.2, 0.1, 0.9, 0.7], {}, $limit, $conf) YIELD metadata, id""",
+                map("host", HOST, "collection", COLL_ID.get(), "conf", map(ALL_RESULTS_KEY, true), "limit", SIZE_PERFORMANCE * 2),
+                Result::resultAsString);
         stopWatchLog(watch, "apoc.vectordb.chroma.query");
 
         watch.start();

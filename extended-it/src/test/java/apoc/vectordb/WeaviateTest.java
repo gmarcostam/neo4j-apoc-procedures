@@ -65,6 +65,8 @@ public class WeaviateTest {
             .withEnv("AUTHENTICATION_APIKEY_ALLOWED_KEYS", ADMIN_KEY + "," + READONLY_KEY)
             .withEnv("AUTHENTICATION_APIKEY_USERS", "jane@doe.com,ian-smith")
             
+            .withEnv("QUERY_MAXIMUM_RESULTS", "100000")
+            
             .withEnv("AUTHORIZATION_ADMINLIST_ENABLED", "true")
             .withEnv("AUTHORIZATION_ADMINLIST_USERS", "jane@doe.com,john@doe.com")
             .withEnv("AUTHORIZATION_ADMINLIST_READONLY_USERS", "ian-smith,roberta@doe.com");
@@ -511,9 +513,21 @@ public class WeaviateTest {
         assertNodesCreated(db);
     }
 
-    @Ignore
     @Test
     public void performanceTest() {
+        
+    /*
+    Operation: apoc.vectordb.weaviate.createCollection | Time spent: 149ms
+    SIZE_PERFORMANCE = 100000
+    Operation: apoc.vectordb.weaviate.upsert | Time spent: 362695ms
+    Operation: apoc.vectordb.weaviate.get | Time spent: 136684ms
+    Operation: apoc.vectordb.weaviate.query | Time spent: 3167ms
+    Operation: apoc.vectordb.weaviate.delete | Time spent: 137041ms
+    Operation: apoc.vectordb.weaviate.deleteCollection | Time spent: 284ms
+     */
+
+        
+        
         StopWatch watch = new StopWatch();
         watch.start();
 
