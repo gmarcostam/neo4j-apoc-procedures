@@ -233,17 +233,17 @@ CALL apoc.vectordb.milvus.delete('http://localhost:19531', 'test_collection', [1
 
 === Performance
 
-The table below shows the time spent on all operations on a sample of 10.000 records.
+The table below shows the time spent on all operations on a sample of 16.384 records.
 
 .Performance results
 [opts="header"]
 |===
 | Operation | Time (ms)
-| apoc.vectordb.milvus.createCollection | 51
-| apoc.vectordb.milvus.upsert | 335
-| apoc.vectordb.milvus.get | 3331
-| apoc.vectordb.milvus.query | 302
-| apoc.vectordb.milvus.delete | 36
-| apoc.vectordb.milvus.deleteCollection | 43
+| apoc.vectordb.milvus.createCollection | 69
+| apoc.vectordb.milvus.upsert | 567
+| apoc.vectordb.milvus.get | 3508
+| apoc.vectordb.milvus.query | 459
+| apoc.vectordb.milvus.delete | 46
+| apoc.vectordb.milvus.deleteCollection | 62
 | ...
 |===

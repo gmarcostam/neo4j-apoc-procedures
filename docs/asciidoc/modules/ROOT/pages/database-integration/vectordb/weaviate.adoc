@@ -250,17 +250,17 @@ CALL apoc.vectordb.weaviate.delete($host, 'test_collection', [1,2], {<optional c
 
 === Performance
 
-The table below shows the time spent on all operations on a sample of 10.000 records.
+The table below shows the time spent on all operations on a sample of 100.000 records.
 
 .Performance results
 [opts="header"]
 |===
 | Operation | Time (ms)
-| apoc.vectordb.weaviate.createCollection | 57
-| apoc.vectordb.weaviate.upsert | 31356
-| apoc.vectordb.weaviate.get | 3117
-| apoc.vectordb.weaviate.query | 245
-| apoc.vectordb.weaviate.delete | 4220
-| apoc.vectordb.weaviate.deleteCollection | 69
+| apoc.vectordb.weaviate.createCollection | 59
+| apoc.vectordb.weaviate.upsert | 319766
+| apoc.vectordb.weaviate.get | 41431
+| apoc.vectordb.weaviate.query | 1887
+| apoc.vectordb.weaviate.delete | 53218
+| apoc.vectordb.weaviate.deleteCollection | 201
 | ...
 |===

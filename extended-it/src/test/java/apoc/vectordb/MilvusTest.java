@@ -27,7 +27,6 @@ import static apoc.vectordb.VectorDbHandler.Type.MILVUS;
 import static apoc.vectordb.VectorDbTestUtil.EntityType.FALSE;
 import static apoc.vectordb.VectorDbTestUtil.EntityType.NODE;
 import static apoc.vectordb.VectorDbTestUtil.EntityType.REL;
-import static apoc.vectordb.VectorDbTestUtil.SIZE_PERFORMANCE;
 import static apoc.vectordb.VectorDbTestUtil.assertBerlinResult;
 import static apoc.vectordb.VectorDbTestUtil.assertLondonResult;
 import static apoc.vectordb.VectorDbTestUtil.assertNodesCreated;
@@ -35,6 +34,7 @@ import static apoc.vectordb.VectorDbTestUtil.assertReadOnlyProcWithMappingResult
 import static apoc.vectordb.VectorDbTestUtil.assertRelsCreated;
 import static apoc.vectordb.VectorDbTestUtil.dropAndDeleteAll;
 import static apoc.vectordb.VectorDbTestUtil.generateFakeData;
+import static apoc.vectordb.VectorDbTestUtil.getSizePerformanceVectors;
 import static apoc.vectordb.VectorDbTestUtil.stopWatchLog;
 import static apoc.vectordb.VectorEmbeddingConfig.ALL_RESULTS_KEY;
 import static apoc.vectordb.VectorEmbeddingConfig.FIELDS_KEY;
@@ -439,16 +439,6 @@ public class MilvusTest {
     @Ignore
     @Test
     public void performanceTest() {
-        /*
-        Operation: apoc.vectordb.milvus.createCollection | Time spent: 344ms
-        SIZE_PERFORMANCE = 16384
-        Operation: apoc.vectordb.milvus.upsert | Time spent: 1539ms
-        Operation: apoc.vectordb.milvus.get | Time spent: 1576ms
-        Operation: apoc.vectordb.milvus.query | Time spent: 1668ms
-        Operation: apoc.vectordb.milvus.delete | Time spent: 218ms
-        Operation: apoc.vectordb.milvus.deleteCollection | Time spent: 67ms
-         */
-        
         StopWatch watch = new StopWatch();
         watch.start();
 
@@ -479,7 +469,7 @@ public class MilvusTest {
                         "host", HOST,
                         "collection", collection,
                         "conf", map(FIELDS_KEY, FIELDS),
-                        "ids", IntStream.range(0, SIZE_PERFORMANCE).mapToObj(Long::valueOf).toList()
+                        "ids", IntStream.range(0, getSizePerformanceVectors(VectorDbHandler.Type.MILVUS.name())).mapToObj(Long::valueOf).toList()
                 ),
                 Result::resultAsString);
 
@@ -493,7 +483,7 @@ public class MilvusTest {
                         "host", HOST,
                         "collection", collection,
                         "conf", map(FIELDS_KEY, FIELDS, ALL_RESULTS_KEY, true),
-                        "limit", SIZE_PERFORMANCE
+                        "limit", getSizePerformanceVectors(VectorDbHandler.Type.MILVUS.name())
                 ),
                 Result::resultAsString);
         stopWatchLog(watch, "apoc.vectordb.milvus.query");

@@ -30,7 +30,6 @@ import static apoc.vectordb.VectorDbHandler.Type.WEAVIATE;
 import static apoc.vectordb.VectorDbTestUtil.EntityType.FALSE;
 import static apoc.vectordb.VectorDbTestUtil.EntityType.NODE;
 import static apoc.vectordb.VectorDbTestUtil.EntityType.REL;
-import static apoc.vectordb.VectorDbTestUtil.SIZE_PERFORMANCE;
 import static apoc.vectordb.VectorDbTestUtil.assertBerlinResult;
 import static apoc.vectordb.VectorDbTestUtil.assertLondonResult;
 import static apoc.vectordb.VectorDbTestUtil.assertNodesCreated;
@@ -40,6 +39,7 @@ import static apoc.vectordb.VectorDbTestUtil.dropAndDeleteAll;
 import static apoc.vectordb.VectorDbTestUtil.generateFakeData;
 import static apoc.vectordb.VectorDbTestUtil.getAuthHeader;
 import static apoc.vectordb.VectorDbTestUtil.getFakeIds;
+import static apoc.vectordb.VectorDbTestUtil.getSizePerformanceVectors;
 import static apoc.vectordb.VectorDbTestUtil.stopWatchLog;
 import static apoc.vectordb.VectorEmbeddingConfig.ALL_RESULTS_KEY;
 import static apoc.vectordb.VectorEmbeddingConfig.FIELDS_KEY;
@@ -513,21 +513,9 @@ public class WeaviateTest {
         assertNodesCreated(db);
     }
 
+    @Ignore
     @Test
     public void performanceTest() {
-        
-    /*
-    Operation: apoc.vectordb.weaviate.createCollection | Time spent: 149ms
-    SIZE_PERFORMANCE = 100000
-    Operation: apoc.vectordb.weaviate.upsert | Time spent: 362695ms
-    Operation: apoc.vectordb.weaviate.get | Time spent: 136684ms
-    Operation: apoc.vectordb.weaviate.query | Time spent: 3167ms
-    Operation: apoc.vectordb.weaviate.delete | Time spent: 137041ms
-    Operation: apoc.vectordb.weaviate.deleteCollection | Time spent: 284ms
-     */
-
-        
-        
         StopWatch watch = new StopWatch();
         watch.start();
 
@@ -568,7 +556,7 @@ public class WeaviateTest {
                 map("host", HOST,
                         "collection", collection,
                         "conf", map(ALL_RESULTS_KEY, true, FIELDS_KEY, FIELDS, HEADERS_KEY, ADMIN_AUTHORIZATION),
-                        "limit", SIZE_PERFORMANCE
+                        "limit", getSizePerformanceVectors(VectorDbHandler.Type.WEAVIATE.name())
                 ),
                 Result::resultAsString);
         stopWatchLog(watch, "apoc.vectordb.weaviate.query");

@@ -28,7 +28,6 @@ import static apoc.vectordb.VectorDbHandler.Type.QDRANT;
 import static apoc.vectordb.VectorDbTestUtil.EntityType.FALSE;
 import static apoc.vectordb.VectorDbTestUtil.EntityType.NODE;
 import static apoc.vectordb.VectorDbTestUtil.EntityType.REL;
-import static apoc.vectordb.VectorDbTestUtil.SIZE_PERFORMANCE;
 import static apoc.vectordb.VectorDbTestUtil.assertBerlinResult;
 import static apoc.vectordb.VectorDbTestUtil.assertLondonResult;
 import static apoc.vectordb.VectorDbTestUtil.assertNodesCreated;
@@ -37,6 +36,7 @@ import static apoc.vectordb.VectorDbTestUtil.assertRelsCreated;
 import static apoc.vectordb.VectorDbTestUtil.dropAndDeleteAll;
 import static apoc.vectordb.VectorDbTestUtil.generateFakeData;
 import static apoc.vectordb.VectorDbTestUtil.getAuthHeader;
+import static apoc.vectordb.VectorDbTestUtil.getSizePerformanceVectors;
 import static apoc.vectordb.VectorDbTestUtil.stopWatchLog;
 import static apoc.vectordb.VectorEmbeddingConfig.ALL_RESULTS_KEY;
 import static apoc.vectordb.VectorEmbeddingConfig.MAPPING_KEY;
@@ -505,7 +505,7 @@ public class QdrantTest {
                         "host", HOST,
                         "collection", collection,
                         "conf", map(ALL_RESULTS_KEY, true, HEADERS_KEY, READONLY_AUTHORIZATION),
-                        "ids", IntStream.range(0, SIZE_PERFORMANCE).mapToObj(Long::valueOf).toList()
+                        "ids", IntStream.range(0, getSizePerformanceVectors(VectorDbHandler.Type.QDRANT.name())).mapToObj(Long::valueOf).toList()
                 ),
                 Result::resultAsString);
         stopWatchLog(watch, "apoc.vectordb.qdrant.get");

@@ -23,8 +23,6 @@ import static org.junit.Assert.assertTrue;
 public class VectorDbTestUtil {
     
     enum EntityType { NODE, REL, FALSE }
-
-    public static int SIZE_PERFORMANCE = 20000;
     
     public static void dropAndDeleteAll(GraphDatabaseService db) {
         db.executeTransactionally("MATCH (n) DETACH DELETE n");

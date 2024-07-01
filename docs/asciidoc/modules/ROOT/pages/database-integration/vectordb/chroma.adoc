@@ -229,17 +229,17 @@ CALL apoc.vectordb.chroma.delete($host, '<collection_id>', [1,2], {<optional con
 
 === Performance
 
-The table below shows the time spent on all operations on a sample of 40.000 records.
+The table below shows the time spent on all operations on a sample of 41.666 records.
 
 .Performance results
 [opts="header"]
 |===
 | Operation | Time (ms)
-| apoc.vectordb.chroma.createCollection | 38
-| apoc.vectordb.chroma.upsert | 7845
-| apoc.vectordb.chroma.get | 1056
-| apoc.vectordb.chroma.query | 53
-| apoc.vectordb.chroma.delete | 29
-| apoc.vectordb.chroma.deleteCollection | 113
+| apoc.vectordb.chroma.createCollection | 40
+| apoc.vectordb.chroma.upsert | 8050
+| apoc.vectordb.chroma.get | 1156
+| apoc.vectordb.chroma.query | 633
+| apoc.vectordb.chroma.delete | 32
+| apoc.vectordb.chroma.deleteCollection | 136
 | ...
 |===
