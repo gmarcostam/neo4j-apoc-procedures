@@ -171,6 +171,29 @@ public class PromptIT {
     }
 
     @Test
+    public void testCypher() {
+        long numOfQueries = 4L;
+        testResult(db, """
+                CALL apoc.ml.cypher($query, {count: $numOfQueries, apiKey: $apiKey})
+                """,
+                Map.of(
+                        "query", "Who are the actors which also directed a movie?",
+                        "numOfQueries", numOfQueries,
+                        "apiKey", OPENAI_KEY
+                ),
+                (r) -> {
+                    List<Map<String, Object>> list = r.stream().toList();
+                    Assertions.assertThat(list).hasSize((int) numOfQueries);
+                    Assertions.assertThat(list.stream()
+                                    .map(m -> m.get("query"))
+                                    .filter(Objects::nonNull)
+                                    .map(Object::toString)
+                                    .filter(StringUtils::isNotEmpty))
+                            .hasSize((int) numOfQueries);
+                });
+    }
+
+    @Test
     public void testCypherGpt35Turbo() {
         long numOfQueries = 4L;
         testResult(db, """
@@ -635,6 +658,7 @@ public class PromptIT {
 
     private static void assert2022Winners(String value) {
         assertThat(value).contains("Stefania Constantini", "Amos Mosaner");
+        assertThat(value).containsAnyOf("Italy", "Italian");
     }
 
 }
