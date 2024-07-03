@@ -1,13 +1,13 @@
 package apoc.kafka.consumer.kafka
 
+import apoc.ApocConfig
+import apoc.kafka.support.shutdownSilently
+import apoc.kafka.support.start
 import io.confluent.kafka.serializers.KafkaAvroDeserializer
 import org.junit.After
 import org.junit.Test
 import org.neo4j.test.rule.ImpermanentDbmsRule
 import org.testcontainers.containers.GenericContainer
-import apoc.kafka.support.setConfig
-import apoc.kafka.support.shutdownSilently
-import apoc.kafka.support.start
 import kotlin.test.assertEquals
 
 
@@ -34,10 +34,10 @@ class KafkaEventSinkNoConfigurationIT {
 
     @Test
     fun `the db should start even with no bootstrap servers provided`() {
-        db.setConfig("kafka.bootstrap.servers", "")
-            .setConfig("streams.sink.enabled", "true")
-            .setConfig("streams.sink.topic.cypher.$topic", "CREATE (p:Place{name: event.name, coordinates: event.coordinates, citizens: event.citizens})")
-            .start()
+        ApocConfig.apocConfig().setProperty("kafka.bootstrap.servers", "")
+        ApocConfig.apocConfig().setProperty("streams.sink.enabled", "true")
+        ApocConfig.apocConfig().setProperty("streams.sink.topic.cypher.$topic", "CREATE (p:Place{name: event.name, coordinates: event.coordinates, citizens: event.citizens})")
+        db.start()
         val count = db.executeTransactionally("MATCH (n) RETURN COUNT(n) AS count", emptyMap()) { it.columnAs<Long>("count").next() }
         assertEquals(0L, count)
     }
@@ -47,12 +47,12 @@ class KafkaEventSinkNoConfigurationIT {
         val fakeWebServer = FakeWebServer()
         fakeWebServer.start()
         val url = fakeWebServer.getUrl().replace("http://", "")
-        db.setConfig("kafka.bootstrap.servers", url)
-            .setConfig("streams.sink.enabled", "true")
-            .setConfig("streams.sink.topic.cypher.$topic", "CREATE (p:Place{name: event.name, coordinates: event.coordinates, citizens: event.citizens})")
-            .setConfig("kafka.key.deserializer", KafkaAvroDeserializer::class.java.name)
-            .setConfig("kafka.value.deserializer", KafkaAvroDeserializer::class.java.name)
-            .start()
+        ApocConfig.apocConfig().setProperty("kafka.bootstrap.servers", url)
+        ApocConfig.apocConfig().setProperty("streams.sink.enabled", "true")
+        ApocConfig.apocConfig().setProperty("streams.sink.topic.cypher.$topic", "CREATE (p:Place{name: event.name, coordinates: event.coordinates, citizens: event.citizens})")
+        ApocConfig.apocConfig().setProperty("kafka.key.deserializer", KafkaAvroDeserializer::class.java.name)
+        ApocConfig.apocConfig().setProperty("kafka.value.deserializer", KafkaAvroDeserializer::class.java.name)
+        db.start()
         val count = db.executeTransactionally("MATCH (n) RETURN COUNT(n) AS count", emptyMap()) { it.columnAs<Long>("count").next() }
         assertEquals(0L, count)
         fakeWebServer.stop()

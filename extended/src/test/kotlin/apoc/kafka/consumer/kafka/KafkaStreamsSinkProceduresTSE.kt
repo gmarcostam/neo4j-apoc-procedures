@@ -1,12 +1,12 @@
 package apoc.kafka.consumer.kafka
 
+import apoc.ApocConfig
 import apoc.kafka.consumer.procedures.StreamsSinkProcedures
 import apoc.kafka.events.StreamsPluginStatus
 import apoc.kafka.extensions.toMap
 import apoc.kafka.producer.integrations.KafkaEventSinkSuiteIT
 import apoc.kafka.support.Assert
 import apoc.kafka.support.KafkaTestUtils
-import apoc.kafka.support.setConfig
 import apoc.kafka.support.start
 import apoc.util.JsonUtil
 import apoc.util.TestUtil
@@ -45,7 +45,7 @@ class KafkaStreamsSinkProceduresTSE : KafkaEventSinkBaseTSE() {
 
     @Test
     fun shouldConsumeDataFromProcedureWithSinkDisabled() {
-        db.setConfig("streams.sink.enabled", "false")
+        ApocConfig.apocConfig().setProperty("streams.sink.enabled", "false")
         db.start()
         val topic = "bar"
         testProcedure(topic)
@@ -288,7 +288,8 @@ class KafkaStreamsSinkProceduresTSE : KafkaEventSinkBaseTSE() {
     @Test
     fun `should report the streams sink status RUNNING`() = runBlocking {
         // given
-        db.setConfig("streams.sink.topic.cypher.shouldWriteCypherQuery", cypherQueryTemplate).start()
+        ApocConfig.apocConfig().setProperty("streams.sink.topic.cypher.shouldWriteCypherQuery", cypherQueryTemplate)
+        db.start()
         registerProcedure()
         val expectedRunning = listOf(mapOf("name" to "status", "value" to StreamsPluginStatus.RUNNING.toString()))
 
@@ -305,7 +306,8 @@ class KafkaStreamsSinkProceduresTSE : KafkaEventSinkBaseTSE() {
     @Test
     fun `should report the streams sink status STOPPED`() {
         // given
-        db.setConfig("streams.sink.topic.cypher.shouldWriteCypherQuery", cypherQueryTemplate).start()
+        ApocConfig.apocConfig().setProperty("streams.sink.topic.cypher.shouldWriteCypherQuery", cypherQueryTemplate)
+        db.start()
         registerProcedure()
         val expectedRunning = listOf(mapOf("name" to "status", "value" to StreamsPluginStatus.STOPPED.toString()))
         db.executeTransactionally("CALL streams.sink.stop()", emptyMap()) {

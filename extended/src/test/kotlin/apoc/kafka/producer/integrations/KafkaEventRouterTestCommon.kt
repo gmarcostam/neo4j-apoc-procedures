@@ -1,6 +1,9 @@
 package apoc.kafka.producer.integrations
 
+import apoc.ApocConfig
 import apoc.kafka.extensions.execute
+import apoc.kafka.support.Assert
+import apoc.kafka.support.start
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.admin.NewTopic
 import org.apache.kafka.clients.consumer.ConsumerRecords
@@ -10,9 +13,6 @@ import org.neo4j.function.ThrowingSupplier
 import org.neo4j.test.rule.DbmsRule
 import java.time.Duration
 import java.util.concurrent.TimeUnit
-import apoc.kafka.support.Assert
-import apoc.kafka.support.setConfig
-import apoc.kafka.support.start
 
 object KafkaEventRouterTestCommon {
 
@@ -51,10 +51,10 @@ object KafkaEventRouterTestCommon {
 
     fun initDbWithLogStrategy(db: DbmsRule, strategy: String, otherConfigs: Map<String, String>? = null, constraints: List<String>? = null) {
 
-        db.setConfig("streams.source.schema.polling.interval", "0")
-                .setConfig("kafka.streams.log.compaction.strategy", strategy)
+        ApocConfig.apocConfig().setProperty("streams.source.schema.polling.interval", "0")
+        ApocConfig.apocConfig().setProperty("kafka.streams.log.compaction.strategy", strategy)
 
-        otherConfigs?.forEach { (k, v) -> db.setConfig(k, v) }
+        otherConfigs?.forEach { (k, v) -> ApocConfig.apocConfig().setProperty(k, v) }
         db.start()
         constraints?.forEach { db.execute(it) }
     }

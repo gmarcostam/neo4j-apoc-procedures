@@ -1,9 +1,9 @@
 package apoc.kafka.producer.integrations
 
+import apoc.ApocConfig
 import apoc.kafka.events.OperationType
 import apoc.kafka.events.StreamsTransactionEvent
 import apoc.kafka.support.KafkaTestUtils
-import apoc.kafka.support.setConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.junit.After
 import org.junit.AfterClass
@@ -57,7 +57,7 @@ open class KafkaEventRouterBaseTSE { // TSE (Test Suit Element)
     @Before
     fun setUp() {
         kafkaConsumer = KafkaTestUtils.createConsumer(bootstrapServers = KafkaEventRouterSuiteIT.kafka.bootstrapServers)
-        db.setConfig("kafka.bootstrap.servers", KafkaEventRouterSuiteIT.kafka.bootstrapServers)
+        ApocConfig.apocConfig().setProperty("kafka.bootstrap.servers", KafkaEventRouterSuiteIT.kafka.bootstrapServers)
     }
 
     @After

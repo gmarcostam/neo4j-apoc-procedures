@@ -1,9 +1,9 @@
 package apoc.kafka.consumer.kafka
 
+import apoc.ApocConfig
 import apoc.kafka.producer.integrations.KafkaEventSinkSuiteIT
 import apoc.kafka.support.Assert
 import apoc.kafka.support.KafkaTestUtils
-import apoc.kafka.support.setConfig
 import apoc.kafka.support.start
 import apoc.kafka.utils.JSONUtils
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -19,8 +19,8 @@ class KafkaEventSinkCommitTSE : KafkaEventSinkBaseTSE() {
     @Test
     fun `should write last offset with auto commit false`() {
         val topic = UUID.randomUUID().toString()
-        db.setConfig("streams.sink.topic.cypher.$topic", cypherQueryTemplate)
-        db.setConfig("kafka.${ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG}", "false")
+        ApocConfig.apocConfig().setProperty("streams.sink.topic.cypher.$topic", cypherQueryTemplate)
+        ApocConfig.apocConfig().setProperty("kafka.${ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG}", "false")
         db.start()
         val partition = 0
         var producerRecord = ProducerRecord(topic, partition, UUID.randomUUID().toString(), JSONUtils.writeValueAsBytes(data))
@@ -51,9 +51,9 @@ class KafkaEventSinkCommitTSE : KafkaEventSinkBaseTSE() {
     @Test
     fun shouldWriteLastOffsetWithAsyncCommit() {
         val topic = UUID.randomUUID().toString()
-        db.setConfig("streams.sink.topic.cypher.$topic", cypherQueryTemplate)
-                .setConfig("kafka.${ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG}", "false")
-                .setConfig("kafka.streams.commit.async", "true")
+        ApocConfig.apocConfig().setProperty("streams.sink.topic.cypher.$topic", cypherQueryTemplate)
+        ApocConfig.apocConfig().setProperty("kafka.${ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG}", "false")
+        ApocConfig.apocConfig().setProperty("kafka.streams.commit.async", "true")
         db.start()
         val partition = 0
         var producerRecord = ProducerRecord(topic, partition, UUID.randomUUID().toString(), JSONUtils.writeValueAsBytes(data))
@@ -90,10 +90,10 @@ class KafkaEventSinkCommitTSE : KafkaEventSinkBaseTSE() {
             MERGE (p:Product {id: event.id})
             MERGE (c)-[:BOUGHT]->(p)
         """.trimIndent()
-        db.setConfig("streams.sink.topic.cypher.${product.first}", product.second)
-        db.setConfig("streams.sink.topic.cypher.${customer.first}", customer.second)
-        db.setConfig("streams.sink.topic.cypher.${bought.first}", bought.second)
-        db.setConfig("kafka.${ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG}", "false")
+        ApocConfig.apocConfig().setProperty("streams.sink.topic.cypher.${product.first}", product.second)
+        ApocConfig.apocConfig().setProperty("streams.sink.topic.cypher.${customer.first}", customer.second)
+        ApocConfig.apocConfig().setProperty("streams.sink.topic.cypher.${bought.first}", bought.second)
+        ApocConfig.apocConfig().setProperty("kafka.${ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG}", "false")
         db.start()
 
         val props = mapOf("id" to 1, "name" to "My Awesome Product")

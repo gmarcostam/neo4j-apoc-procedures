@@ -1,6 +1,9 @@
 package apoc.kafka.consumer.kafka
 
+import apoc.ApocConfig
 import apoc.kafka.producer.integrations.KafkaEventSinkSuiteIT
+import apoc.kafka.support.Assert
+import apoc.kafka.support.start
 import io.confluent.kafka.serializers.KafkaAvroDeserializer
 import org.apache.avro.SchemaBuilder
 import org.apache.avro.generic.GenericRecord
@@ -10,10 +13,7 @@ import org.hamcrest.Matchers
 import org.junit.Test
 import org.neo4j.function.ThrowingSupplier
 import org.neo4j.graphdb.Node
-import apoc.kafka.support.Assert
-import apoc.kafka.support.setConfig
-import apoc.kafka.support.start
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 
@@ -23,10 +23,10 @@ class KafkaEventSinkAvroTSE : KafkaEventSinkBaseTSE() {
     fun `should insert AVRO data`() {
         //given
         val topic = "avro"
-        db.setConfig("streams.sink.topic.cypher.$topic", "CREATE (p:Place{name: event.name, coordinates: event.coordinates, citizens: event.citizens})")
-        db.setConfig("kafka.key.deserializer", KafkaAvroDeserializer::class.java.name)
-        db.setConfig("kafka.value.deserializer", KafkaAvroDeserializer::class.java.name)
-        db.setConfig("kafka.schema.registry.url", KafkaEventSinkSuiteIT.schemaRegistry.getSchemaRegistryUrl())
+        ApocConfig.apocConfig().setProperty("streams.sink.topic.cypher.$topic", "CREATE (p:Place{name: event.name, coordinates: event.coordinates, citizens: event.citizens})")
+        ApocConfig.apocConfig().setProperty("kafka.key.deserializer", KafkaAvroDeserializer::class.java.name)
+        ApocConfig.apocConfig().setProperty("kafka.value.deserializer", KafkaAvroDeserializer::class.java.name)
+        ApocConfig.apocConfig().setProperty("kafka.schema.registry.url", KafkaEventSinkSuiteIT.schemaRegistry.getSchemaRegistryUrl())
         db.start()
 
         val PLACE_SCHEMA = SchemaBuilder.builder("com.namespace")
@@ -71,10 +71,10 @@ class KafkaEventSinkAvroTSE : KafkaEventSinkBaseTSE() {
     fun `the node pattern strategy must work also with AVRO data`() {
         //given
         val topic = UUID.randomUUID().toString()
-        db.setConfig("kafka.key.deserializer", KafkaAvroDeserializer::class.java.name)
-        db.setConfig("kafka.value.deserializer", KafkaAvroDeserializer::class.java.name)
-        db.setConfig("kafka.schema.registry.url", KafkaEventSinkSuiteIT.schemaRegistry.getSchemaRegistryUrl())
-        db.setConfig("streams.sink.topic.pattern.node.$topic","(:Place{!name})")
+        ApocConfig.apocConfig().setProperty("kafka.key.deserializer", KafkaAvroDeserializer::class.java.name)
+        ApocConfig.apocConfig().setProperty("kafka.value.deserializer", KafkaAvroDeserializer::class.java.name)
+        ApocConfig.apocConfig().setProperty("kafka.schema.registry.url", KafkaEventSinkSuiteIT.schemaRegistry.getSchemaRegistryUrl())
+        ApocConfig.apocConfig().setProperty("streams.sink.topic.pattern.node.$topic", "(:Place{!name})")
         db.start()
 
         val PLACE_SCHEMA = SchemaBuilder.builder("com.namespace")
