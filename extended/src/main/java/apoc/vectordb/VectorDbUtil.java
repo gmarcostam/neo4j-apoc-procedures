@@ -40,20 +40,45 @@ public class VectorDbUtil {
             Object id, Double score, List<Double> vector, Map<String, Object> metadata, String text,
             Node node,
             Relationship rel) {}
-    
+
+    /**
+     * Get vector configuration from config. parameter and system db database
+     */
     public static Map<String, Object> getCommonVectorDbInfo(
             String hostOrKey, String collection, Map<String, Object> configuration, String templateUrl, VectorDbHandler handler) {
         Map<String, Object> config = new HashMap<>(configuration);
 
+        Map<String, Object> systemDbProps = getSystemDbProps(hostOrKey, handler);
+
+        String baseUrl = getBaseUrl(hostOrKey, handler, config, systemDbProps);
+
+        getMapping(config, systemDbProps);
+
+        config = getCredentialsFromSystemDb(handler, config, systemDbProps);
+
+        // endpoint creation
+        String endpoint = templateUrl.formatted(baseUrl, collection);
+        getEndpoint(config, endpoint);
+
+        return config;
+    }
+
+    /**
+     * Retrieve, if exists, the properties stored via `apoc.vectordb.configure` procedure
+     */
+    private static Map<String, Object> getSystemDbProps(String hostOrKey, VectorDbHandler handler) {
         Map<String, Object> props = withSystemDb(transaction -> {
             Label label = Label.label(handler.getLabel());
             Node node = transaction.findNode(label, SystemPropertyKeys.name.name(), hostOrKey);
             return node == null ? Map.of() : node.getAllProperties();
         });
+        return props;
+    }
 
-        String url = getUrl(hostOrKey, handler, props);
-        config.put(BASE_URL_KEY, url);
-
+    /**
+     * Retrieve, if exists, the mapping stored via `apoc.vectordb.configure` procedure or via configuration parameter with key `mapping`
+     */
+    private static void getMapping(Map<String, Object> config, Map<String, Object> props) {
         Map mappingConfVal = (Map) config.get(MAPPING_KEY);
         if ( MapUtils.isEmpty(mappingConfVal) ) {
             String mappingStoreVal = (String) props.get(MAPPING_KEY);
@@ -61,18 +86,22 @@ public class VectorDbUtil {
                 config.put( MAPPING_KEY, Util.fromJson(mappingStoreVal, Map.class) );
             }
         }
+    }
 
+    private static Map<String, Object> getCredentialsFromSystemDb(VectorDbHandler handler, Map<String, Object> config, Map<String, Object> props) {
         String credentials = (String) props.get(ExtendedSystemPropertyKeys.credentials.name());
         if (credentials != null) {
             Object credentialsObj = Util.fromJson(credentials, Object.class);
             
             config = handler.getCredentials(credentialsObj, config);
         }
-
-        String endpoint = templateUrl.formatted(url, collection);
-        getEndpoint(config, endpoint);
-
         return config;
+    }
+
+    private static String getBaseUrl(String hostOrKey, VectorDbHandler handler, Map<String, Object> config, Map<String, Object> props) {
+        String url = getUrl(hostOrKey, handler, props);
+        config.put(BASE_URL_KEY, url);
+        return url;
     }
 
     private static String getUrl(String hostOrKey, VectorDbHandler handler, Map<String, Object> props) {
