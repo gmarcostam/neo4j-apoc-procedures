@@ -117,6 +117,18 @@ public class QdrantTest {
     public void before() {
         dropAndDeleteAll(db);
     }
+
+    @Test
+    public void getInfo() {
+        testResult(
+                db,
+                "CALL apoc.vectordb.qdrant.info($host, 'test_collection', $conf)",
+                map("host", HOST, "conf", ADMIN_HEADER_CONF),
+                r -> {
+                    Map<String, Object> res = r.next();
+                    System.out.println(res);
+                });
+    }
     
     @Test
     public void getVectorsWithReadOnlyApiKey() {

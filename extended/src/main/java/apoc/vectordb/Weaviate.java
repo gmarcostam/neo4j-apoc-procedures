@@ -44,6 +44,23 @@ public class Weaviate {
     @Context
     public URLAccessChecker urlAccessChecker;
 
+    @Procedure("apoc.vectordb.weaviate.info")
+    @Description("apoc.vectordb.weaviate.info(hostOrKey, collection, $configuration) - Creates a collection, with the name specified in the 2nd parameter, and with the specified `similarity` and `size`")
+    public Stream<MapResult> createCollection(@Name("hostOrKey") String hostOrKey,
+                                              @Name("collection") String collection,
+                                              @Name(value = "configuration", defaultValue = "{}") Map<String, Object> configuration) throws Exception {
+        var config = getVectorDbInfo(hostOrKey, collection, configuration, "%s/schema/%s");
+        config.putIfAbsent(METHOD_KEY, null);
+
+        Map<String, Object> additionalBodies = Map.of("class", collection);
+
+        RestAPIConfig restAPIConfig = new RestAPIConfig(config, Map.of(), additionalBodies);
+
+        return executeRequest(restAPIConfig, urlAccessChecker)
+                .map(v -> (Map<String,Object>) v)
+                .map(MapResult::new);
+    }
+
     @Procedure("apoc.vectordb.weaviate.createCollection")
     @Description("apoc.vectordb.weaviate.createCollection(hostOrKey, collection, similarity, size, $configuration) - Creates a collection, with the name specified in the 2nd parameter, and with the specified `similarity` and `size`")
     public Stream<MapResult> createCollection(@Name("hostOrKey") String hostOrKey,

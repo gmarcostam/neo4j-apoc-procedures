@@ -45,6 +45,24 @@ public class ChromaDb {
     @Context
     public URLAccessChecker urlAccessChecker;
 
+    @Procedure("apoc.vectordb.chroma.info")
+    @Description("apoc.vectordb.chroma.info(hostOrKey, collection, $configuration) - Get information about specified existing collection")
+    public Stream<MapResult> info(@Name("hostOrKey") String hostOrKey, @Name("collection") String collection, @Name(value = "configuration", defaultValue = "{}") Map<String, Object> configuration) throws Exception {
+        String url = "%s/api/v1/collections/%s";
+
+        Map<String, Object> config = getVectorDbInfo(hostOrKey, collection, configuration, url);
+
+        config.put(METHOD_KEY, "GET");
+
+        RestAPIConfig restAPIConfig = new RestAPIConfig( config, Map.of(), Map.of() );
+
+        restAPIConfig.setBody(null);
+
+        return executeRequest(restAPIConfig, urlAccessChecker)
+                .map(v -> (Map<String,Object>) v)
+                .map(MapResult::new);
+    }
+
     @Procedure("apoc.vectordb.chroma.createCollection")
     @Description("apoc.vectordb.chroma.createCollection(hostOrKey, collection, similarity, size, $configuration) - Creates a collection, with the name specified in the 2nd parameter, and with the specified `similarity` and `size`")
     public Stream<MapResult> createCollection(@Name("hostOrKey") String hostOrKey,

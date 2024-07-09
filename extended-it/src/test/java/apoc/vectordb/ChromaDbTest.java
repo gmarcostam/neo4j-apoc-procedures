@@ -109,6 +109,16 @@ public class ChromaDbTest {
     public void before() {
         dropAndDeleteAll(db);
     }
+
+    @Test
+    public void getInfo() {
+        testResult(db, "CALL apoc.vectordb.chroma.info($host, $collection, $conf) ",
+                map("host", HOST, "collection", "test_collection", "conf", map(ALL_RESULTS_KEY, true)),
+                r -> {
+                    Map<String, Object> row = r.next();
+                    System.out.println("Test");
+                });
+    }
     
     @Test
     public void getVectors() {

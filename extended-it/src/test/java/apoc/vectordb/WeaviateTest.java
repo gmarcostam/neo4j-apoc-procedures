@@ -148,6 +148,16 @@ public class WeaviateTest {
     }
 
     @Test
+    public void getInfo() {
+        testResult(db, "CALL apoc.vectordb.weaviate.info($host, 'TestCollection', $conf)",
+                map("host", HOST, "conf", map(ALL_RESULTS_KEY, true, HEADERS_KEY, READONLY_AUTHORIZATION)),
+                r -> {
+                    Map<String, Object> row = r.next();
+                    System.out.println("TEST INFO");
+                });
+    }
+
+    @Test
     public void getVectorsWithReadOnlyApiKey() {
         testResult(db, "CALL apoc.vectordb.weaviate.get($host, 'TestCollection', [$id1], $conf)",
                 map("host", HOST, "id1", ID_1, "conf", map(ALL_RESULTS_KEY, true, HEADERS_KEY, READONLY_AUTHORIZATION)),

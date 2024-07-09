@@ -13,11 +13,13 @@ import org.neo4j.procedure.Mode;
 import org.neo4j.procedure.Name;
 import org.neo4j.procedure.Procedure;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static apoc.ml.RestAPIConfig.BODY_KEY;
 import static apoc.ml.RestAPIConfig.METHOD_KEY;
 import static apoc.vectordb.VectorDb.executeRequest;
 import static apoc.vectordb.VectorDb.getEmbeddingResultStream;
@@ -51,17 +53,20 @@ public class Qdrant {
     //               nelle assertion, ci metteremo il risultato aspettato in caso avessimo la chiave
     
     @Procedure("apoc.vectordb.qdrant.info")
-    @Description("apoc.vectordb.qdrant.createCollection(hostOrKey, collection, similarity, size, $configuration) - Get information about specified existing collection")
-    public Stream<MapResult> createCollection(@Name("hostOrKey") String hostOrKey, @Name("collection") String collection, @Name(value = "configuration", defaultValue = "{}") Map<String, Object> configuration) throws Exception {
+    @Description("apoc.vectordb.qdrant.info(hostOrKey, collection, $configuration) - Get information about specified existing collection")
+    public Stream<MapResult> info(@Name("hostOrKey") String hostOrKey, @Name("collection") String collection, @Name(value = "configuration", defaultValue = "{}") Map<String, Object> configuration) throws Exception {
         // TODO - questo è il template dell'endpoint, il primo %s è il base url, il secondo %s è il collection name (definito )
         //  in questo caso di questo endpoint: https://qdrant.github.io/qdrant/redoc/index.html#tag/collections/operation/get_collection
         String url = "%s/collections/%s";
         Map<String, Object> config = getVectorDbInfo(hostOrKey, collection, configuration, url);
         
         // TODO - questo serve per definire il metodo HTTP, negli endpoint degli altri potrebbe essere diverso, controllare
-        config.putIfAbsent(METHOD_KEY, "GET");
+        config.put(METHOD_KEY, "GET");
 
         RestAPIConfig restAPIConfig = new RestAPIConfig( config, Map.of(), Map.of() );
+
+        restAPIConfig.setBody(null);
+
         return executeRequest(restAPIConfig, urlAccessChecker)
                 .map(v -> (Map<String,Object>) v)
                 .map(MapResult::new);
