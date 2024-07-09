@@ -41,32 +41,16 @@ public class Qdrant {
     
     @Context
     public URLAccessChecker urlAccessChecker;
-
-    // TODO - creare test su QdrantTest
-    
-    // TODO - cercare analogo per gli altri vectordb
-    //  Chroma: forse questo https://cookbook.chromadb.dev/core/collections/#getting-a-collection
-    //  Milvus: forse questo https://milvus.io/api-reference/restful/v2.4.x/v2/Collection%20(v2)/Describe.md
-    //  Weaviate: cercarlo da qui: https://weaviate.io/developers/weaviate/api/rest 
-    //  Pinecone: cercarlo da qui https://docs.pinecone.io/reference/api/introduction
-    //         NOTA: di Pinecone non abbiamo la chiave, per il momento facciamo un test con una chiave fasulla in cui ci aspettiamo come risultato 401.
-    //               nelle assertion, ci metteremo il risultato aspettato in caso avessimo la chiave
     
     @Procedure("apoc.vectordb.qdrant.info")
     @Description("apoc.vectordb.qdrant.info(hostOrKey, collection, $configuration) - Get information about specified existing collection")
     public Stream<MapResult> info(@Name("hostOrKey") String hostOrKey, @Name("collection") String collection, @Name(value = "configuration", defaultValue = "{}") Map<String, Object> configuration) throws Exception {
-        // TODO - questo è il template dell'endpoint, il primo %s è il base url, il secondo %s è il collection name (definito )
-        //  in questo caso di questo endpoint: https://qdrant.github.io/qdrant/redoc/index.html#tag/collections/operation/get_collection
         String url = "%s/collections/%s";
         Map<String, Object> config = getVectorDbInfo(hostOrKey, collection, configuration, url);
-        
-        // TODO - questo serve per definire il metodo HTTP, negli endpoint degli altri potrebbe essere diverso, controllare
-//        config.put(METHOD_KEY, "GET");
+
         methodAndPayloadNull(config);
 
         RestAPIConfig restAPIConfig = new RestAPIConfig( config, Map.of(), Map.of() );
-
-        restAPIConfig.setBody(null);
 
         return executeRequest(restAPIConfig, urlAccessChecker)
                 .map(v -> (Map<String,Object>) v)

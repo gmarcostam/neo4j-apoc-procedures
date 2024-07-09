@@ -7,6 +7,7 @@ note that the list and the signature procedures are consistent with the others, 
 [opts=header, cols="1, 3"]
 |===
 | name | description
+| apoc.vectordb.qdrant.info(hostOrKey, collection, $config) | Get information about specified existing collection
 | apoc.vectordb.qdrant.createCollection(hostOrKey, collection, similarity, size, $config) |
     Creates a collection, with the name specified in the 2nd parameter, and with the specified `similarity` and `size`.
     The default endpoint is `<hostOrKey param>/collections/<collection param>`.
@@ -38,6 +39,12 @@ With hostOrKey=null, the default is 'http://localhost:6333'.
 
 
 == Examples
+
+.Get collection info (it leverages https://qdrant.github.io/qdrant/redoc/index.html#tag/collections/operation/get_collection[this API])
+[source,cypher]
+----
+CALL apoc.vectordb.qdrant.info(hostOrKey, 'test_collection', {<optional config>})
+----
 
 .Create a collection (it leverages https://qdrant.github.io/qdrant/redoc/index.html#tag/collections/operation/create_collection[this API])
 [source,cypher]

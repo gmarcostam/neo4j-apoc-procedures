@@ -7,6 +7,7 @@ note that the list and the signature procedures are consistent with the others, 
 [opts=header, cols="1, 3"]
 |===
 | name | description
+| apoc.vectordb.weaviate.info($host, $collectionName, $config) | Get information about specified existing collection
 | apoc.vectordb.weaviate.createCollection(hostOrKey, collection, similarity, size, $config) |
     Creates a collection, with the name specified in the 2nd parameter, and with the specified `similarity` and `size`.
     The default endpoint is `<hostOrKey param>/schema`.
@@ -39,6 +40,12 @@ where the 1st parameter can be a key defined by the apoc config `apoc.weaviate.<
 With hostOrKey=null, the default is 'http://localhost:8080/v1'.
 
 == Examples
+
+.Get collection info (it leverages https://weaviate.io/developers/weaviate/api/rest#tag/schema/get/schema/{className}[this API])
+[source, cypher]
+----
+CALL apoc.vectordb.weaviate.info($host, 'test_collection', {<optional config>})
+----
 
 .Create a collection (it leverages https://weaviate.io/developers/weaviate/api/rest#tag/schema/post/schema[this API])
 [source,cypher]
