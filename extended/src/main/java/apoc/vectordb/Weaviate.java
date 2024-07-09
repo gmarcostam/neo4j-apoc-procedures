@@ -50,7 +50,8 @@ public class Weaviate {
                                               @Name("collection") String collection,
                                               @Name(value = "configuration", defaultValue = "{}") Map<String, Object> configuration) throws Exception {
         var config = getVectorDbInfo(hostOrKey, collection, configuration, "%s/schema/%s");
-        config.putIfAbsent(METHOD_KEY, null);
+//        config.putIfAbsent(METHOD_KEY, null);
+        methodAndPayloadNull(config);
 
         Map<String, Object> additionalBodies = Map.of("class", collection);
 

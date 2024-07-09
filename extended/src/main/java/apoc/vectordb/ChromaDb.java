@@ -52,11 +52,9 @@ public class ChromaDb {
 
         Map<String, Object> config = getVectorDbInfo(hostOrKey, collection, configuration, url);
 
-        config.put(METHOD_KEY, "GET");
+        methodAndPayloadNull(config);
 
         RestAPIConfig restAPIConfig = new RestAPIConfig( config, Map.of(), Map.of() );
-
-        restAPIConfig.setBody(null);
 
         return executeRequest(restAPIConfig, urlAccessChecker)
                 .map(v -> (Map<String,Object>) v)

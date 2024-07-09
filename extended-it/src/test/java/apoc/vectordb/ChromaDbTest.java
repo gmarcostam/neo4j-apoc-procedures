@@ -116,7 +116,7 @@ public class ChromaDbTest {
                 map("host", HOST, "collection", "test_collection", "conf", map(ALL_RESULTS_KEY, true)),
                 r -> {
                     Map<String, Object> row = r.next();
-                    System.out.println("Test");
+                    System.out.println("row = " + row);
                 });
     }
     

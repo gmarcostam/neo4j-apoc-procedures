@@ -153,7 +153,7 @@ public class WeaviateTest {
                 map("host", HOST, "conf", map(ALL_RESULTS_KEY, true, HEADERS_KEY, READONLY_AUTHORIZATION)),
                 r -> {
                     Map<String, Object> row = r.next();
-                    System.out.println("TEST INFO");
+                    System.out.println("row = " + row);
                 });
     }
 

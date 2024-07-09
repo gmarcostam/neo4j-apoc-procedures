@@ -9,12 +9,16 @@ import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static apoc.ml.RestAPIConfig.BASE_URL_KEY;
+import static apoc.ml.RestAPIConfig.BODY_KEY;
 import static apoc.ml.RestAPIConfig.ENDPOINT_KEY;
+import static apoc.ml.RestAPIConfig.METHOD_KEY;
 import static apoc.util.SystemDbUtil.withSystemDb;
 import static apoc.vectordb.VectorEmbeddingConfig.MAPPING_KEY;
 import static apoc.vectordb.VectorMappingConfig.MODE_KEY;
@@ -114,5 +118,16 @@ public class VectorDbUtil {
     public static void setReadOnlyMappingMode(Map<String, Object> configuration) {
         Map<String, Object> mappingConf = (Map<String, Object>) configuration.getOrDefault(MAPPING_KEY, new HashMap<>());
         mappingConf.put(MODE_KEY, READ_ONLY.toString());
+    }
+
+    /**
+     * The "method" should be "GET", but is null as a workaround.
+     * Since with `method: POST` the {@link apoc.util.Util#openUrlConnection(URL, Map)} has a `setChunkedStreamingMode`
+     * that makes the request to respond `405: Method Not Allowed` even if {@link HttpURLConnection#getRequestMethod()} is "GET".
+     * In any case, by putting `body: null`, the request is still in GET  by default
+     */
+    public static void methodAndPayloadNull(Map<String, Object> config) {
+        config.put(METHOD_KEY, null);
+        config.put(BODY_KEY, null);
     }
 }

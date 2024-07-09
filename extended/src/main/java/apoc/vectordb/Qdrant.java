@@ -61,7 +61,8 @@ public class Qdrant {
         Map<String, Object> config = getVectorDbInfo(hostOrKey, collection, configuration, url);
         
         // TODO - questo serve per definire il metodo HTTP, negli endpoint degli altri potrebbe essere diverso, controllare
-        config.put(METHOD_KEY, "GET");
+//        config.put(METHOD_KEY, "GET");
+        methodAndPayloadNull(config);
 
         RestAPIConfig restAPIConfig = new RestAPIConfig( config, Map.of(), Map.of() );
 
