@@ -45,6 +45,13 @@ With hostOrKey=null, the default is 'http://localhost:8000'.
 CALL apoc.vectordb.chroma.info(hostOrKey, 'test_collection', {<optional config>})
 ----
 
+.Example results
+[opts="header"]
+|===
+| value
+| {name=test_collection, metadata={size=4, hnsw:space=cosine}, database=default_database, id=74ebe008-1ccb-4d3d-8c5d-cdd7cfa526c2, tenant=default_tenant}
+|===
+
 .Create a collection (it leverages https://docs.trychroma.com/usage-guide#creating-inspecting-and-deleting-collections[this API])
 [source,cypher]
 ----

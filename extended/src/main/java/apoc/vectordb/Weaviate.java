@@ -45,7 +45,7 @@ public class Weaviate {
     public URLAccessChecker urlAccessChecker;
 
     @Procedure("apoc.vectordb.weaviate.info")
-    @Description("apoc.vectordb.weaviate.info(hostOrKey, collection, $configuration) - Creates a collection, with the name specified in the 2nd parameter, and with the specified `similarity` and `size`")
+    @Description("apoc.vectordb.weaviate.info(hostOrKey, collection, $configuration) - Get information about specified existing collection")
     public Stream<MapResult> createCollection(@Name("hostOrKey") String hostOrKey,
                                               @Name("collection") String collection,
                                               @Name(value = "configuration", defaultValue = "{}") Map<String, Object> configuration) throws Exception {
