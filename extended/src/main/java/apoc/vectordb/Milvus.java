@@ -43,13 +43,13 @@ public class Milvus {
 
     @Procedure("apoc.vectordb.milvus.info")
     @Description("apoc.vectordb.milvus.info(hostOrKey, collection, $configuration) - Get information about specified existing collection")
-    public Stream<MapResult> info(@Name("hostOrKey") String hostOrKey, @Name("collection") String collection, @Name(value = "dbName", defaultValue = "default") String dbName,  @Name(value = "configuration", defaultValue = "{}") Map<String, Object> configuration) throws Exception {
+    public Stream<MapResult> info(@Name("hostOrKey") String hostOrKey, @Name("collection") String collection,  @Name(value = "configuration", defaultValue = "{}") Map<String, Object> configuration) throws Exception {
         String url = "%s/collections/describe";
         Map<String, Object> config = getVectorDbInfo(hostOrKey, collection, configuration, url);
 
-        config.put(BODY_KEY, Map.of("dbName", dbName, "collectionName", collection));
+        Map<String, Object> additionalBodies = Map.of("collectionName", collection);
 
-        RestAPIConfig restAPIConfig = new RestAPIConfig( config, Map.of(), Map.of() );
+        RestAPIConfig restAPIConfig = new RestAPIConfig( config, Map.of(), additionalBodies );
 
         return executeRequest(restAPIConfig, urlAccessChecker)
                 .map(v -> (Map<String,Object>) v)

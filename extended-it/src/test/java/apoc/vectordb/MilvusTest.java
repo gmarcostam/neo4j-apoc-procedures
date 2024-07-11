@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 import static apoc.ml.Prompt.API_KEY_CONF;
+import static apoc.ml.RestAPIConfig.BODY_KEY;
 import static apoc.ml.RestAPIConfig.HEADERS_KEY;
 import static apoc.util.MapUtil.map;
 import static apoc.util.TestUtil.testCall;
@@ -119,11 +120,31 @@ public class MilvusTest {
 
     @Test
     public void getInfo() {
-        testResult(db, "CALL apoc.vectordb.milvus.info($host, 'test_collection', '', $conf) ",
-                map("host", HOST, "conf", map(FIELDS_KEY, FIELDS)),
+        testCall(db, "CALL apoc.vectordb.milvus.info($host, 'test_collection', $conf) ",
+                map("host", HOST, "conf", map()),
                 r -> {
-                    Map<String, Object> row = r.next();
-                    Map value = (Map) row.get("value");
+                    Map value = (Map) r.get("value");
+                    assertEquals(200L, value.get("code"));
+                });
+    }
+    @Test
+    public void getInfoWithWrongDatabaseName() {
+        testCall(db, "CALL apoc.vectordb.milvus.info($host, 'test_collection', $conf) ",
+                map("host", HOST, "conf", map(BODY_KEY, map("dbName", "wrong"))),
+                r -> {
+                    Map value = (Map) r.get("value");
+                    String message = (String) value.get("message");
+                    long code = (long) value.get("code");
+                    assertEquals("database not found, database: wrong", message);
+                    assertEquals(800L, code);
+                });
+    }
+    @Test
+    public void getInfoWithRightDatabaseName() {
+        testCall(db, "CALL apoc.vectordb.milvus.info($host, 'test_collection', $conf) ",
+                map("host", HOST, "conf", map(BODY_KEY, map("dbName", "default"))),
+                r -> {
+                    Map value = (Map) r.get("value");
                     assertEquals(200L, value.get("code"));
                 });
     }
