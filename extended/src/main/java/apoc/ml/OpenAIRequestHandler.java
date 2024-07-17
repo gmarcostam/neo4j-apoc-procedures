@@ -48,10 +48,7 @@ abstract class OpenAIRequestHandler {
         HUGGINGFACE(new OpenAi(null)),
         MIXEDBREAD_EMBEDDING(new OpenAi(MIXEDBREAD_BASE_URL)),
         MIXEDBREAD_CUSTOM(new Custom()),
-        // todo - aggiungere questo type
-        //  ANTHROPIC(new Anthropic())
-        // -- 
-        
+        ANTHROPIC(new Anthropic()),
         OPENAI(new OpenAi("https://api.openai.com/v1"));
 
         private final OpenAIRequestHandler handler;
@@ -97,16 +94,20 @@ abstract class OpenAIRequestHandler {
             headers.put("Authorization", "Bearer " + apiKey);
         }
     }
-    
-    /*TODO -  
-       
-        static class Anthropic extends OpenAi {
+
+
+    static class Anthropic extends OpenAi {
 
         public Anthropic() {
-            super("TODO QUI METTERE IL DEFAULT BASE URL, DOVREBBE ESSERE https://api.anthropic.com/v1");
+            super("https://api.anthropic.com/v1");
+        }
+
+        @Override
+        public void addApiKey(Map<String, Object> headers, String apiKey) {
+            headers.put("x-api-key", apiKey);
         }
     }
-     */
+
 
     static class Custom extends OpenAi {
 

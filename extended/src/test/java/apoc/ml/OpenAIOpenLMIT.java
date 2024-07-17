@@ -3,6 +3,7 @@ package apoc.ml;
 import apoc.util.TestUtil;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.neo4j.test.rule.DbmsRule;
@@ -12,10 +13,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static apoc.ml.OpenAI.API_TYPE_CONF_KEY;
 import static apoc.ml.MLUtil.*;
+import static apoc.ml.OpenAI.API_TYPE_CONF_KEY;
 import static apoc.ml.OpenAI.PATH_CONF_KEY;
-import static apoc.ml.OpenAITestResultUtils.*;
+import static apoc.ml.OpenAITestResultUtils.COMPLETION_QUERY;
+import static apoc.ml.OpenAITestResultUtils.COMPLETION_QUERY_EXTENDED;
+import static apoc.util.ExtendedTestUtil.assertFails;
 import static apoc.util.TestUtil.testCall;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -31,31 +34,168 @@ public class OpenAIOpenLMIT {
     @Rule
     public DbmsRule db = new ImpermanentDbmsRule();
 
-
     @Before
     public void setUp() throws Exception {
         TestUtil.registerProcedure(db, OpenAI.class);
+
     }
-    
-    
-    /* todo - esempio simile a completionWithHuggingFace, 
-          dove invece delle prime due righe andrà scritta una cosa simile ma con `ANTHROPIC_API_KEY`, che dovrà essere passato nel Modify run configuration
-          La configurazione dovrebbe essere questa:
-            Map<String, String> conf = Map.of(API_TYPE_CONF_KEY, OpenAIRequestHandler.Type.ANTHROPIC.name());
-          
-        
-       todo - esempio in cui viene passato nel config "model": "modelloDiversoDaQuelloDiDefault"
-       
-       todo - esempio in cui viene passato nel config "model": "modelloInesistente" --> dovrebbe fallire?
-       
-       todo -  esempio in cui viene passato nel config "max_tokens": numeroPiccolo --> il result dovrebbe essere diverso da quello senza max_tokens
-       
-       todo -  esempio in cui viene passato nel config headers: {anthropic-version: 'ANNO-MM-GG'}, dovrebbe andare 
-       
-       todo -  esempio in cui viene passato nel config headers: {anthropic-version: 'ajeje'}, dovrebbe spaccare visto che non in formato YYYY-MM-DD
-       
-       todo - vedere se testare altri casi, forse questo con stream:true --> https://docs.anthropic.com/en/api/messages-streaming  
-    */
+
+    @Test
+    public void completionWithAnthropic() {
+        String anthropicApiKey = System.getenv("ANTHROPIC_API_KEY");
+        Assume.assumeNotNull("No ANTHROPIC_API_KEY environment configured", anthropicApiKey);
+
+        Map<String, Object> conf = Map.of(
+                ENDPOINT_CONF_KEY, "https://api.anthropic.com/v1/messages",
+                API_TYPE_CONF_KEY, OpenAIRequestHandler.Type.ANTHROPIC.name(),
+                MAX_TOKENS, 1024
+        );
+        testCall(db, COMPLETION_QUERY_EXTENDED,
+                Map.of("conf", conf, "apiKey", anthropicApiKey),
+                (row) -> {
+                    var result = (Map<String,Object>) row.get("value");
+                    var contentList = (List<Map<String, Object>>) result.get("content");
+                    Map<String, Object> content = contentList.get(0);
+                    String generatedText = (String) content.get("text");
+                    assertTrue(generatedText.toLowerCase().contains("blue"),
+                            "Actual generatedText is " + generatedText);
+                });
+    }
+
+    @Test
+    public void completionWithAnthropicNonDefaultModel() {
+        String anthropicApiKey = System.getenv("ANTHROPIC_API_KEY");
+        Assume.assumeNotNull("No ANTHROPIC_API_KEY environment configured", anthropicApiKey);
+
+        String modelId = "claude-3-haiku-20240307";
+        Map<String, Object> conf = Map.of(
+                ENDPOINT_CONF_KEY, "https://api.anthropic.com/v1/messages",
+                API_TYPE_CONF_KEY, OpenAIRequestHandler.Type.ANTHROPIC.name(),
+                MODEL_CONF_KEY, modelId,
+                MAX_TOKENS, 1024
+        );
+        testCall(db, COMPLETION_QUERY_EXTENDED,
+                Map.of("conf", conf, "apiKey", anthropicApiKey),
+                (row) -> {
+                    var result = (Map<String,Object>) row.get("value");
+                    var contentList = (List<Map<String, Object>>) result.get("content");
+                    Map<String, Object> content = contentList.get(0);
+                    String generatedText = (String) content.get("text");
+                    assertTrue(generatedText.toLowerCase().contains("blue"),
+                            "Actual generatedText is " + generatedText);
+                });
+    }
+
+    @Test
+    public void completionWithAnthropicUnkwnownModel() {
+        String anthropicApiKey = System.getenv("ANTHROPIC_API_KEY");
+        Assume.assumeNotNull("No ANTHROPIC_API_KEY environment configured", anthropicApiKey);
+
+        String modelId = "unknown";
+        Map<String, Object> conf = Map.of(
+                ENDPOINT_CONF_KEY, "https://api.anthropic.com/v1/messages",
+                API_TYPE_CONF_KEY, OpenAIRequestHandler.Type.ANTHROPIC.name(),
+                MODEL_CONF_KEY, modelId,
+                MAX_TOKENS, 1024
+        );
+
+        assertFails(
+                db,
+                COMPLETION_QUERY_EXTENDED,
+                Map.of("conf", conf, "apiKey", anthropicApiKey),
+                "Failed to invoke procedure `apoc.ml.openai.completion`: Caused by: java.io.FileNotFoundException: https://api.anthropic.com/v1/messages"
+        );
+    }
+
+@Test
+public void completionWithAnthropicSmallTokenSize() {
+    String anthropicApiKey = System.getenv("ANTHROPIC_API_KEY");
+    Assume.assumeNotNull("No ANTHROPIC_API_KEY environment configured", anthropicApiKey);
+
+    Map<String, Object> conf = Map.of(
+            ENDPOINT_CONF_KEY, "https://api.anthropic.com/v1/messages",
+            API_TYPE_CONF_KEY, OpenAIRequestHandler.Type.ANTHROPIC.name(),
+            MAX_TOKENS, 1
+    );
+
+    testCall(db, COMPLETION_QUERY_EXTENDED,
+            Map.of("conf", conf, "apiKey", anthropicApiKey),
+            (row) -> {
+                var result = (Map<String,Object>) row.get("value");
+                var contentList = (List<Map<String, Object>>) result.get("content");
+                Map<String, Object> content = contentList.get(0);
+                String generatedText = (String) content.get("text");
+                String[] wordCount = generatedText.toLowerCase().split(" ");
+                assertEquals(1, wordCount.length);
+            });
+}
+
+@Test
+public void completionWithAnthropicCustomVersion() {
+    String anthropicApiKey = System.getenv("ANTHROPIC_API_KEY");
+    Assume.assumeNotNull("No ANTHROPIC_API_KEY environment configured", anthropicApiKey);
+
+    Map<String, Object> conf = Map.of(
+            ENDPOINT_CONF_KEY, "https://api.anthropic.com/v1/messages",
+            API_TYPE_CONF_KEY, OpenAIRequestHandler.Type.ANTHROPIC.name(),
+            MAX_TOKENS, 1024,
+            ANTHROPIC_VERSION, "2023-06-01"
+    );
+    testCall(db, COMPLETION_QUERY_EXTENDED,
+            Map.of("conf", conf, "apiKey", anthropicApiKey),
+            (row) -> {
+                var result = (Map<String,Object>) row.get("value");
+                var contentList = (List<Map<String, Object>>) result.get("content");
+                Map<String, Object> content = contentList.get(0);
+                String generatedText = (String) content.get("text");
+                assertTrue(generatedText.toLowerCase().contains("blue"),
+                        "Actual generatedText is " + generatedText);
+            });
+}
+
+@Test
+public void completionWithAnthropicWrongVersion() {
+    String anthropicApiKey = System.getenv("ANTHROPIC_API_KEY");
+    Assume.assumeNotNull("No ANTHROPIC_API_KEY environment configured", anthropicApiKey);
+
+    Map<String, Object> conf = Map.of(
+            ENDPOINT_CONF_KEY, "https://api.anthropic.com/v1/messages",
+            API_TYPE_CONF_KEY, OpenAIRequestHandler.Type.ANTHROPIC.name(),
+            MAX_TOKENS, 1024,
+            ANTHROPIC_VERSION, "ajeje"
+    );
+
+    assertFails(
+            db,
+            COMPLETION_QUERY_EXTENDED,
+            Map.of("conf", conf, "apiKey", anthropicApiKey),
+            "Server returned HTTP response code: 400 for URL: https://api.anthropic.com/v1/messages"
+    );
+}
+
+@Ignore
+@Test
+public void completionWithAnthropicStream() {
+    String anthropicApiKey = System.getenv("ANTHROPIC_API_KEY");
+    Assume.assumeNotNull("No ANTHROPIC_API_KEY environment configured", anthropicApiKey);
+
+    Map<String, Object> conf = Map.of(
+            ENDPOINT_CONF_KEY, "https://api.anthropic.com/v1/messages",
+            API_TYPE_CONF_KEY, OpenAIRequestHandler.Type.ANTHROPIC.name(),
+            MAX_TOKENS, 256,
+            "stream", true
+    );
+    testCall(db, COMPLETION_QUERY_EXTENDED,
+            Map.of("conf", conf, "apiKey", anthropicApiKey),
+            (row) -> {
+                var result = (Map<String,Object>) row.get("value");
+                var contentList = (List<Map<String, Object>>) result.get("content");
+                Map<String, Object> content = contentList.get(0);
+                String generatedText = (String) content.get("text");
+                assertTrue(generatedText.toLowerCase().contains("blue"),
+                        "Actual generatedText is " + generatedText);
+            });
+}
 
     /**
      * Request converter similar to: https://github.com/r2d4/openlm/blob/main/openlm/llm/huggingface.py

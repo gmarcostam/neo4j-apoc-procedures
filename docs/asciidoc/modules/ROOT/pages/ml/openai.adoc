@@ -171,6 +171,12 @@ CALL apoc.ml.openai.completion('What color is the sky? Answer in one word: ', $c
 {endpoint: 'https://api.cohere.ai/v1/generate', path: '', model: 'command'})
 ----
 
+Another alternative is by using https://docs.anthropic.com/en/api/getting-started[Anthropic API]. The default `model` is `claude-3-5-sonnet-20240620`. It is possible to set another model using `model: 'custom-gpt-model'` inside configuration object.
+[source,cypher]
+----
+CALL apoc.ml.openai.completion('What color is the sky?', $anthropicApiKey,
+{endpoint: 'https://api.anthropic.com/v1/messages', apiType: 'ANTHROPIC', max_tokens: 1024})
+----
 
 == Chat Completion API
 
