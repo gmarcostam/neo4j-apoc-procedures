@@ -70,27 +70,7 @@ public class OpenAI {
 
         final Map<String, Object> headers = new HashMap<>();
 
-        switch (type) {
-            case MIXEDBREAD_CUSTOM -> {
-                // no payload manipulation, taken from the configuration as-is
-            }
-            case HUGGINGFACE -> {
-                config.putIfAbsent("inputs", inputs);
-                jsonPath = "$[0]";
-            }
-            case ANTHROPIC -> {
-                headers.putIfAbsent(ANTHROPIC_VERSION, config.getOrDefault(ANTHROPIC_VERSION, "2023-06-01"));
-                config.putIfAbsent("messages", List.of(Map.of("role", "user", "content", inputs)));
-                config.remove(PATH_CONF_KEY); // Used for body
-                configuration.put(PATH_CONF_KEY, ""); // Used for other settings
-                config.remove(ANTHROPIC_VERSION);
-                config.putIfAbsent(MODEL_CONF_KEY, "claude-3-5-sonnet-20240620");
-            }
-            default -> {
-                config.putIfAbsent(MODEL_CONF_KEY, model);
-                config.put(key, inputs);
-            }
-        }
+        handleAPIProvider(configuration, path, model, key, inputs, type, config, headers);
 
         path = (String) configuration.getOrDefault(PATH_CONF_KEY, path);
         OpenAIRequestHandler apiType = type.get();
@@ -114,6 +94,38 @@ public class OpenAI {
         // therefore is better to join the not-empty path pieces
         var url = apiType.getFullUrl(path, configuration, apocConfig);
         return JsonUtil.loadJson(url, headers, payload, jsonPath, true, List.of(), urlAccessChecker);
+    }
+
+    private static void handleAPIProvider(Map<String, Object> configuration, String path, String model, String key, Object inputs, OpenAIRequestHandler.Type type, HashMap<String, Object> config, Map<String, Object> headers) {
+        switch (type) {
+            case MIXEDBREAD_CUSTOM -> {
+                // no payload manipulation, taken from the configuration as-is
+            }
+            case HUGGINGFACE -> {
+                config.putIfAbsent("inputs", inputs);
+                configuration.putIfAbsent(JSON_PATH_CONF_KEY, "$[0]");
+            }
+            case ANTHROPIC -> {
+                headers.putIfAbsent(ANTHROPIC_VERSION, config.getOrDefault(ANTHROPIC_VERSION, "2023-06-01"));
+
+                if (path.equals("completions")) {
+                    configuration.putIfAbsent(PATH_CONF_KEY, "complete");
+                    config.putIfAbsent("max_tokens_to_sample", 1000);
+                    config.putIfAbsent(MODEL_CONF_KEY, "claude-2.1");
+                } else {
+                    configuration.putIfAbsent(PATH_CONF_KEY, "messages");
+                    config.putIfAbsent(MAX_TOKENS, 1000);
+                    config.putIfAbsent(MODEL_CONF_KEY, "claude-3-5-sonnet-20240620");
+                }
+
+                config.remove(ANTHROPIC_VERSION);
+                config.put(key, inputs);
+            }
+            default -> {
+                config.putIfAbsent(MODEL_CONF_KEY, model);
+                config.put(key, inputs);
+            }
+        }
     }
 
     @Procedure("apoc.ml.openai.embedding")

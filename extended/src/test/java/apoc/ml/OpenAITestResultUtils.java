@@ -14,9 +14,15 @@ public class OpenAITestResultUtils {
             {role:"user", content:"What planet do humans live on?"}
             ], $apiKey, $conf)
             """;
+    public static final String CHAT_COMPLETION_QUERY_WITHOUT_SYSTEM = """
+            CALL apoc.ml.openai.chat([
+            { content: "What planet do humans live on?", role: "user" },
+            { content: "Only answer with a single word", role: "assistant" }
+            ], $apiKey, $conf)
+            """;
     public static final String COMPLETION_QUERY = "CALL apoc.ml.openai.completion('What color is the sky? Answer in one word: ', $apiKey, $conf)";
 
-    public static final String COMPLETION_QUERY_EXTENDED = "CALL apoc.ml.openai.completion('What color is the sky?', $apiKey, $conf)";
+    public static final String COMPLETION_QUERY_EXTENDED = "CALL apoc.ml.openai.completion('\\n\\nHuman: What color is sky?\\n\\nAssistant:', $apiKey, $conf)";
     
     public static void assertEmbeddings(Map<String, Object> row) {
         assertEmbeddings(row, 1536);

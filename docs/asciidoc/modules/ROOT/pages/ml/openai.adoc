@@ -171,12 +171,23 @@ CALL apoc.ml.openai.completion('What color is the sky? Answer in one word: ', $c
 {endpoint: 'https://api.cohere.ai/v1/generate', path: '', model: 'command'})
 ----
 
-Another alternative is by using https://docs.anthropic.com/en/api/getting-started[Anthropic API]. The default `model` is `claude-3-5-sonnet-20240620`. It is possible to set another model using `model: 'custom-gpt-model'` inside configuration object.
+Another alternative is by using https://docs.anthropic.com/en/api/complete[Anthropic API].
 [source,cypher]
 ----
 CALL apoc.ml.openai.completion('What color is the sky?', $anthropicApiKey,
-{endpoint: 'https://api.anthropic.com/v1/messages', apiType: 'ANTHROPIC', max_tokens: 1024})
+{apiType: 'ANTHROPIC'})
 ----
+
+.Default Anthropic parameters
+[%autowidth, opts=header]
+|===
+|name | description
+| endpoint | https://api.anthropic.com/v1/complete
+| max_tokens_to_sample | 1000
+| model | claude-2.1
+|===
+
+NOTE: currently https://docs.anthropic.com/en/api/messages-streaming[`stream: true`] is not supported, since the result of apoc.ml.openai must be in JSON format
 
 == Chat Completion API
 
@@ -219,6 +230,25 @@ choices=[{finish_reason="stop", index=0, message={role="assistant", content="Ear
 | value | result entry from OpenAI (containing created, id, model, object, usage(tokens), choices(message, index, finish_reason))
 |===
 
+Another alternative is by using https://docs.anthropic.com/en/api/messages[Anthropic API].
+[source,cypher]
+----
+CALL apoc.ml.openai.chat([
+{ content: "What planet do humans live on?", role: "user" },
+{ content: "Only answer with a single word", role: "assistant" }
+], $apiKey, $conf)
+----
+
+.Default Anthropic parameters
+[%autowidth, opts=header]
+|===
+|name | description
+| endpoint | https://api.anthropic.com/v1/messages
+| max_tokens | 1000
+| model | claude-3-5-sonnet-20240620
+|===
+
+NOTE: currently https://docs.anthropic.com/en/api/messages-streaming[`stream: true`] is not supported, since the result of apoc.ml.openai must be in JSON format
 
 [[openai_compatible_provider]]
 == OpenAI-compatible provider
