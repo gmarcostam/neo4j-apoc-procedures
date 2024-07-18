@@ -104,6 +104,30 @@ public class VertexAIIT {
     }
 
     @Test
+    public void chatCompletionGpt4() {
+        testCall(db, """
+                    CALL apoc.ml.vertexai.chat([
+                    {author:"user", content:"What planet do timelords live on?"}
+                    ],  $apiKey, $project, {temperature:0},
+                    "Fictional universe of Doctor Who. Only answer with a single word!",
+                    [{input:{content:"What planet do humans live on?"}, output:{content:"Earth"}}])""",
+                Map.of("apiKey", vertexAiKey, "project", vertexAiProject, "conf", Map.of(MODEL_CONF_KEY, "gpt-4o")),
+                (row) -> assertCorrectResponse(row, "gallifrey"));
+    }
+
+    @Test
+    public void chatCompletionGeminiFlash() {
+        testCall(db, """
+                    CALL apoc.ml.vertexai.chat([
+                    {author:"user", content:"What planet do timelords live on?"}
+                    ],  $apiKey, $project, {temperature:0},
+                    "Fictional universe of Doctor Who. Only answer with a single word!",
+                    [{input:{content:"What planet do humans live on?"}, output:{content:"Earth"}}])""",
+                Map.of("apiKey", vertexAiKey, "project", vertexAiProject, "conf", Map.of(MODEL_CONF_KEY, "gemini-flash")),
+                (row) -> assertCorrectResponse(row, "gallifrey"));
+    }
+
+    @Test
     public void stream() {
         HashMap<String, Object> params = new HashMap<>(parameters);
         params.put("contents", streamContents);

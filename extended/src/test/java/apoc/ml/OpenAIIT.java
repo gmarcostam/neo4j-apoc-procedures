@@ -25,6 +25,8 @@ public class OpenAIIT {
 
     private String openaiKey;
 
+    private static final String GPT_4_MODEL = "gpt-4o";
+
     @Rule
     public DbmsRule db = new ImpermanentDbmsRule();
 
@@ -125,6 +127,12 @@ public class OpenAIIT {
     }
 
     @Test
+    public void chatCompletionGpt4() {
+        testCall(db, CHAT_COMPLETION_QUERY, Map.of("apiKey",openaiKey, "conf", Map.of(MODEL_CONF_KEY, GPT_4_MODEL)),
+                (row) -> assertChatCompletion(row, GPT_4_MODEL));
+    }
+
+    @Test
     public void embeddingsNull() {
         assertNullInputFails(db, "CALL apoc.ml.openai.embedding(null, $apiKey, $conf)",
                 Map.of("apiKey", openaiKey, "conf", emptyMap())
@@ -142,6 +150,13 @@ public class OpenAIIT {
     public void chatCompletionNull() {
         assertNullInputFails(db, "CALL apoc.ml.openai.chat(null, $apiKey, $conf)",
                 Map.of("apiKey", openaiKey, "conf", emptyMap())
+        );
+    }
+
+    @Test
+    public void chatCompletionNullGpt4() {
+        assertNullInputFails(db, "CALL apoc.ml.openai.chat(null, $apiKey, $conf)",
+                Map.of("apiKey", openaiKey, "conf", Map.of(MODEL_CONF_KEY, GPT_4_MODEL))
         );
     }
 }
