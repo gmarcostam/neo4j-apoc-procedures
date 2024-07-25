@@ -4,7 +4,7 @@ import apoc.ApocConfig
 import apoc.kafka.producer.integrations.KafkaEventSinkSuiteIT
 import apoc.kafka.support.Assert
 import apoc.kafka.support.KafkaTestUtils
-import apoc.kafka.support.start
+// import apoc.kafka.support.start
 import apoc.kafka.utils.JSONUtils
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
@@ -21,13 +21,13 @@ class KafkaEventSinkCommitTSE : KafkaEventSinkBaseTSE() {
         val topic = UUID.randomUUID().toString()
         ApocConfig.apocConfig().setProperty("streams.sink.topic.cypher.$topic", cypherQueryTemplate)
         ApocConfig.apocConfig().setProperty("kafka.${ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG}", "false")
-        db.start()
+        // db.start()
         val partition = 0
-        var producerRecord = ProducerRecord(topic, partition, UUID.randomUUID().toString(), JSONUtils.writeValueAsBytes(data))
+        var producerRecord = ProducerRecord(topic, partition, "{\"a\":1}", JSONUtils.writeValueAsBytes(data))
         kafkaProducer.send(producerRecord).get()
         val newData = data.toMutableMap()
         newData["id"] = 2
-        producerRecord = ProducerRecord(topic, partition, UUID.randomUUID().toString(), JSONUtils.writeValueAsBytes(newData))
+        producerRecord = ProducerRecord(topic, partition, "{\"a\":1}", JSONUtils.writeValueAsBytes(newData))
         val resp = kafkaProducer.send(producerRecord).get()
 
         Assert.assertEventually(ThrowingSupplier {
@@ -54,13 +54,13 @@ class KafkaEventSinkCommitTSE : KafkaEventSinkBaseTSE() {
         ApocConfig.apocConfig().setProperty("streams.sink.topic.cypher.$topic", cypherQueryTemplate)
         ApocConfig.apocConfig().setProperty("kafka.${ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG}", "false")
         ApocConfig.apocConfig().setProperty("kafka.streams.commit.async", "true")
-        db.start()
+        // db.start()
         val partition = 0
-        var producerRecord = ProducerRecord(topic, partition, UUID.randomUUID().toString(), JSONUtils.writeValueAsBytes(data))
+        var producerRecord = ProducerRecord(topic, partition, "{\"a\":1}", JSONUtils.writeValueAsBytes(data))
         kafkaProducer.send(producerRecord).get()
         val newData = data.toMutableMap()
         newData["id"] = 2
-        producerRecord = ProducerRecord(topic, partition, UUID.randomUUID().toString(), JSONUtils.writeValueAsBytes(newData))
+        producerRecord = ProducerRecord(topic, partition, "{\"a\":1}", JSONUtils.writeValueAsBytes(newData))
         val resp = kafkaProducer.send(producerRecord).get()
 
         Assert.assertEventually(ThrowingSupplier {
@@ -94,10 +94,10 @@ class KafkaEventSinkCommitTSE : KafkaEventSinkBaseTSE() {
         ApocConfig.apocConfig().setProperty("streams.sink.topic.cypher.${customer.first}", customer.second)
         ApocConfig.apocConfig().setProperty("streams.sink.topic.cypher.${bought.first}", bought.second)
         ApocConfig.apocConfig().setProperty("kafka.${ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG}", "false")
-        db.start()
+        // db.start()
 
         val props = mapOf("id" to 1, "name" to "My Awesome Product")
-        var producerRecord = ProducerRecord(product.first, UUID.randomUUID().toString(),
+        var producerRecord = ProducerRecord(product.first, "{\"a\":1}",
                 JSONUtils.writeValueAsBytes(props))
         kafkaProducer.send(producerRecord).get()
         Assert.assertEventually(ThrowingSupplier<Boolean, Exception> {

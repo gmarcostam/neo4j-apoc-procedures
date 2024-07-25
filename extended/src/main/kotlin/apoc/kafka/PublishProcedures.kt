@@ -12,6 +12,7 @@ package apoc.kafka
  * TODO - Controllare Neo4jContainerExtension
  * TODO - controllare JSONUtils e JSONUtil common
  */
+import apoc.kafka.consumer.procedures.StreamsSinkProcedures
 import apoc.kafka.producer.StreamsEventRouter
 import apoc.kafka.producer.StreamsTransactionEventHandler
 import kotlinx.coroutines.runBlocking
@@ -38,7 +39,7 @@ data class StreamsEventSinkStoreEntry(val eventRouter: StreamsEventRouter,
 class PublishProcedures {
 
     @JvmField @Context
-    var db: GraphDatabaseService? = null
+    var db: GraphDatabaseAPI? = null
 
     @JvmField @Context var log: Log? = null
 
@@ -74,6 +75,7 @@ class PublishProcedures {
     }
 
     private fun checkEnabled() {
+//        StreamsSinkProcedures.initListeners(db!!, log!!)
         if (!getStreamsEventSinkStoreEntry().eventRouter.eventRouterConfiguration.proceduresEnabled) {
             throw RuntimeException("In order to use the procedure you must set streams.procedures.enabled=true")
         }

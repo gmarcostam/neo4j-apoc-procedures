@@ -1,5 +1,6 @@
 package apoc.kafka.producer.integrations
 
+import apoc.ApocConfig
 import apoc.kafka.events.NodeChange
 import apoc.kafka.events.OperationType
 import apoc.kafka.events.RelationshipPayload
@@ -10,21 +11,25 @@ import org.junit.Test
 import org.neo4j.test.rule.DbmsRule
 import org.neo4j.test.rule.ImpermanentDbmsRule
 import apoc.kafka.producer.mocks.MockStreamsEventRouter
-import apoc.kafka.support.setConfig
-import apoc.kafka.support.start
+import org.junit.Rule
+// import apoc.kafka.support.setConfig
+// import apoc.kafka.support.start
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 @Suppress("DEPRECATION")
 class StreamsTransactionEventHandlerIT {
 
+    @JvmField
+    @Rule
     val db: DbmsRule = ImpermanentDbmsRule()
-            .setConfig("streams.router", "apoc.kafka.producer.mocks.MockStreamsEventRouter")
+//            .setConfig("streams.router", "apoc.kafka.producer.mocks.MockStreamsEventRouter")
 
     @Before
     fun setUp() {
+        ApocConfig.apocConfig().setProperty("streams.router", "apoc.kafka.producer.mocks.MockStreamsEventRouter")
         MockStreamsEventRouter.reset()
-        db.start()
+        // db.start()
     }
 
     @After

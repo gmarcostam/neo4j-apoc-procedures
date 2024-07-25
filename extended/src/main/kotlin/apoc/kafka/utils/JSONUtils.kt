@@ -1,8 +1,10 @@
 package apoc.kafka.utils
 
+import apoc.kafka.events.*
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.core.JsonProcessingException
+import com.fasterxml.jackson.core.exc.StreamReadException
 import com.fasterxml.jackson.databind.*
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.module.kotlin.convertValue
@@ -11,7 +13,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import org.neo4j.driver.internal.value.PointValue
 import org.neo4j.graphdb.spatial.Point
 import org.neo4j.values.storable.CoordinateReferenceSystem
-import apoc.kafka.events.*
 import java.io.IOException
 import java.time.temporal.TemporalAccessor
 import kotlin.reflect.full.isSubclassOf
@@ -76,7 +77,7 @@ class TemporalAccessorSerializer : JsonSerializer<TemporalAccessor>() {
     }
 }
 
-
+// TODO - different from apoc.JSONUtil.OBJECT_MAPPER
 object JSONUtils {
 
     private val OBJECT_MAPPER: ObjectMapper = jacksonObjectMapper()
@@ -110,34 +111,43 @@ object JSONUtils {
         return OBJECT_MAPPER.writeValueAsBytes(any)
     }
 
-    inline fun <reified T> readValue(value: ByteArray): T {
-        return getObjectMapper().readValue(value, T::class.java)
+    fun <T> readValue(value: ByteArray, valueType: Class<T>?): T {
+        return getObjectMapper().readValue(value, valueType)
     }
 
-    inline fun <reified T> readValue(value: Any,
-                                     stringWhenFailure: Boolean = false,
-                                     objectMapper: ObjectMapper = getObjectMapper()): T {
-        return try {
-            when (value) {
-                is String -> objectMapper.readValue(value)
-                is ByteArray -> objectMapper.readValue(value)
-                else -> objectMapper.convertValue(value)
-            }
-        } catch (e: JsonParseException) {
-            if (stringWhenFailure && String::class.isSubclassOf(T::class)) {
-                val strValue = when (value) {
-                    is ByteArray -> String(value)
-                    null -> ""
-                    else -> value.toString()
-                }
-                strValue.trimStart().let {
-                    if (it[0] == '{' || it[0] == '[') throw e
-                    else it as T
-                }
-            }
-            else throw e
-        }
+    fun readValue(value: ByteArray): Any {
+        return getObjectMapper().readValue(value)
     }
+
+//    fun <T> readValue(src: ByteArray?, valueType: Class<T>?): T {
+//        _assertNotNull("src", src)
+//        return _readMapAndClose(_jsonFactory.createParser(src), _typeFactory.constructType(valueType)) as T
+//    }
+
+//    inline fun <reified T> readValue(value: Any,
+//                                     stringWhenFailure: Boolean = false,
+//                                     objectMapper: ObjectMapper = getObjectMapper()): T {
+//        return try {
+//            when (value) {
+//                is String -> objectMapper.readValue(value)
+//                is ByteArray -> objectMapper.readValue(value)
+//                else -> objectMapper.convertValue(value)
+//            }
+//        } catch (e: JsonParseException) {
+//            if (stringWhenFailure && String::class.isSubclassOf(T::class)) {
+//                val strValue = when (value) {
+//                    is ByteArray -> String(value)
+//                    null -> ""
+//                    else -> value.toString()
+//                }
+//                strValue.trimStart().let {
+//                    if (it[0] == '{' || it[0] == '[') throw e
+//                    else it as T
+//                }
+//            }
+//            else throw e
+//        }
+//    }
 
     inline fun <reified T> convertValue(value: Any, objectMapper: ObjectMapper = getObjectMapper()): T {
         return objectMapper.convertValue(value)
@@ -146,18 +156,14 @@ object JSONUtils {
     fun asStreamsTransactionEvent(obj: Any): StreamsTransactionEvent {
         return try {
             val evt = when (obj) {
-                is String, is ByteArray -> readValue<StreamsTransactionNodeEvent>(value = obj,
-                        objectMapper = STRICT_OBJECT_MAPPER)
-                else -> convertValue<StreamsTransactionNodeEvent>(value = obj,
-                        objectMapper = STRICT_OBJECT_MAPPER)
+                is String, is ByteArray -> STRICT_OBJECT_MAPPER.readValue(obj as ByteArray, StreamsTransactionNodeEvent::class.java)
+                else -> STRICT_OBJECT_MAPPER.convertValue(obj, StreamsTransactionNodeEvent::class.java)
             }
             evt.toStreamsTransactionEvent()
         } catch (e: Exception) {
             val evt = when (obj) {
-                is String, is ByteArray -> readValue<StreamsTransactionRelationshipEvent>(value = obj,
-                        objectMapper = STRICT_OBJECT_MAPPER)
-                else -> convertValue<StreamsTransactionRelationshipEvent>(value = obj,
-                        objectMapper = STRICT_OBJECT_MAPPER)
+                is String, is ByteArray -> STRICT_OBJECT_MAPPER.readValue(obj as ByteArray, StreamsTransactionRelationshipEvent::class.java)
+                else -> STRICT_OBJECT_MAPPER.convertValue(obj, StreamsTransactionRelationshipEvent::class.java)
             }
             evt.toStreamsTransactionEvent()
         }

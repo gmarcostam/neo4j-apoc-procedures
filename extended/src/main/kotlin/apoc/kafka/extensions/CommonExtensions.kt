@@ -69,7 +69,7 @@ fun Schema.toMap() = JSONUtils.asMap(this.toString())
 private fun convertData(data: Any?, stringWhenFailure: Boolean = false): Any? {
     return when (data) {
         null -> null
-        is ByteArray -> JSONUtils.readValue<Any>(data, stringWhenFailure)
+        is ByteArray -> JSONUtils.readValue(data, Any::class.java)
         is GenericRecord -> data.toMap()
         else -> if (stringWhenFailure) data.toString() else throw RuntimeException("Unsupported type ${data::class.java.name}")
     }

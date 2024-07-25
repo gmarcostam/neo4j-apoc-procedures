@@ -38,10 +38,20 @@ class KafkaEventRouterWithMultipleNodeConstraintsTSE: KafkaEventRouterBaseTSE() 
                 "streams.source.topic.relationships.$topicWithoutStrategy" to "$noKeyStrategy{*}",
                 "streams.source.topic.relationships.$topicWithStrategyAll.key_strategy" to RelKeyStrategy.ALL.toString().toLowerCase(),
                 "streams.source.topic.relationships.$topicWithStrategyDefault.key_strategy" to RelKeyStrategy.DEFAULT.toString().toLowerCase())
-        val queries = listOf("CREATE CONSTRAINT ON (p:$labelStart) ASSERT p.surname IS UNIQUE",
-                "CREATE CONSTRAINT ON (p:$labelStart) ASSERT p.name IS UNIQUE",
-                "CREATE CONSTRAINT ON (p:$labelEnd) ASSERT p.name IS UNIQUE")
+        val queries = listOf("CREATE CONSTRAINT FOR (p:$labelStart) REQUIRE p.surname IS UNIQUE",
+                "CREATE CONSTRAINT FOR (p:$labelStart) REQUIRE p.name IS UNIQUE",
+                "CREATE CONSTRAINT FOR (p:$labelEnd) REQUIRE p.name IS UNIQUE")
 
+
+        val db = createDbWithKafkaConfigs("streams.source.schema.polling.interval" to "0",
+            "kafka.streams.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_COMPACT,
+            "streams.source.topic.nodes.$personTopic" to "$labelStart{*}",
+            "streams.source.topic.nodes.$productTopic" to "$labelEnd{*}",
+            "streams.source.topic.relationships.$topicWithStrategyAll" to "$keyStrategyAll{*}",
+            "streams.source.topic.relationships.$topicWithStrategyDefault" to "$keyStrategyDefault{*}",
+            "streams.source.topic.relationships.$topicWithoutStrategy" to "$noKeyStrategy{*}",
+            "streams.source.topic.relationships.$topicWithStrategyAll.key_strategy" to RelKeyStrategy.ALL.toString().toLowerCase(),
+            "streams.source.topic.relationships.$topicWithStrategyDefault.key_strategy" to RelKeyStrategy.DEFAULT.toString().toLowerCase())
         initDbWithLogStrategy(db, TopicConfig.CLEANUP_POLICY_DELETE, sourceTopics, queries)
 
         val expectedSetConstraints = setOf(

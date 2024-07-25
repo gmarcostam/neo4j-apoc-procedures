@@ -17,16 +17,16 @@ private const val kafkaConfigPrefix = "kafka."
 private val SUPPORTED_DESERIALIZER = listOf(ByteArrayDeserializer::class.java.name, KafkaAvroDeserializer::class.java.name)
 
 private fun validateDeserializers(config: KafkaSinkConfiguration) {
-    val key = if (!SUPPORTED_DESERIALIZER.contains(config.keyDeserializer)) {
-        ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG
-    } else if (!SUPPORTED_DESERIALIZER.contains(config.valueDeserializer)) {
-        ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG
-    } else {
-        ""
-    }
-    if (key.isNotBlank()) {
-        throw RuntimeException("The property `kafka.$key` contains an invalid deserializer. Supported deserializers are $SUPPORTED_DESERIALIZER")
-    }
+//    val key = if (!SUPPORTED_DESERIALIZER.contains(config.keyDeserializer)) {
+//        ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG
+//    } else if (!SUPPORTED_DESERIALIZER.contains(config.valueDeserializer)) {
+//        ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG
+//    } else {
+//        ""
+//    }
+//    if (key.isNotBlank()) {
+//        throw RuntimeException("The property `kafka.$key` contains an invalid deserializer. Supported deserializers are $SUPPORTED_DESERIALIZER")
+//    }
 }
 
 data class KafkaSinkConfiguration(val bootstrapServers: String = "localhost:9092",

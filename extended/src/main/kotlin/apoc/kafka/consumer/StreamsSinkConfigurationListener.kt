@@ -64,7 +64,7 @@ class StreamsSinkConfigurationListener(private val db: GraphDatabaseAPI,
         }
     }
 
-    private fun shutdown() {
+    fun shutdown() {
         val isShuttingDown = eventSink != null
         if (isShuttingDown) {
             log.info("[Sink] Shutting down the Streams Sink Module")
@@ -102,8 +102,8 @@ class StreamsSinkConfigurationListener(private val db: GraphDatabaseAPI,
         }
     }
 
-    private fun start(configMap: Map<String, String>) {
-        lastConfig = KafkaSinkConfiguration.create(configMap, db.databaseName(), db.isDefaultDb())
+    fun start(configMap: Map<String, String>) {
+        lastConfig = KafkaSinkConfiguration.create(StreamsConfig.getConfiguration(), db.databaseName(), db.isDefaultDb())
         val streamsSinkConfiguration = lastConfig!!.streamsSinkConfiguration
         streamsTopicService.clearAll()
         streamsTopicService.setAll(streamsSinkConfiguration.topics)
@@ -155,29 +155,29 @@ class StreamsSinkConfigurationListener(private val db: GraphDatabaseAPI,
     }
 
     private fun initSinkModule(streamsSinkConfiguration: StreamsSinkConfiguration) {
-        if (streamsSinkConfiguration.checkApocTimeout > -1) {
-            waitForApoc()
-        } else {
+//        if (streamsSinkConfiguration.checkApocTimeout > -1) {
+//            waitForApoc()
+//        } else {
             initSink()
-        }
+//        }
     }
 
-    private fun waitForApoc() {
-        GlobalScope.launch(Dispatchers.IO) {
-            val success = StreamsUtils.blockUntilFalseOrTimeout(eventSink!!.streamsSinkConfiguration.checkApocTimeout,
-                eventSink!!.streamsSinkConfiguration.checkApocInterval) {
-                val hasApoc = Neo4jUtils.hasApoc(db)
-                if (!hasApoc && log.isDebugEnabled) {
-                    log.debug("[Sink] APOC not loaded yet, next check in ${eventSink!!.streamsSinkConfiguration.checkApocInterval} ms")
-                }
-                hasApoc
-            }
-            if (success) {
-                initSink()
-            } else {
-                log.info("[Sink] Streams Sink plugin not loaded as APOC are not installed")
-            }
-        }
-    }
+//    private fun waitForApoc() {
+//        GlobalScope.launch(Dispatchers.IO) {
+//            val success = StreamsUtils.blockUntilFalseOrTimeout(eventSink!!.streamsSinkConfiguration.checkApocTimeout,
+//                eventSink!!.streamsSinkConfiguration.checkApocInterval) {
+//                val hasApoc = Neo4jUtils.hasApoc(db)
+//                if (!hasApoc && log.isDebugEnabled) {
+//                    log.debug("[Sink] APOC not loaded yet, next check in ${eventSink!!.streamsSinkConfiguration.checkApocInterval} ms")
+//                }
+//                hasApoc
+//            }
+//            if (success) {
+//                initSink()
+//            } else {
+//                log.info("[Sink] Streams Sink plugin not loaded as APOC are not installed")
+//            }
+//        }
+//    }
 
 }

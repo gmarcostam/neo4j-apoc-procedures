@@ -1,5 +1,6 @@
 package apoc.kafka.producer
 
+import apoc.kafka.PublishProcedures
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -12,7 +13,7 @@ import org.neo4j.plugin.configuration.listners.ConfigurationLifecycleListener
 import apoc.kafka.events.StreamsPluginStatus
 import apoc.kafka.extensions.isDefaultDb
 import apoc.kafka.producer.kafka.KafkaConfiguration
-import apoc.kafka.producer.procedures.StreamsProcedures
+//import apoc.kafka.producer.procedures.StreamsProcedures
 import apoc.kafka.utils.KafkaValidationUtils
 
 class StreamsRouterConfigurationListener(private val db: GraphDatabaseAPI,
@@ -60,7 +61,7 @@ class StreamsRouterConfigurationListener(private val db: GraphDatabaseAPI,
         else -> true
     }
 
-    private fun shutdown() {
+    fun shutdown() {
         val isShuttingDown = txHandler?.status() == StreamsPluginStatus.RUNNING
         if (isShuttingDown) {
             log.info("[Sink] Shutting down the Streams Source Module")
@@ -69,7 +70,7 @@ class StreamsRouterConfigurationListener(private val db: GraphDatabaseAPI,
             streamsConstraintsService?.close()
             streamsEventRouter?.stop()
             streamsEventRouter = null
-            StreamsProcedures.unregister(db)
+            PublishProcedures.unregister(db)
             txHandler?.stop()
             txHandler = null
         }
@@ -78,7 +79,7 @@ class StreamsRouterConfigurationListener(private val db: GraphDatabaseAPI,
         }
     }
 
-    private fun start(configMap: Map<String, String>) {
+    fun start(configMap: Map<String, String>) {
         lastConfig = KafkaConfiguration.create(configMap)
         streamsEventRouterConfiguration = StreamsEventRouterConfiguration.from(configMap, db.databaseName(), isDefaultDb = db.isDefaultDb(), log)
         streamsEventRouter = StreamsEventRouterFactory.getStreamsEventRouter(configMap, db, log)
@@ -92,7 +93,7 @@ class StreamsRouterConfigurationListener(private val db: GraphDatabaseAPI,
             streamsEventRouter!!.printInvalidTopics()
             txHandler!!.start()
         }
-        StreamsProcedures.register(db, streamsEventRouter!!, txHandler!!)
+        PublishProcedures.register(db, streamsEventRouter!!, txHandler!!)
         log.info("[Source] Streams Source module initialised")
     }
 

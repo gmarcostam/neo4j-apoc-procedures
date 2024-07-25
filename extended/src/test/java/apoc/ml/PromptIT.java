@@ -452,6 +452,7 @@ public class PromptIT {
 
     private static void assert2022Winners(String value) {
         assertThat(value).contains("Stefania Constantini", "Amos Mosaner", "Italy");
+        assertThat(value).containsAnyOf("Italy", "Italian");
     }
 
 }

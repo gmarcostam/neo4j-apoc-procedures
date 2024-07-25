@@ -1,5 +1,6 @@
 package apoc.kafka.config
 
+import apoc.ApocConfig
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -17,6 +18,7 @@ import apoc.kafka.extensions.isAvailable
 import apoc.kafka.utils.Neo4jUtils
 import apoc.kafka.utils.ProcedureUtils
 import apoc.kafka.utils.StreamsUtils
+import org.apache.commons.configuration2.ConfigurationMap
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
@@ -24,6 +26,14 @@ import java.util.concurrent.atomic.AtomicReference
 class StreamsConfig(private val log: Log, private val dbms: DatabaseManagementService) {
 
     companion object {
+
+        fun getConfiguration(): Map<String, String> {
+            return ConfigurationMap( ApocConfig.apocConfig().config )
+                .filter { it.value is String }
+                .toMutableMap() as Map<String, String>
+            //        return ConfigurationLifecycleUtils.toMap(configLifecycle.configuration)
+        }
+        
         private const val SUN_JAVA_COMMAND = "sun.java.command"
         private const val CONF_DIR_ARG = "config-dir="
         const val SOURCE_ENABLED = "streams.source.enabled"
@@ -199,7 +209,9 @@ class StreamsConfig(private val log: Log, private val dbms: DatabaseManagementSe
         configLifecycle.removeConfigurationLifecycleListener(evt, listener)
     }
 
-    fun getConfiguration(): Map<String, Any> = ConfigurationLifecycleUtils.toMap(configLifecycle.configuration)
+//    companion object {
+//        
+//    }
 
     fun defaultDbName() = this.dbms.getDefaultDbName()
 

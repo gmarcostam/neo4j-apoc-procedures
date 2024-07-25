@@ -2,6 +2,7 @@ package apoc;
 
 import apoc.custom.CypherProcedures;
 import apoc.custom.CypherProceduresHandler;
+import apoc.kafka.KafkaHandler;
 import apoc.load.LoadDirectory;
 import apoc.load.LoadDirectoryHandler;
 import apoc.ttl.TTLLifeCycle;
@@ -55,13 +56,18 @@ public class ExtendedApocGlobalComponents implements ApocGlobalComponents {
                         dependencies.log().getUserLog(LoadDirectory.class),
                         dependencies.pools()),
 
-                "cypherProcedures", cypherProcedureHandler
+                "cypherProcedures", cypherProcedureHandler,
+                "kafkaHandler", new KafkaHandler(dependencies.scheduler(),
+                        db,
+                        TTLConfig.ttlConfig(),
+                        dependencies.log().getUserLog(KafkaHandler.class)
+                )
         );
     }
 
     @Override
     public Collection<Class> getContextClasses() {
-        return List.of(CypherProceduresHandler.class, UuidHandler.class, LoadDirectoryHandler.class);
+        return List.of(CypherProceduresHandler.class, UuidHandler.class, LoadDirectoryHandler.class, KafkaHandler.class);
     }
 
     @Override

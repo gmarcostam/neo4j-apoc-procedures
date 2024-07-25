@@ -1,10 +1,12 @@
 package apoc.kafka.producer.integrations
 
-import apoc.kafka.producer.procedures.StreamsProcedures
+//import apoc.kafka.producer.procedures.StreamsProcedures
+import apoc.kafka.PublishProcedures
 import apoc.kafka.utils.StreamsUtils
 import org.junit.AfterClass
 import org.junit.Assume
 import org.junit.BeforeClass
+import org.neo4j.graphdb.GraphDatabaseService
 import org.neo4j.kernel.api.procedure.GlobalProcedures
 import org.neo4j.kernel.internal.GraphDatabaseAPI
 import org.testcontainers.containers.KafkaContainer
@@ -51,9 +53,9 @@ class KafkaEventRouterSuiteIT {
             }, UninitializedPropertyAccessException::class.java)
         }
 
-        fun registerPublishProcedure(db: GraphDatabaseAPI) {
-            db.dependencyResolver.resolveDependency(GlobalProcedures::class.java)
-                    .registerProcedure(StreamsProcedures::class.java)
+        fun registerPublishProcedure(db: GraphDatabaseService) {
+//            (db as GraphDatabaseAPI).dependencyResolver.resolveDependency(GlobalProcedures::class.java)
+//                    .registerProcedure(PublishProcedures::class.java)
         }
     }
 

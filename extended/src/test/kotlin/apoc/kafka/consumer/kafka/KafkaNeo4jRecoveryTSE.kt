@@ -21,8 +21,8 @@
 //import org.neo4j.graphdb.RelationshipType.withName
 //import org.neo4j.graphdb.schema.IndexType
 //import org.neo4j.internal.helpers.collection.Iterables.count
-//import org.neo4j.internal.index.label.RelationshipTypeScanStoreSettings.enable_relationship_type_scan_store
-//import org.neo4j.internal.kernel.api.IndexQuery.fulltextSearch
+////import org.neo4j.internal.index.label.RelationshipTypeScanStoreSettings.enable_relationship_type_scan_store
+////import org.neo4j.internal.kernel.api.IndexQuery.fulltextSearch
 //import org.neo4j.internal.kernel.api.IndexQueryConstraints.unconstrained
 //import org.neo4j.io.ByteUnit
 //import org.neo4j.io.fs.DefaultFileSystemAbstraction
@@ -37,9 +37,9 @@
 //import org.neo4j.kernel.extension.ExtensionFactory
 //import org.neo4j.kernel.extension.context.ExtensionContext
 //import org.neo4j.kernel.impl.coreapi.InternalTransaction
-//import org.neo4j.kernel.impl.store.MetaDataStore.Position.LAST_MISSING_STORE_FILES_RECOVERY_TIMESTAMP
-//import org.neo4j.kernel.impl.store.MetaDataStore.getRecord
-//import org.neo4j.kernel.impl.storemigration.LegacyTransactionLogsLocator
+////import org.neo4j.kernel.impl.store.MetaDataStore.Position.LAST_MISSING_STORE_FILES_RECOVERY_TIMESTAMP
+////import org.neo4j.kernel.impl.store.MetaDataStore.getRecord
+////import org.neo4j.kernel.impl.storemigration.LegacyTransactionLogsLocator
 //import org.neo4j.kernel.impl.transaction.log.files.LogFiles
 //import org.neo4j.kernel.impl.transaction.log.files.LogFilesBuilder
 //import org.neo4j.kernel.impl.transaction.log.files.TransactionLogFilesHelper.DEFAULT_NAME
@@ -143,27 +143,27 @@
 //        }
 //    }
 //
-//    @Test
-//    fun tracePageCacheAccessOnDatabaseRecovery() {
-//        val database: GraphDatabaseService = createDatabase()
-//        val numberOfNodes = 10
-//        for (i in 0 until numberOfNodes) {
-//            createSingleNode(database)
-//        }
-//        managementService!!.shutdown()
-//        RecoveryHelpers.removeLastCheckpointRecordFromLastLogFile(databaseLayout, fileSystem)
-//        val pageCacheTracer = DefaultPageCacheTracer()
-//        val tracers = DatabaseTracers(DatabaseTracer.NULL, LockTracer.NONE, pageCacheTracer)
-//        recoverDatabase(tracers)
-//        assertThat(pageCacheTracer.pins()).isEqualTo(pageCacheTracer.unpins())
-//        assertThat(pageCacheTracer.hits() + pageCacheTracer.faults()).isEqualTo(pageCacheTracer.pins())
-//        val recoveredDatabase: GraphDatabaseService = createDatabase()
-//        try {
-//            recoveredDatabase.beginTx().use { tx -> assertEquals(numberOfNodes, count(tx.allNodes)) }
-//        } finally {
-//            managementService!!.shutdown()
-//        }
-//    }
+////    @Test
+////    fun tracePageCacheAccessOnDatabaseRecovery() {
+////        val database: GraphDatabaseService = createDatabase()
+////        val numberOfNodes = 10
+////        for (i in 0 until numberOfNodes) {
+////            createSingleNode(database)
+////        }
+////        managementService!!.shutdown()
+////        RecoveryHelpers.removeLastCheckpointRecordFromLastLogFile(databaseLayout, fileSystem)
+////        val pageCacheTracer = DefaultPageCacheTracer()
+////        val tracers = DatabaseTracers(DatabaseTracer.NULL, LockTracer.NONE, pageCacheTracer)
+////        recoverDatabase(tracers)
+////        assertThat(pageCacheTracer.pins()).isEqualTo(pageCacheTracer.unpins())
+////        assertThat(pageCacheTracer.hits() + pageCacheTracer.faults()).isEqualTo(pageCacheTracer.pins())
+////        val recoveredDatabase: GraphDatabaseService = createDatabase()
+////        try {
+////            recoveredDatabase.beginTx().use { tx -> assertEquals(numberOfNodes, count(tx.allNodes)) }
+////        } finally {
+////            managementService!!.shutdown()
+////        }
+////    }
 //
 //    @Test
 //    fun recoverDatabaseWithNodesAndRelationshipsAndRelationshipTypes() {
@@ -267,50 +267,50 @@
 //        }
 //    }
 //
-//    @Test
-//    fun recoverDatabaseWithRelationshipIndex() {
-//        val database: GraphDatabaseService = createDatabase()
-//        val numberOfRelationships = 10
-//        val type = withName("TYPE")
-//        val property = "prop"
-//        val indexName = "my index"
-//        database.beginTx().use { transaction ->
-//            transaction.schema().indexFor(type).on(property).withIndexType(IndexType.FULLTEXT)
-//                .withName(indexName).create()
-//            transaction.commit()
-//        }
-//        awaitIndexesOnline(database)
-//        database.beginTx().use { transaction ->
-//            val start = transaction.createNode()
-//            val stop = transaction.createNode()
-//            for (i in 0 until numberOfRelationships) {
-//                val relationship = start.createRelationshipTo(stop, type)
-//                relationship.setProperty(property, "value")
-//            }
-//            transaction.commit()
-//        }
-//        managementService!!.shutdown()
-//        RecoveryHelpers.removeLastCheckpointRecordFromLastLogFile(databaseLayout, fileSystem)
-//        recoverDatabase()
-//        val recoveredDatabase = createDatabase()
-//        awaitIndexesOnline(recoveredDatabase)
-//        try {
-//            recoveredDatabase.beginTx().use { transaction ->
-//                val ktx = (transaction as InternalTransaction).kernelTransaction()
-//                val index = ktx.schemaRead().indexGetForName(indexName)
-//                var relationshipsInIndex = 0
-//                ktx.cursors().allocateRelationshipIndexCursor(ktx.pageCursorTracer()).use { cursor ->
-//                    ktx.dataRead().relationshipIndexSeek(index, cursor, unconstrained(), fulltextSearch("*"))
-//                    while (cursor.next()) {
-//                        relationshipsInIndex++
-//                    }
-//                }
-//                assertEquals(numberOfRelationships, relationshipsInIndex)
-//            }
-//        } finally {
-//            managementService!!.shutdown()
-//        }
-//    }
+////    @Test
+////    fun recoverDatabaseWithRelationshipIndex() {
+////        val database: GraphDatabaseService = createDatabase()
+////        val numberOfRelationships = 10
+////        val type = withName("TYPE")
+////        val property = "prop"
+////        val indexName = "my index"
+////        database.beginTx().use { transaction ->
+////            transaction.schema().indexFor(type).on(property).withIndexType(IndexType.FULLTEXT)
+////                .withName(indexName).create()
+////            transaction.commit()
+////        }
+////        awaitIndexesOnline(database)
+////        database.beginTx().use { transaction ->
+////            val start = transaction.createNode()
+////            val stop = transaction.createNode()
+////            for (i in 0 until numberOfRelationships) {
+////                val relationship = start.createRelationshipTo(stop, type)
+////                relationship.setProperty(property, "value")
+////            }
+////            transaction.commit()
+////        }
+////        managementService!!.shutdown()
+////        RecoveryHelpers.removeLastCheckpointRecordFromLastLogFile(databaseLayout, fileSystem)
+////        recoverDatabase()
+////        val recoveredDatabase = createDatabase()
+////        awaitIndexesOnline(recoveredDatabase)
+////        try {
+////            recoveredDatabase.beginTx().use { transaction ->
+////                val ktx = (transaction as InternalTransaction).kernelTransaction()
+////                val index = ktx.schemaRead().indexGetForName(indexName)
+////                var relationshipsInIndex = 0
+////                ktx.cursors().allocateRelationshipIndexCursor(ktx.pageCursorTracer()).use { cursor ->
+////                    ktx.dataRead().relationshipIndexSeek(index, cursor, unconstrained(), fulltextSearch("*"))
+////                    while (cursor.next()) {
+////                        relationshipsInIndex++
+////                    }
+////                }
+////                assertEquals(numberOfRelationships, relationshipsInIndex)
+////            }
+////        } finally {
+////            managementService!!.shutdown()
+////        }
+////    }
 //
 //    @Test
 //    fun recoverDatabaseWithFirstTransactionLogFileWithoutShutdownCheckpoint() {
@@ -346,64 +346,64 @@
 //        }
 //    }
 //
-//    @Test
-//    fun failToStartDatabaseWithTransactionLogsInLegacyLocation() {
-//        val database = createDatabase()
-//        generateSomeData(database)
-//        managementService!!.shutdown()
-//        val logFiles = buildLogFiles()
-//        var txLogFiles: Array<Path> = fileSystem!!.listFiles(logFiles.logFilesDirectory(),
-//            DirectoryStream.Filter { path: Path ->
-//                path.fileName.toString().startsWith(DEFAULT_NAME)
-//            })
-//        txLogFiles += logFiles.checkpointFile.detachedCheckpointFiles
-//        val databasesDirectory: Path = databaseLayout!!.neo4jLayout.databasesDirectory()
-//        val legacyLayout = Neo4jLayout.ofFlat(databasesDirectory).databaseLayout(databaseLayout.databaseName)
-//        val logsLocator = LegacyTransactionLogsLocator(defaults(), legacyLayout)
-//        val transactionLogsDirectory: Path = logsLocator.transactionLogsDirectory
-//        assertNotNull(txLogFiles)
-//        assertTrue(txLogFiles.size > 0)
-//        for (logFile in txLogFiles) {
-//            fileSystem.moveToDirectory(logFile, transactionLogsDirectory)
-//        }
-//        val logProvider = AssertableLogProvider()
-//        builder!!.setInternalLogProvider(logProvider)
-//        val restartedDb = createDatabase()
-//        try {
-//            val dbStateService = restartedDb.dependencyResolver.resolveDependency(
-//                DatabaseStateService::class.java
-//            )
-//            val failure = dbStateService.causeOfFailure(restartedDb.databaseId())
-//            assertTrue(failure.isPresent)
-//            assertThat(failure.get()).hasRootCauseMessage("Transaction logs are missing and recovery is not possible.")
-//            assertThat(logProvider.serialize()).contains(txLogFiles[0].getFileName().toString())
-//        } finally {
-//            managementService!!.shutdown()
-//        }
-//    }
+////    @Test
+////    fun failToStartDatabaseWithTransactionLogsInLegacyLocation() {
+////        val database = createDatabase()
+////        generateSomeData(database)
+////        managementService!!.shutdown()
+////        val logFiles = buildLogFiles()
+////        var txLogFiles: Array<Path> = fileSystem!!.listFiles(logFiles.logFilesDirectory(),
+////            DirectoryStream.Filter { path: Path ->
+////                path.fileName.toString().startsWith(DEFAULT_NAME)
+////            })
+////        txLogFiles += logFiles.checkpointFile.detachedCheckpointFiles
+////        val databasesDirectory: Path = databaseLayout!!.neo4jLayout.databasesDirectory()
+////        val legacyLayout = Neo4jLayout.ofFlat(databasesDirectory).databaseLayout(databaseLayout.databaseName)
+////        val logsLocator = LegacyTransactionLogsLocator(defaults(), legacyLayout)
+////        val transactionLogsDirectory: Path = logsLocator.transactionLogsDirectory
+////        assertNotNull(txLogFiles)
+////        assertTrue(txLogFiles.size > 0)
+////        for (logFile in txLogFiles) {
+////            fileSystem.moveToDirectory(logFile, transactionLogsDirectory)
+////        }
+////        val logProvider = AssertableLogProvider()
+////        builder!!.setInternalLogProvider(logProvider)
+////        val restartedDb = createDatabase()
+////        try {
+////            val dbStateService = restartedDb.dependencyResolver.resolveDependency(
+////                DatabaseStateService::class.java
+////            )
+////            val failure = dbStateService.causeOfFailure(restartedDb.databaseId())
+////            assertTrue(failure.isPresent)
+////            assertThat(failure.get()).hasRootCauseMessage("Transaction logs are missing and recovery is not possible.")
+////            assertThat(logProvider.serialize()).contains(txLogFiles[0].getFileName().toString())
+////        } finally {
+////            managementService!!.shutdown()
+////        }
+////    }
 //
-//    @Test
-//    fun startDatabaseWithRemovedSingleTransactionLogFile() {
-//        val database = createDatabase()
-//        val pageCache = getDatabasePageCache(database)
-//        generateSomeData(database)
-//        assertEquals(
-//            -1,
-//            getRecord(
-//                pageCache,
-//                database.databaseLayout().metadataStore(),
-//                LAST_MISSING_STORE_FILES_RECOVERY_TIMESTAMP,
-//                NULL
-//            )
-//        )
-//        managementService!!.shutdown()
-//        removeTransactionLogs()
-//        startStopDatabaseWithForcedRecovery()
-//        assertFalse(isRecoveryRequired(databaseLayout))
-//        // we will have 2 checkpoints: first will be created as part of recovery and another on shutdown
-//        assertEquals(2, countCheckPointsInTransactionLogs())
-//        verifyRecoveryTimestampPresent(database)
-//    }
+////    @Test
+////    fun startDatabaseWithRemovedSingleTransactionLogFile() {
+////        val database = createDatabase()
+////        val pageCache = getDatabasePageCache(database)
+////        generateSomeData(database)
+////        assertEquals(
+////            -1,
+////            getRecord(
+////                pageCache,
+////                database.databaseLayout().metadataStore(),
+////                LAST_MISSING_STORE_FILES_RECOVERY_TIMESTAMP,
+////                NULL
+////            )
+////        )
+////        managementService!!.shutdown()
+////        removeTransactionLogs()
+////        startStopDatabaseWithForcedRecovery()
+////        assertFalse(isRecoveryRequired(databaseLayout))
+////        // we will have 2 checkpoints: first will be created as part of recovery and another on shutdown
+////        assertEquals(2, countCheckPointsInTransactionLogs())
+////        verifyRecoveryTimestampPresent(database)
+////    }
 //
 //    @Test
 //    fun startDatabaseWithRemovedMultipleTransactionLogFiles() {
@@ -495,18 +495,18 @@
 //        assertEquals(3, countCheckPointsInTransactionLogs())
 //    }
 //
-//    @Test
-//    fun recoverDatabaseWithoutOneIdFile() {
-//        val db = createDatabase()
-//        generateSomeData(db)
-//        val layout = db.databaseLayout()
-//        managementService!!.shutdown()
-//        fileSystem!!.deleteFileOrThrow(layout.idRelationshipStore())
-//        assertTrue(isRecoveryRequired(layout))
-//        performRecovery(fileSystem, pageCache, EMPTY, defaults(), layout, INSTANCE)
-//        assertFalse(isRecoveryRequired(layout))
-//        assertTrue(fileSystem.fileExists(layout.idRelationshipStore()))
-//    }
+////    @Test
+////    fun recoverDatabaseWithoutOneIdFile() {
+////        val db = createDatabase()
+////        generateSomeData(db)
+////        val layout = db.databaseLayout()
+////        managementService!!.shutdown()
+////        fileSystem!!.deleteFileOrThrow(layout.idRelationshipStore())
+////        assertTrue(isRecoveryRequired(layout))
+////        performRecovery(fileSystem, pageCache, EMPTY, defaults(), layout, INSTANCE)
+////        assertFalse(isRecoveryRequired(layout))
+////        assertTrue(fileSystem.fileExists(layout.idRelationshipStore()))
+////    }
 //
 //    @Test
 //    fun recoverDatabaseWithoutIdFiles() {
@@ -525,52 +525,52 @@
 //        }
 //    }
 //
-//    @Test
-//    fun cancelRecoveryInTheMiddle() {
-//        val db = createDatabase()
-//        generateSomeData(db)
-//        val layout = db.databaseLayout()
-//        managementService!!.shutdown()
-//        RecoveryHelpers.removeLastCheckpointRecordFromLastLogFile(databaseLayout, fileSystem)
-//        assertTrue(isRecoveryRequired(layout))
-//        val monitors = Monitors()
-//        val guardExtensionFactory = GlobalGuardConsumerTestExtensionFactory()
-//        val recoveryMonitor = object : RecoveryMonitor {
-//            private val reverseCompleted = AtomicBoolean()
-//            private val recoveryCompleted = AtomicBoolean()
-//            override fun reverseStoreRecoveryCompleted(lowestRecoveredTxId: Long) {
-//                guardExtensionFactory.providedGuardConsumer!!.globalGuard.stop()
-//                reverseCompleted.set(true)
-//            }
-//
-//            override fun recoveryCompleted(numberOfRecoveredTransactions: Int, recoveryTimeInMilliseconds: Long) {
-//                recoveryCompleted.set(true)
-//            }
-//
-//            fun isReverseCompleted(): Boolean {
-//                return reverseCompleted.get()
-//            }
-//
-//            fun isRecoveryCompleted(): Boolean {
-//                return recoveryCompleted.get()
-//            }
-//        }
-//        monitors.addMonitorListener(recoveryMonitor)
-//        val service = builderWithRelationshipTypeScanStoreSet(layout.neo4jLayout)
-//            .addExtension(guardExtensionFactory)
-//            .setMonitors(monitors).build()
-//        try {
-//            val database = service.database(layout.databaseName)
-//            assertTrue(recoveryMonitor.isReverseCompleted())
-//            assertFalse(recoveryMonitor.isRecoveryCompleted())
-//            assertFalse(guardExtensionFactory.providedGuardConsumer!!.globalGuard.isAvailable)
-//            assertFalse(database.isAvailable(0))
-//            val e: Exception = assertThrows(Exception::class.java, database::beginTx)
-//            assertThat(getRootCause(e)).isInstanceOf(DatabaseStartAbortedException::class.java)
-//        } finally {
-//            service.shutdown()
-//        }
-//    }
+////    @Test
+////    fun cancelRecoveryInTheMiddle() {
+////        val db = createDatabase()
+////        generateSomeData(db)
+////        val layout = db.databaseLayout()
+////        managementService!!.shutdown()
+////        RecoveryHelpers.removeLastCheckpointRecordFromLastLogFile(databaseLayout, fileSystem)
+////        assertTrue(isRecoveryRequired(layout))
+////        val monitors = Monitors()
+////        val guardExtensionFactory = GlobalGuardConsumerTestExtensionFactory()
+////        val recoveryMonitor = object : RecoveryMonitor {
+////            private val reverseCompleted = AtomicBoolean()
+////            private val recoveryCompleted = AtomicBoolean()
+////            override fun reverseStoreRecoveryCompleted(lowestRecoveredTxId: Long) {
+////                guardExtensionFactory.providedGuardConsumer!!.globalGuard.stop()
+////                reverseCompleted.set(true)
+////            }
+////
+////            override fun recoveryCompleted(numberOfRecoveredTransactions: Int, recoveryTimeInMilliseconds: Long) {
+////                recoveryCompleted.set(true)
+////            }
+////
+////            fun isReverseCompleted(): Boolean {
+////                return reverseCompleted.get()
+////            }
+////
+////            fun isRecoveryCompleted(): Boolean {
+////                return recoveryCompleted.get()
+////            }
+////        }
+////        monitors.addMonitorListener(recoveryMonitor)
+////        val service = builderWithRelationshipTypeScanStoreSet(layout.neo4jLayout)
+////            .addExtension(guardExtensionFactory)
+////            .setMonitors(monitors).build()
+////        try {
+////            val database = service.database(layout.databaseName)
+////            assertTrue(recoveryMonitor.isReverseCompleted())
+////            assertFalse(recoveryMonitor.isRecoveryCompleted())
+////            assertFalse(guardExtensionFactory.providedGuardConsumer!!.globalGuard.isAvailable)
+////            assertFalse(database.isAvailable(0))
+////            val e: Exception = assertThrows(Exception::class.java, database::beginTx)
+////            assertThat(getRootCause(e)).isInstanceOf(DatabaseStartAbortedException::class.java)
+////        } finally {
+////            service.shutdown()
+////        }
+////    }
 //
 //    private fun awaitIndexesOnline(database: GraphDatabaseService) {
 //        database.beginTx().use { transaction ->
@@ -596,19 +596,19 @@
 //        recoverDatabase(EMPTY)
 //    }
 //
-//    private fun recoverDatabase(databaseTracers: DatabaseTracers) {
-//        val config =
-//            Config.newBuilder().set(enable_relationship_type_scan_store, enableRelationshipTypeScanStore()).build()
-//        assertTrue(isRecoveryRequired(databaseLayout, config))
-//        performRecovery(fileSystem, pageCache, databaseTracers, config, databaseLayout, INSTANCE)
-//        assertFalse(isRecoveryRequired(databaseLayout, config))
-//    }
-//
-//    private fun isRecoveryRequired(layout: DatabaseLayout?): Boolean {
-//        val config =
-//            Config.newBuilder().set(enable_relationship_type_scan_store, enableRelationshipTypeScanStore()).build()
-//        return isRecoveryRequired(layout, config)
-//    }
+////    private fun recoverDatabase(databaseTracers: DatabaseTracers) {
+////        val config =
+////            Config.newBuilder().set(enable_relationship_type_scan_store, enableRelationshipTypeScanStore()).build()
+////        assertTrue(isRecoveryRequired(databaseLayout, config))
+////        performRecovery(fileSystem, pageCache, databaseTracers, config, databaseLayout, INSTANCE)
+////        assertFalse(isRecoveryRequired(databaseLayout, config))
+////    }
+////
+////    private fun isRecoveryRequired(layout: DatabaseLayout?): Boolean {
+////        val config =
+////            Config.newBuilder().set(enable_relationship_type_scan_store, enableRelationshipTypeScanStore()).build()
+////        return isRecoveryRequired(layout, config)
+////    }
 //
 //    private fun isRecoveryRequired(layout: DatabaseLayout?, config: Config): Boolean {
 //        return Recovery.isRecoveryRequired(fileSystem, layout, config, INSTANCE)
@@ -689,30 +689,30 @@
 //        return builderWithRelationshipTypeScanStoreSet(neo4jLayout)
 //    }
 //
-//    private fun builderWithRelationshipTypeScanStoreSet(neo4jLayout: Neo4jLayout?): TestDatabaseManagementServiceBuilder {
-//        return TestDatabaseManagementServiceBuilder(neo4jLayout)
-//            .setConfig(enable_relationship_type_scan_store, enableRelationshipTypeScanStore())
-//    }
+////    private fun builderWithRelationshipTypeScanStoreSet(neo4jLayout: Neo4jLayout?): TestDatabaseManagementServiceBuilder {
+////        return TestDatabaseManagementServiceBuilder(neo4jLayout)
+////            .setConfig(enable_relationship_type_scan_store, enableRelationshipTypeScanStore())
+////    }
 //
 //    private fun getDatabasePageCache(databaseAPI: GraphDatabaseAPI): PageCache {
 //        return databaseAPI.dependencyResolver.resolveDependency(PageCache::class.java)
 //    }
 //
-//    private fun verifyRecoveryTimestampPresent(databaseAPI: GraphDatabaseAPI) {
-//        val restartedDatabase = createDatabase()
-//        try {
-//            val restartedCache = getDatabasePageCache(restartedDatabase)
-//            val record = getRecord(
-//                restartedCache,
-//                databaseAPI.databaseLayout().metadataStore(),
-//                LAST_MISSING_STORE_FILES_RECOVERY_TIMESTAMP,
-//                NULL
-//            )
-//            assertThat(record).isGreaterThan(0L)
-//        } finally {
-//            managementService!!.shutdown()
-//        }
-//    }
+////    private fun verifyRecoveryTimestampPresent(databaseAPI: GraphDatabaseAPI) {
+////        val restartedDatabase = createDatabase()
+////        try {
+////            val restartedCache = getDatabasePageCache(restartedDatabase)
+////            val record = getRecord(
+////                restartedCache,
+////                databaseAPI.databaseLayout().metadataStore(),
+////                LAST_MISSING_STORE_FILES_RECOVERY_TIMESTAMP,
+////                NULL
+////            )
+////            assertThat(record).isGreaterThan(0L)
+////        } finally {
+////            managementService!!.shutdown()
+////        }
+////    }
 //
 //    internal interface Dependencies {
 //        fun globalGuard(): CompositeDatabaseAvailabilityGuard
@@ -736,16 +736,16 @@
 //            globalGuard = dependencies.globalGuard()
 //        }
 //    }
-//
-//    private fun sendKafkaEvents() = runBlocking {
-//        (1..10).forEach {
-//            val dataProperties = mapOf("prop1" to "foo $it", "bar" to it)
-//            val data = mapOf("id" to it, "properties" to dataProperties)
-//            val producerRecord = ProducerRecord(topic, UUID.randomUUID().toString(), JSONUtils.writeValueAsBytes(data))
-//            val metadata = kafkaProducer.send(producerRecord).get()
-//            println("Sent record $it to topic ${metadata.topic()}")
-//        }
-//        delay(5000)
-//    }
+////
+////    private fun sendKafkaEvents() = runBlocking {
+////        (1..10).forEach {
+////            val dataProperties = mapOf("prop1" to "foo $it", "bar" to it)
+////            val data = mapOf("id" to it, "properties" to dataProperties)
+////            val producerRecord = ProducerRecord(topic, UUID.randomUUID().toString(), JSONUtils.writeValueAsBytes(data))
+////            val metadata = kafkaProducer.send(producerRecord).get()
+////            println("Sent record $it to topic ${metadata.topic()}")
+////        }
+////        delay(5000)
+////    }
 //
 //}

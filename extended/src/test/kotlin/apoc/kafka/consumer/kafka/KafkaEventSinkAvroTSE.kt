@@ -3,7 +3,7 @@ package apoc.kafka.consumer.kafka
 import apoc.ApocConfig
 import apoc.kafka.producer.integrations.KafkaEventSinkSuiteIT
 import apoc.kafka.support.Assert
-import apoc.kafka.support.start
+
 import io.confluent.kafka.serializers.KafkaAvroDeserializer
 import org.apache.avro.SchemaBuilder
 import org.apache.avro.generic.GenericRecord
@@ -27,7 +27,6 @@ class KafkaEventSinkAvroTSE : KafkaEventSinkBaseTSE() {
         ApocConfig.apocConfig().setProperty("kafka.key.deserializer", KafkaAvroDeserializer::class.java.name)
         ApocConfig.apocConfig().setProperty("kafka.value.deserializer", KafkaAvroDeserializer::class.java.name)
         ApocConfig.apocConfig().setProperty("kafka.schema.registry.url", KafkaEventSinkSuiteIT.schemaRegistry.getSchemaRegistryUrl())
-        db.start()
 
         val PLACE_SCHEMA = SchemaBuilder.builder("com.namespace")
                 .record("Place").fields()
@@ -75,7 +74,7 @@ class KafkaEventSinkAvroTSE : KafkaEventSinkBaseTSE() {
         ApocConfig.apocConfig().setProperty("kafka.value.deserializer", KafkaAvroDeserializer::class.java.name)
         ApocConfig.apocConfig().setProperty("kafka.schema.registry.url", KafkaEventSinkSuiteIT.schemaRegistry.getSchemaRegistryUrl())
         ApocConfig.apocConfig().setProperty("streams.sink.topic.pattern.node.$topic", "(:Place{!name})")
-        db.start()
+        // db.start()
 
         val PLACE_SCHEMA = SchemaBuilder.builder("com.namespace")
                 .record("Place").fields()

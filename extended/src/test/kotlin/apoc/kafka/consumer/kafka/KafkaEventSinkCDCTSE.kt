@@ -17,8 +17,8 @@
 //import apoc.kafka.events.Schema
 //import apoc.kafka.events.StreamsConstraintType
 //import apoc.kafka.events.StreamsTransactionEvent
-//import apoc.kafka.support.setConfig
-//import apoc.kafka.support.start
+//// import apoc.kafka.support.setConfig
+//// import apoc.kafka.support.start
 //import apoc.kafka.utils.JSONUtils
 //import java.util.UUID
 //import java.util.concurrent.TimeUnit
@@ -32,7 +32,7 @@
 //        db.setConfig("streams.sink.topic.cdc.sourceId", topic)
 //        db.setConfig("streams.sink.topic.cdc.sourceId.idName", "customIdN@me")
 //        db.setConfig("streams.sink.topic.cdc.sourceId.labelName", "CustomLabelN@me")
-//        db.start()
+//        // db.start()
 //
 //        val cdcDataStart = StreamsTransactionEvent(
 //                meta = Meta(timestamp = System.currentTimeMillis(),
@@ -103,7 +103,7 @@
 //    fun shouldWriteDataFromSinkWithCDCSchemaTopic() = runBlocking {
 //        val topic = UUID.randomUUID().toString()
 //        db.setConfig("streams.sink.topic.cdc.schema", topic)
-//        db.start()
+//        // db.start()
 //
 //        val constraints = listOf(Constraint(label = "User", type = StreamsConstraintType.UNIQUE, properties = setOf("name", "surname")))
 //        val relSchema = Schema(properties = mapOf("since" to "Long"), constraints = constraints)
@@ -178,7 +178,7 @@
 //    fun writeDataFromSinkWithCDCSchemaTopicMultipleConstraintsAndLabels() = runBlocking {
 //        val topic = UUID.randomUUID().toString()
 //        db.setConfig("streams.sink.topic.cdc.schema", topic)
-//        db.start()
+//        // db.start()
 //
 //        val constraintsCharacter = listOf(
 //                Constraint(label = "Character", type = StreamsConstraintType.UNIQUE, properties = setOf("surname")),
@@ -307,7 +307,7 @@
 //    fun shouldWriteDataFromSinkWithCDCSchemaTopicWithMultipleConstraints() = runBlocking {
 //        val topic = UUID.randomUUID().toString()
 //        db.setConfig("streams.sink.topic.cdc.schema", topic)
-//        db.start()
+//        // db.start()
 //
 //        val constraints = listOf(
 //                Constraint(label = "User", type = StreamsConstraintType.UNIQUE, properties = setOf("name")),
@@ -429,7 +429,7 @@
 //    fun shouldDeleteDataFromSinkWithCDCSchemaTopic() = runBlocking {
 //        val topic = UUID.randomUUID().toString()
 //        db.setConfig("streams.sink.topic.cdc.schema", topic)
-//        db.start()
+//        // db.start()
 //
 //        db.executeTransactionally("CREATE (s:User{name:'Andrea', surname:'Santurbano', `comp@ny`:'LARUS-BA'})-[r:`KNOWS WHO`{since:2014}]->(e:User{name:'Michael', surname:'Hunger', `comp@ny`:'Neo4j'})", emptyMap())
 //        val nodeSchema = Schema(properties = mapOf("name" to "String", "surname" to "String", "comp@ny" to "String"),

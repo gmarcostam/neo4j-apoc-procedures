@@ -1,10 +1,11 @@
 package apoc.kafka.producer.integrations
 
+import apoc.ApocConfig
 import apoc.kafka.extensions.execute
 import apoc.kafka.producer.kafka.KafkaConfiguration
 import apoc.kafka.support.KafkaTestUtils
-import apoc.kafka.support.setConfig
-import apoc.kafka.support.start
+// import apoc.kafka.support.setConfig
+// import apoc.kafka.support.start
 import apoc.kafka.utils.StreamsUtils
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
@@ -73,9 +74,9 @@ class KafkaEventRouterNoTopicAutocreationIT {
     fun `should start even with no topic created`() {
         // when
         val db = ImpermanentDbmsRule()
-                .setConfig("kafka.bootstrap.servers", kafka.bootstrapServers)
-                .setConfig("streams.source.topic.nodes.personNotDefined", "Person{*}")
-                .start()
+        ApocConfig.apocConfig().setProperty("kafka.bootstrap.servers", kafka.bootstrapServers)
+        ApocConfig.apocConfig().setProperty("streams.source.topic.nodes.personNotDefined", "Person{*}")
+//                .start()
 
         // then
         val count = db.execute("MATCH (n) RETURN COUNT(n) AS count") {
@@ -93,10 +94,9 @@ class KafkaEventRouterNoTopicAutocreationIT {
         val neo4jTopic = "neo4j"
         val expectedTopics = listOf(personTopic, customerTopic, neo4jTopic)
         val db = ImpermanentDbmsRule()
-                .setConfig("kafka.bootstrap.servers", kafka.bootstrapServers)
-                .setConfig("streams.source.topic.nodes.$personTopic", "Person{*}")
-                .setConfig("streams.source.topic.nodes.$customerTopic", "Customer{*}")
-                .start()
+        ApocConfig.apocConfig().setProperty("kafka.bootstrap.servers", kafka.bootstrapServers)
+        ApocConfig.apocConfig().setProperty("streams.source.topic.nodes.$personTopic", "Person{*}")
+        ApocConfig.apocConfig().setProperty("streams.source.topic.nodes.$customerTopic", "Customer{*}")
         // we create a new node an check that the source plugin is working
         db.execute("CREATE (p:Person{id: 1})")
         val config = KafkaConfiguration(bootstrapServers = kafka.bootstrapServers)

@@ -19,9 +19,9 @@ class SchemaRegistryContainer(version: String): GenericContainer<SchemaRegistryC
                     .withTarget(PORT, networkAlias)
 
         proxy.start()
-        waitingFor(Wait.forHttp("/subjects")
-                .forPort(PORT)
-                .forStatusCode(200))
+//        waitingFor(Wait.forHttp("/subjects")
+//                .forPort(PORT)
+//                .forStatusCode(200))
         super.doStart()
     }
 

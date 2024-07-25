@@ -3,8 +3,8 @@
 //import apoc.kafka.service.errors.ErrorService
 //import apoc.kafka.support.Assert
 //import apoc.kafka.support.KafkaTestUtils
-//import apoc.kafka.support.setConfig
-//import apoc.kafka.support.start
+//// import apoc.kafka.support.setConfig
+//// import apoc.kafka.support.start
 //import apoc.kafka.utils.JSONUtils
 //import apoc.util.JsonUtil
 //import org.apache.kafka.clients.producer.ProducerRecord
@@ -25,7 +25,7 @@
 //        db.setConfig("streams.sink."+ErrorService.ErrorConfig.DLQ_TOPIC, dlqTopic)
 //        db.setConfig("streams.sink."+ErrorService.ErrorConfig.DLQ_HEADERS, "true")
 //        db.setConfig("streams.sink."+ErrorService.ErrorConfig.DLQ_HEADER_PREFIX, "__streams.errors.")
-//        db.start()
+//        // db.start()
 //        val data = mapOf("id" to null, "name" to "Andrea", "surname" to "Santurbano")
 //
 //        val producerRecord = ProducerRecord(topic, UUID.randomUUID().toString(), JSONUtils.writeValueAsBytes(data))
@@ -67,7 +67,7 @@
 //        db.setConfig("streams.sink."+ErrorService.ErrorConfig.DLQ_TOPIC, dlqTopic)
 //        db.setConfig("streams.sink."+ErrorService.ErrorConfig.DLQ_HEADERS, "true")
 //        db.setConfig("streams.sink."+ErrorService.ErrorConfig.DLQ_HEADER_PREFIX, "__streams.errors.")
-//        db.start()
+//        // db.start()
 //
 //        val data = """{id: 1, "name": "Andrea", "surname": "Santurbano"}"""
 //

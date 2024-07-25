@@ -4,8 +4,8 @@
 //import apoc.kafka.extensions.execute
 //import apoc.kafka.producer.kafka.KafkaConfiguration
 //import apoc.kafka.support.KafkaTestUtils
-//import apoc.kafka.support.setConfig
-//import apoc.kafka.support.start
+//// import apoc.kafka.support.setConfig
+//// import apoc.kafka.support.start
 //import apoc.kafka.utils.JSONUtils
 //import kotlinx.coroutines.async
 //import kotlinx.coroutines.runBlocking
@@ -22,7 +22,7 @@
 //
 //    @Test
 //    fun testCreateNode() {
-//        db.start()
+//        // db.start()
 //        kafkaConsumer.subscribe(listOf("neo4j"))
 //        db.execute("CREATE (:Person {name:'John Doe', age:42})")
 //        val records = kafkaConsumer.poll(5000)

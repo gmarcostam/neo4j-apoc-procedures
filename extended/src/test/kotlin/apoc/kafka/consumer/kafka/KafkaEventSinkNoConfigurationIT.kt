@@ -1,8 +1,8 @@
 package apoc.kafka.consumer.kafka
 
 import apoc.ApocConfig
-import apoc.kafka.support.shutdownSilently
-import apoc.kafka.support.start
+// import apoc.kafka.support.shutdownSilently
+// import apoc.kafka.support.start
 import io.confluent.kafka.serializers.KafkaAvroDeserializer
 import org.junit.After
 import org.junit.Test
@@ -29,7 +29,7 @@ class KafkaEventSinkNoConfigurationIT {
 
     @After
     fun tearDown() {
-        db.shutdownSilently()
+//        db.shutdownSilently()
     }
 
     @Test
@@ -37,7 +37,7 @@ class KafkaEventSinkNoConfigurationIT {
         ApocConfig.apocConfig().setProperty("kafka.bootstrap.servers", "")
         ApocConfig.apocConfig().setProperty("streams.sink.enabled", "true")
         ApocConfig.apocConfig().setProperty("streams.sink.topic.cypher.$topic", "CREATE (p:Place{name: event.name, coordinates: event.coordinates, citizens: event.citizens})")
-        db.start()
+        // db.start()
         val count = db.executeTransactionally("MATCH (n) RETURN COUNT(n) AS count", emptyMap()) { it.columnAs<Long>("count").next() }
         assertEquals(0L, count)
     }
@@ -52,7 +52,7 @@ class KafkaEventSinkNoConfigurationIT {
         ApocConfig.apocConfig().setProperty("streams.sink.topic.cypher.$topic", "CREATE (p:Place{name: event.name, coordinates: event.coordinates, citizens: event.citizens})")
         ApocConfig.apocConfig().setProperty("kafka.key.deserializer", KafkaAvroDeserializer::class.java.name)
         ApocConfig.apocConfig().setProperty("kafka.value.deserializer", KafkaAvroDeserializer::class.java.name)
-        db.start()
+        // db.start()
         val count = db.executeTransactionally("MATCH (n) RETURN COUNT(n) AS count", emptyMap()) { it.columnAs<Long>("count").next() }
         assertEquals(0L, count)
         fakeWebServer.stop()

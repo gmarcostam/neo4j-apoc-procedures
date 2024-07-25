@@ -5,8 +5,8 @@
 //import apoc.kafka.service.sink.strategy.CUDOperations
 //import apoc.kafka.service.sink.strategy.CUDRelationship
 //import apoc.kafka.support.Assert
-//import apoc.kafka.support.setConfig
-//import apoc.kafka.support.start
+//// import apoc.kafka.support.setConfig
+//// import apoc.kafka.support.start
 //import apoc.kafka.utils.JSONUtils
 //import org.apache.kafka.clients.producer.ProducerRecord
 //import org.hamcrest.Matchers
@@ -37,7 +37,7 @@
 //        }
 //        val topic = UUID.randomUUID().toString()
 //        db.setConfig("streams.sink.topic.cud", topic)
-//        db.start()
+//        // db.start()
 //
 //        // when
 //        list.forEach {
@@ -83,7 +83,7 @@
 //        val key = "_id"
 //        val topic = UUID.randomUUID().toString()
 //        db.setConfig("streams.sink.topic.cud", topic)
-//        db.start()
+//        // db.start()
 //        val idList = db.beginTx().use {
 //            db.executeTransactionally("UNWIND range(1, 10) AS id CREATE (:Foo:Bar {key: id})", emptyMap())
 //            assertEquals(10, it.allNodes.count())
@@ -151,7 +151,7 @@
 //        }
 //        val topic = UUID.randomUUID().toString()
 //        db.setConfig("streams.sink.topic.cud", topic)
-//        db.start()
+//        // db.start()
 //        db.beginTx().use {
 //            db.executeTransactionally("UNWIND range(1, 10) AS id CREATE (n:Foo:Bar {key: id})")
 //            assertEquals(10, it.allNodes.count())
@@ -190,7 +190,7 @@
 //        }
 //        val topic = UUID.randomUUID().toString()
 //        db.setConfig("streams.sink.topic.cud", topic)
-//        db.start()
+//        // db.start()
 //        db.beginTx().use {
 //            db.executeTransactionally("UNWIND range(1, 5) AS id CREATE (s:Foo:Bar {key: id})-[:MY_REL]->(u:Foo:Bar {key: id + 1})")
 //            assertEquals(10, it.allNodes.count())
@@ -230,7 +230,7 @@
 //        }
 //        val topic = UUID.randomUUID().toString()
 //        db.setConfig("streams.sink.topic.cud", topic)
-//        db.start()
+//        // db.start()
 //        db.beginTx().use {
 //            db.executeTransactionally("""
 //                UNWIND range(1, 10) AS id
@@ -285,7 +285,7 @@
 //
 //        val topic = UUID.randomUUID().toString()
 //        db.setConfig("streams.sink.topic.cud", topic)
-//        db.start()
+//        // db.start()
 //        db.beginTx().use {
 //            db.executeTransactionally("""
 //                CREATE (:$startNode {key: 1})
@@ -335,7 +335,7 @@
 //        }
 //        val topic = UUID.randomUUID().toString()
 //        db.setConfig("streams.sink.topic.cud", topic)
-//        db.start()
+//        // db.start()
 //        db.beginTx().use {
 //            db.executeTransactionally("UNWIND range(1, 10) AS id CREATE (:Foo:Bar {key: id})-[:$rel_type{id: id}]->(:FooBar{key: id})")
 //            assertEquals(10, it.allRelationships.count())
@@ -380,7 +380,7 @@
 //        val rel_type = "MY_REL"
 //        val topic = UUID.randomUUID().toString()
 //        db.setConfig("streams.sink.topic.cud", topic)
-//        db.start()
+//        // db.start()
 //        val idMap = db.beginTx().use { tx ->
 //            tx.execute("UNWIND range(1, 10) AS id CREATE (:Foo:Bar {key: id})-[:$rel_type{id: id}]->(:FooBar{key: id})")
 //            assertEquals(10, tx.allRelationships.count())
@@ -444,7 +444,7 @@
 //            JSONUtils.writeValueAsBytes(rel)
 //        }
 //        db.setConfig("streams.sink.topic.cud", topic)
-//        db.start()
+//        // db.start()
 //
 //        // when
 //        list.forEach {

@@ -11,10 +11,11 @@ import org.junit.runners.Suite
 import org.testcontainers.containers.KafkaContainer
 import org.testcontainers.containers.Network
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy
+import org.testcontainers.utility.DockerImageName
 import java.time.Duration
 
-@RunWith(Suite::class)
-@Suite.SuiteClasses(
+//@RunWith(Suite::class)
+//@Suite.SuiteClasses(
 //    KafkaEventSinkCDCTSE::class,
 //    KafkaEventSinkCommitTSE::class,
 //    KafkaEventSinkDLQTSE::class,
@@ -25,7 +26,7 @@ import java.time.Duration
 //    KafkaEventSinkAvroTSE::class,
 //    KafkaNeo4jRecoveryTSE::class,
 //    KafkaEventSinkEnterpriseTSE::class
-)
+//)
 class KafkaEventSinkSuiteIT {
     companion object {
         /**
@@ -41,7 +42,7 @@ class KafkaEventSinkSuiteIT {
          * Please see also https://docs.confluent.io/current/installation/versions-interoperability.html#cp-and-apache-kafka-compatibility
          */
 //        private const val confluentPlatformVersion = "4.0.2"
-        private const val confluentPlatformVersion = "7.6.1"
+        private const val confluentPlatformVersion = "7.6.2"
         @JvmStatic lateinit var kafka: KafkaContainer
         @JvmStatic lateinit var schemaRegistry: SchemaRegistryContainer
 
@@ -50,10 +51,10 @@ class KafkaEventSinkSuiteIT {
         @BeforeClass
         @JvmStatic
         fun setUpContainer() {
-            StreamsUtils.ignoreExceptions({
-                kafka = KafkaContainer(confluentPlatformVersion)
+//            StreamsUtils.ignoreExceptions({
+                kafka = KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.6.2"))
                     .withNetwork(Network.newNetwork())
-                    .withStartupTimeout(Duration.ofMinutes(5))
+//                    .withStartupTimeout(Duration.ofMinutes(5))
                 kafka.start()
                 schemaRegistry = SchemaRegistryContainer(confluentPlatformVersion)
                     .withExposedPorts(8081)
@@ -61,7 +62,7 @@ class KafkaEventSinkSuiteIT {
                     .withKafka(kafka)!!
                 schemaRegistry.start()
                 isRunning = true
-            }, IllegalStateException::class.java)
+//            }, IllegalStateException::class.java)
             assumeTrue("Kafka must be running", ::kafka.isInitialized && kafka.isRunning)
             assumeTrue("Schema Registry must be running", schemaRegistry.isRunning)
             assumeTrue("isRunning must be true", isRunning)

@@ -34,14 +34,14 @@ object Neo4jUtils {
         }
     }
 
-    fun hasApoc(db: GraphDatabaseAPI): Boolean = try {
-         db.execute("RETURN apoc.version() AS version") {
-            it.columnAs<String>("version").next()
-            true
-        }
-    } catch (e: QueryExecutionException) {
-        false
-    }
+//    fun hasApoc(db: GraphDatabaseAPI): Boolean = try {
+//         db.execute("RETURN apoc.version() AS version") {
+//            it.columnAs<String>("version").next()
+//            true
+//        }
+//    } catch (e: QueryExecutionException) {
+//        false
+//    }
 
     private fun clusterHasLeader(db: GraphDatabaseAPI): Boolean = try {
         db.execute("""

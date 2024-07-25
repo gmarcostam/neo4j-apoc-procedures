@@ -1,29 +1,30 @@
-//package apoc.kafka.consumer.kafka
-//
-//import apoc.kafka.support.Assert
-//import apoc.kafka.support.setConfig
-//import apoc.kafka.support.start
-//import apoc.util.JsonUtil
-//import kotlinx.coroutines.runBlocking
-//import org.apache.kafka.clients.producer.KafkaProducer
-//import org.apache.kafka.clients.producer.ProducerConfig
-//import org.apache.kafka.clients.producer.ProducerRecord
-//import org.apache.kafka.common.serialization.ByteArraySerializer
-//import org.hamcrest.Matchers
-//import org.junit.Ignore
-//import org.junit.Test
-//import org.neo4j.function.ThrowingSupplier
-//import java.util.*
-//import java.util.concurrent.TimeUnit
-//import kotlin.test.assertEquals
-//
-//class KafkaEventSinkPatternTSE : KafkaEventSinkBaseTSE() {
+package apoc.kafka.consumer.kafka
+
+import apoc.kafka.support.Assert
+// import apoc.kafka.support.setConfig
+// import apoc.kafka.support.start
+import apoc.util.JsonUtil
+import kotlinx.coroutines.runBlocking
+import org.apache.kafka.clients.producer.KafkaProducer
+import org.apache.kafka.clients.producer.ProducerConfig
+import org.apache.kafka.clients.producer.ProducerRecord
+import org.apache.kafka.common.serialization.ByteArraySerializer
+import org.hamcrest.Matchers
+import org.junit.Ignore
+import org.junit.Test
+import org.neo4j.function.ThrowingSupplier
+import java.util.*
+import java.util.concurrent.TimeUnit
+import kotlin.test.assertEquals
+
+@Ignore
+class KafkaEventSinkPatternTSE : KafkaEventSinkBaseTSE() {
 //    @Test
 //    fun shouldWorkWithNodePatternTopic() = runBlocking {
 //        val topic = UUID.randomUUID().toString()
 //        db.setConfig("streams.sink.topic.pattern.node.$topic",
 //                "(:User{!userId,name,surname,address.city})")
-//        db.start()
+//        // db.start()
 //
 //        val data = mapOf("userId" to 1, "name" to "Andrea", "surname" to "Santurbano",
 //                "address" to mapOf("city" to "Venice", "CAP" to "30100"))
@@ -51,9 +52,9 @@
 //                "(:Product{!productId})")
 //        db.setConfig("streams.sink.topic.pattern.relationship.$rel",
 //                "(:User{!userId})-[:BOUGHT]->(:Product{!productId})")
-//        db.start()
-//        db.executeTransactionally("CREATE CONSTRAINT neo4j_streams_user_constraint ON (u:User) ASSERT (u.userId) IS UNIQUE")
-//        db.executeTransactionally("CREATE CONSTRAINT neo4j_streams_product_constraint ON (p:Product) ASSERT (p.productId) IS UNIQUE")
+//        // db.start()
+//        db.executeTransactionally("CREATE CONSTRAINT neo4j_streams_user_constraint FOR ( u:User) REQUIRE (u.userId) IS UNIQUE")
+//        db.executeTransactionally("CREATE CONSTRAINT neo4j_streams_product_constraint FOR ( p:Product) REQUIRE (p.productId) IS UNIQUE")
 //        val userData = mapOf("userId" to 1, "name" to "Andrea Santurbano")
 //        val productData = mapOf("productId" to 10, "name" to "My Product")
 //        val relData = mapOf("productId" to 10, "userId" to 1, "quantity" to 100)
@@ -104,7 +105,7 @@
 //        val topic = UUID.randomUUID().toString()
 //        db.setConfig("streams.sink.topic.pattern.relationship.$topic",
 //                "(:User{!sourceId,sourceName,sourceSurname})-[:KNOWS]->(:User{!targetId,targetName,targetSurname})")
-//        db.start()
+//        // db.start()
 //        val data = mapOf("sourceId" to 1, "sourceName" to "Andrea", "sourceSurname" to "Santurbano",
 //                "targetId" to 1, "targetName" to "Michael", "targetSurname" to "Hunger", "since" to 2014)
 //
@@ -127,7 +128,7 @@
 //        val topic = UUID.randomUUID().toString()
 //        db.setConfig("streams.sink.topic.pattern.node.$topic",
 //                "(:User{!userId,name,surname})")
-//        db.start()
+//        // db.start()
 //
 //        db.executeTransactionally("CREATE (u:User{userId: 1, name: 'Andrea', surname: 'Santurbano'})")
 //        val count = db.executeTransactionally("MATCH (n:User) RETURN count(n) AS count", emptyMap()) { it.columnAs<Long>("count").next() }
@@ -154,4 +155,4 @@
 //            }
 //        }, Matchers.equalTo(true), 30, TimeUnit.SECONDS)
 //    }
-//}
+}

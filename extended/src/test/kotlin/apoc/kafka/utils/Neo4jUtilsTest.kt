@@ -18,10 +18,10 @@ class Neo4jUtilsTest {
         val isWriteableInstance = Neo4jUtils.isWriteableInstance(db)
         assertTrue { isWriteableInstance }
     }
-
-    @Test
-    fun `should not have APOC`() {
-        assertFalse { Neo4jUtils.hasApoc(db) }
-    }
+//
+//    @Test
+//    fun `should not have APOC`() {
+//        assertFalse { Neo4jUtils.hasApoc(db) }
+//    }
 
 }

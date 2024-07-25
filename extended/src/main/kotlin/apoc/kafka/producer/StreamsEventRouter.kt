@@ -24,7 +24,7 @@ abstract class StreamsEventRouter(config: Map<String, String>, db: GraphDatabase
 
 object StreamsEventRouterFactory {
     fun getStreamsEventRouter(config: Map<String, String>, db: GraphDatabaseService, log: Log): StreamsEventRouter {
-        return Class.forName(config.getOrDefault("streams.router", "streams.kafka.KafkaEventRouter"))
+        return Class.forName(config.getOrDefault("streams.router", "apoc.kafka.producer.kafka.KafkaEventRouter"))
                 .getConstructor(Map::class.java, GraphDatabaseService::class.java, Log::class.java)
                 .newInstance(config, db, log) as StreamsEventRouter
     }

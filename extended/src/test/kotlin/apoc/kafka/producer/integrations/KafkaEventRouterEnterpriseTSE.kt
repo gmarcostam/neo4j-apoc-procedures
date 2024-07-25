@@ -247,7 +247,7 @@
 //
 //    @Test
 //    fun `node with node key constraint and topic compact`() {
-//        val queries = listOf("CREATE CONSTRAINT person ON (p:Person) ASSERT (p.name, p.surname) IS NODE KEY")
+//        val queries = listOf("CREATE CONSTRAINT person FOR ( p:Person) REQUIRE (p.name, p.surname) IS NODE KEY")
 //        createConstraintAndAssert(queries, DB_TEST_NODE_WITH_COMPACT)
 //
 //        kafkaConsumer.subscribe(listOf(TOPIC_IN_DB_TEST_NODE))
@@ -278,7 +278,7 @@
 //    fun `delete single tombstone relation with strategy compact and constraints`() {
 //        // we create a topic with strategy compact
 //        val keyRel = "KNOWS"
-//        val queries = listOf("CREATE CONSTRAINT person ON (p:Person) ASSERT (p.name, p.surname) IS NODE KEY")
+//        val queries = listOf("CREATE CONSTRAINT person FOR ( p:Person) REQUIRE (p.name, p.surname) IS NODE KEY")
 //        createConstraintAndAssert(queries, DB_TOMBSTONE_WITH_COMPACT)
 //
 //        kafkaConsumer.subscribe(listOf(TOPIC_WITH_TOMBSTONE))
@@ -319,8 +319,8 @@
 //    @Test
 //    fun `relationship with node key constraints and strategy compact`() {
 //        val relType = "BUYS"
-//        val queries = listOf("CREATE CONSTRAINT product ON (p:Product) ASSERT (p.code, p.price) IS NODE KEY",
-//                "CREATE CONSTRAINT other ON (p:Other) ASSERT (p.address, p.city) IS NODE KEY")
+//        val queries = listOf("CREATE CONSTRAINT product FOR ( p:Product) REQUIRE (p.code, p.price) IS NODE KEY",
+//                "CREATE CONSTRAINT other FOR ( p:Other) REQUIRE (p.address, p.city) IS NODE KEY")
 //        createConstraintAndAssert(queries, DB_TEST_REL_WITH_COMPACT, 2)
 //
 //        kafkaConsumer.subscribe(listOf(TOPIC_PERSON_AND_BUYS_IN_DB_TEST_REL, TOPIC_PRODUCT_IN_DB_TEST_REL))
@@ -362,10 +362,10 @@
 //        val labelStart = "Product"
 //        val firstLabelEnd = "Person"
 //        val secondLabelEnd = "Other"
-//        val queries = listOf("CREATE CONSTRAINT productOne ON (p:$labelStart) ASSERT (p.code, p.price) IS NODE KEY",
-//                "CREATE CONSTRAINT productTwo ON (p:$labelStart) ASSERT (p.type, p.name) IS NODE KEY",
-//                "CREATE CONSTRAINT person ON (p:$firstLabelEnd) ASSERT (p.name, p.surname) IS NODE KEY",
-//                "CREATE CONSTRAINT other ON (p:$secondLabelEnd) ASSERT (p.address, p.city) IS NODE KEY")
+//        val queries = listOf("CREATE CONSTRAINT productOne FOR ( p:$labelStart) REQUIRE (p.code, p.price) IS NODE KEY",
+//                "CREATE CONSTRAINT productTwo FOR ( p:$labelStart) REQUIRE (p.type, p.name) IS NODE KEY",
+//                "CREATE CONSTRAINT person FOR ( p:$firstLabelEnd) REQUIRE (p.name, p.surname) IS NODE KEY",
+//                "CREATE CONSTRAINT other FOR ( p:$secondLabelEnd) REQUIRE (p.address, p.city) IS NODE KEY")
 //        createConstraintAndAssert(queries, DB_STRATEGY_ALL, 4)
 //        createConstraintAndAssert(queries, DB_STRATEGY_DEFAULT, 4)
 //

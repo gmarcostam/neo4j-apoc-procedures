@@ -14,12 +14,11 @@ import org.neo4j.procedure.Mode
 import org.neo4j.procedure.Name
 import org.neo4j.procedure.Procedure
 import org.neo4j.procedure.TerminationGuard
-import apoc.kafka.consumer.StreamsEventConsumer
-import apoc.kafka.consumer.StreamsEventSink
-import apoc.kafka.consumer.StreamsSinkConfiguration
 import apoc.kafka.config.StreamsConfig
+import apoc.kafka.consumer.*
 import apoc.kafka.events.StreamsPluginStatus
 import apoc.kafka.extensions.isDefaultDb
+import apoc.kafka.producer.StreamsRouterConfigurationListener
 import apoc.kafka.utils.Neo4jUtils
 import apoc.kafka.utils.StreamsUtils
 import java.util.concurrent.ArrayBlockingQueue
@@ -32,16 +31,21 @@ class StreamResult(@JvmField val event: Map<String, *>)
 class KeyValueResult(@JvmField val name: String, @JvmField val value: Any?)
 
 class StreamsSinkProcedures {
-
+    
+    
     @JvmField @Context
     var log: Log? = null
 
     @JvmField @Context
-    var db: GraphDatabaseService? = null
+    var db: GraphDatabaseAPI? = null
 
     @JvmField @Context
     var terminationGuard: TerminationGuard? = null
 
+
+    
+
+    
     @Procedure(mode = Mode.READ, name = "streams.consume")
     @Description("streams.consume(topic, {timeout: <long value>, from: <string>, groupId: <string>, commit: <boolean>, partitions:[{partition: <number>, offset: <number>}]}) " +
             "YIELD event - Allows to consume custom topics")
@@ -53,9 +57,12 @@ class StreamsSinkProcedures {
             Stream.empty<StreamResult>()
         } else {
             val properties = config?.mapValues { it.value.toString() } ?: emptyMap()
-            val configuration = getStreamsEventSink(db!!)!!
-                .getEventSinkConfigMapper()
-                .convert(config = properties)
+            val configuration = StreamsConfig.getConfiguration()
+//            val configuration = StreamsEventSinkConfigMapper(StreamsConfig.getConfiguration(), 
+//                
+//                StreamsConfig.getConfiguration()// getStreamsEventSink(db!!)!!
+//                .getEventSinkConfigMapper()
+//                .convert(config = properties)
 
             readData(topic, config ?: emptyMap(), configuration)
         }
@@ -107,7 +114,9 @@ class StreamsSinkProcedures {
         checkEnabled()
         return checkLeader {
             StreamsSinkConfiguration
-                    .from(configMap = StreamsConfig.getInstance(db!! as GraphDatabaseAPI)
+                // todo - check that
+//                    .from(configMap = StreamsConfig.getInstance(db!! as GraphDatabaseAPI)
+                    .from(configMap = StreamsConfig
                         .getConfiguration().mapValues { it.value.toString() },
                         dbName = db!!.databaseName(),
                         isDefaultDb = db!!.isDefaultDb())
@@ -143,12 +152,17 @@ class StreamsSinkProcedures {
             try {
                 val start = System.currentTimeMillis()
                 while ((System.currentTimeMillis() - start) < timeout) {
+                    println("coroutineContext = ${coroutineContext}")
                     consumer.read(cfg) { _, topicData ->
+                        println("topicData = ${topicData}")
                         data.addAll(topicData.mapNotNull { it.value }.map { StreamResult(mapOf("data" to it)) })
                     }
                 }
+                println("coroutineContext = ${coroutineContext}")
                 data.add(tombstone)
             } catch (e: Exception) {
+                println("coroutineContext = "  
+                + e.message)
                 if (log?.isDebugEnabled!!) {
                     log?.error("Error while consuming data", e)
                 }
@@ -164,7 +178,10 @@ class StreamsSinkProcedures {
     }
 
     private fun createConsumer(consumerConfig: Map<String, String>, topic: String): StreamsEventConsumer = runBlocking {
-        val copy = StreamsConfig.getInstance(db!! as GraphDatabaseAPI).getConfiguration()
+        // todo - check that
+        val copy = StreamsConfig.getConfiguration()
+//        val copy = StreamsConfig.getInstance(db!! as GraphDatabaseAPI).getConfiguration()
+            .filter { it.value is String }
             .mapValues { it.value.toString() }
             .toMutableMap()
         copy.putAll(consumerConfig)
@@ -173,13 +190,27 @@ class StreamsSinkProcedures {
     }
 
     private fun checkEnabled() {
+//        initListeners(db!!, log!!)
+        
         if (!StreamsConfig.getInstance(db!! as GraphDatabaseAPI).hasProceduresEnabled(db?.databaseName() ?: ""))  {
             throw RuntimeException("In order to use the procedure you must set streams.procedures.enabled=true")
         }
+        
+        
     }
 
     companion object {
-
+        // todo - move in another class, similar to CypherProceduresHandler extends LifecycleAdapter implements AvailabilityListener {
+//        fun initListeners(db: GraphDatabaseAPI?, log: Log?) {
+//            // todo - move in another class, similar to CypherProcedureHandler
+//            // todo - check if there is a better way, maybe put if(apoc.kafka.enabled=true) 
+//            StreamsRouterConfigurationListener(db!!, log!!
+//            ).start(StreamsConfig.getConfiguration())
+//
+//            StreamsSinkConfigurationListener(db!!, log!!
+//            ).start(StreamsConfig.getConfiguration())
+//        }
+//        
         private val streamsEventSinkStore = ConcurrentHashMap<String, StreamsEventSink>()
 
         private fun getStreamsEventSink(db: GraphDatabaseService) = streamsEventSinkStore[StreamsUtils.getName(db)]
