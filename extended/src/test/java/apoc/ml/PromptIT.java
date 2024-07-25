@@ -249,106 +249,12 @@ public class PromptIT {
 
     @Test
     public void ragWithRelevantAttributesComparedToIrrelevantOneAndChatProcedure() {
-        String question = "Which athletes won the gold medal in mixed doubles's curling  at the 2022 Winter Olympics?";
-        
-        // -- test with hallucinations, wrong winner names
-        testCall(db, """
-                CALL apoc.ml.openai.chat([
-                    {role:"user", content: $question}
-                ], $apiKey)""", 
-                map("apiKey", OPENAI_KEY, "question", question),
-                r -> {
-                    var result = (Map<String,Object>) r.get("value");
-
-                    Map message = ((List<Map<String,Map>>) result.get("choices")).get(0).get("message");
-                    assertEquals("assistant", message.get("role"));
-                    String value = (String) message.get("content");
-
-                    String msg = "Current value is: " + value;
-                    assertTrue(msg, value.contains("gold medal"));
-                    assertNot2022Winners(value);
-                });
-
-        // -- test RAG with irrilevant attributes
-        testCall(db, QUERY_RAG,
-                map("attributes", List.of("irrelevant", "irrelevant2"),
-                        "question", "Which athletes won the gold medal in curling at the 2022 Winter Olympics?",
-                        "conf", map(API_KEY_CONF, OPENAI_KEY)
-                ),
-                (r) -> {
-                    String value = (String) r.get("value");
-                    String message = "Current value is: " + value;
-                    assertTrue(message, value.contains(UNKNOWN_ANSWER));
-
-                    assertNot2022Winners(value);
-                });
-
-        // -- test RAG with relevant attributes
-        testCall(db, QUERY_RAG,
-                map(
-                        "attributes", RAG_ATTRIBUTES,
-                        "question", "Which athletes won the gold medal in curling at the 2022 Winter Olympics?",
-                        "conf", map("apiKey", OPENAI_KEY)
-                ),
-                (r) -> {
-                    String value = (String) r.get("value");
-                    String message = "Current value is: " + value;
-                    assertTrue(message, value.contains("Stefania Constantini"));
-                    assertTrue(message, value.contains("Amos Mosaner"));
-                    assertTrue(message, value.contains("Italy"));
-                });
+        ragWithRelevantAttributesCommon(Map.of());
     }
 
     @Test
     public void ragWithRelevantAttributesComparedToIrrelevantOneAndChatProcedureGpt4() {
-        String model = "gpt-4o";
-        String question = "Which athletes won the gold medal in mixed doubles's curling  at the 2022 Winter Olympics?";
-
-        // -- test with hallucinations, wrong winner names
-        testCall(db, """
-                CALL apoc.ml.openai.chat([
-                    {role:"user", content: $question}
-                ], $apiKey, $conf)""",
-                map("apiKey", OPENAI_KEY, "question", question, "conf", Map.of(MODEL_CONF_KEY, model)),
-                r -> {
-                    var result = (Map<String,Object>) r.get("value");
-
-                    Map message = ((List<Map<String,Map>>) result.get("choices")).get(0).get("message");
-                    assertEquals("assistant", message.get("role"));
-                    String value = (String) message.get("content");
-
-                    String msg = "Current value is: " + value;
-                    assertTrue(msg, value.contains("gold medal"));
-                    assert2022Winners(value);
-                });
-
-        // -- test RAG with irrilevant attributes
-        testCall(db, QUERY_RAG,
-                map("attributes", List.of("irrelevant", "irrelevant2"),
-                        "question", "Which athletes won the gold medal in curling at the 2022 Winter Olympics?",
-                        "conf", map(API_KEY_CONF, OPENAI_KEY, MODEL_CONF_KEY, model)
-                ),
-                (r) -> {
-                    String value = (String) r.get("value");
-                    String message = "Current value is: " + value;
-                    assertTrue(message, value.contains(UNKNOWN_ANSWER));
-                    assertNot2022Winners(value);
-                });
-
-        // -- test RAG with relevant attributes
-        testCall(db, QUERY_RAG,
-                map(
-                        "attributes", RAG_ATTRIBUTES,
-                        "question", "Which athletes won the gold medal in curling at the 2022 Winter Olympics?",
-                        "conf", map("apiKey", OPENAI_KEY, MODEL_CONF_KEY, model)
-                ),
-                (r) -> {
-                    String value = (String) r.get("value");
-                    String message = "Current value is: " + value;
-                    assertTrue(message, value.contains("Stefania Constantini"));
-                    assertTrue(message, value.contains("Amos Mosaner"));
-                    assertTrue(message, value.contains("Italy"));
-                });
+        ragWithRelevantAttributesCommon(Map.of(MODEL_CONF_KEY, "gpt-4o"));
     }
 
     @Test
@@ -506,6 +412,62 @@ public class PromptIT {
     private static void assert2022Winners(String value) {
         assertThat(value).contains("Stefania Constantini", "Amos Mosaner");
         assertThat(value).containsAnyOf("Italy", "Italian");
+    }
+
+    private void ragWithRelevantAttributesCommon(Map<String, Object> config) {
+        String question = "Which athletes won the gold medal in mixed doubles's curling  at the 2022 Winter Olympics?";
+
+        // -- test with hallucinations, wrong winner names
+        testCall(db, """
+                CALL apoc.ml.openai.chat([
+                    {role:"user", content: $question}
+                ], $apiKey, $conf)""",
+                map("apiKey", OPENAI_KEY, "question", question, "conf", config),
+                r -> {
+                    var result = (Map<String,Object>) r.get("value");
+
+
+
+                    Map message = ((List<Map<String,Map>>) result.get("choices")).get(0).get("message");
+                    assertEquals("assistant", message.get("role"));
+                    String value = (String) message.get("content");
+
+                    String msg = "Current value is: " + value;
+                    assertTrue(msg, value.contains("gold medal"));
+                    if (!config.isEmpty()) {
+                        assert2022Winners(value);
+                    } else {
+                        assertNot2022Winners(value);
+                    }
+                });
+
+        // -- test RAG with irrilevant attributes
+        testCall(db, QUERY_RAG,
+                map("attributes", List.of("irrelevant", "irrelevant2"),
+                        "question", "Which athletes won the gold medal in curling at the 2022 Winter Olympics?",
+                        "conf", config.isEmpty() ? map(API_KEY_CONF, OPENAI_KEY) : map(API_KEY_CONF, OPENAI_KEY, MODEL_CONF_KEY, config.get(MODEL_CONF_KEY))
+                ),
+                (r) -> {
+                    String value = (String) r.get("value");
+                    String message = "Current value is: " + value;
+                    assertTrue(message, value.contains(UNKNOWN_ANSWER));
+                    assertNot2022Winners(value);
+                });
+
+        // -- test RAG with relevant attributes
+        testCall(db, QUERY_RAG,
+                map(
+                        "attributes", RAG_ATTRIBUTES,
+                        "question", "Which athletes won the gold medal in curling at the 2022 Winter Olympics?",
+                        "conf", config.isEmpty() ? map(API_KEY_CONF, OPENAI_KEY) : map(API_KEY_CONF, OPENAI_KEY, MODEL_CONF_KEY, config.get(MODEL_CONF_KEY))
+                ),
+                (r) -> {
+                    String value = (String) r.get("value");
+                    String message = "Current value is: " + value;
+                    assertTrue(message, value.contains("Stefania Constantini"));
+                    assertTrue(message, value.contains("Amos Mosaner"));
+                    assertTrue(message, value.contains("Italy"));
+                });
     }
 
 }
