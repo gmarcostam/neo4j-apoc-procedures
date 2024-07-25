@@ -34,7 +34,7 @@ public class VertexAIIT {
 
     private String vertexAiKey;
     private String vertexAiProject;
-    
+
     private final List<Map<String, Object>> streamContents = List.of(
             Map.of("role", "user",
                     "parts", List.of(Map.of("text", "translate book in italian"))
@@ -98,32 +98,8 @@ public class VertexAIIT {
                     {author:"user", content:"What planet do timelords live on?"}
                     ],  $apiKey, $project, {temperature:0},
                     "Fictional universe of Doctor Who. Only answer with a single word!",
-                    [{input:{content:"What planet do humans live on?"}, output:{content:"Earth"}}])""", 
+                    [{input:{content:"What planet do humans live on?"}, output:{content:"Earth"}}])""",
                 parameters,
-                (row) -> assertCorrectResponse(row, "gallifrey"));
-    }
-
-    @Test
-    public void chatCompletionGpt4() {
-        testCall(db, """
-                    CALL apoc.ml.vertexai.chat([
-                    {author:"user", content:"What planet do timelords live on?"}
-                    ],  $apiKey, $project, {temperature:0},
-                    "Fictional universe of Doctor Who. Only answer with a single word!",
-                    [{input:{content:"What planet do humans live on?"}, output:{content:"Earth"}}])""",
-                Map.of("apiKey", vertexAiKey, "project", vertexAiProject, "conf", Map.of(MODEL_CONF_KEY, "gpt-4o")),
-                (row) -> assertCorrectResponse(row, "gallifrey"));
-    }
-
-    @Test
-    public void chatCompletionGeminiFlash() {
-        testCall(db, """
-                    CALL apoc.ml.vertexai.chat([
-                    {author:"user", content:"What planet do timelords live on?"}
-                    ],  $apiKey, $project, {temperature:0},
-                    "Fictional universe of Doctor Who. Only answer with a single word!",
-                    [{input:{content:"What planet do humans live on?"}, output:{content:"Earth"}}])""",
-                Map.of("apiKey", vertexAiKey, "project", vertexAiProject, "conf", Map.of(MODEL_CONF_KEY, "gemini-flash")),
                 (row) -> assertCorrectResponse(row, "gallifrey"));
     }
 
@@ -131,31 +107,36 @@ public class VertexAIIT {
     public void stream() {
         HashMap<String, Object> params = new HashMap<>(parameters);
         params.put("contents", streamContents);
-        testCall(db, "CALL apoc.ml.vertexai.stream($contents,$apiKey, $project)", 
+        testCall(db, "CALL apoc.ml.vertexai.stream($contents,$apiKey, $project)",
                 params, (row) -> {
-            assertCorrectResponse(row, "libro");
-        });
+                    assertCorrectResponse(row, "libro");
+                });
     }
-    
+
     @Test
     public void customWithCompleteString() {
         HashMap<String, Object> params = new HashMap<>(parameters);
         params.put("contents", streamContents);
         String endpoint = "https://us-central1-aiplatform.googleapis.com/v1/projects/" + vertexAiProject + "/locations/us-central1/publishers/google/models/gemini-pro-vision:" + STREAM_RESOURCE;
         params.put(ENDPOINT_CONF_KEY, endpoint);
-        testCall(db, " CALL apoc.ml.vertexai.custom({contents: $contents}, $apiKey, null, {endpoint: $endpoint})", 
-                params, 
+        testCall(db, " CALL apoc.ml.vertexai.custom({contents: $contents}, $apiKey, null, {endpoint: $endpoint})",
+                params,
                 (row) -> assertCorrectResponse(row, "libro"));
     }
-    
+
+    @Test
+    public void customWithCompleteStringGeminiFlash() {
+        customWithCompleteStringCustomModel("gemini-1.5-flash-001");
+    }
+
     @Test
     public void customWithStringFormat() {
         HashMap<String, Object> params = new HashMap<>(parameters);
         params.put("contents", streamContents);
         String endpoint = "https://us-central1-aiplatform.googleapis.com/v1/projects/{project}/locations/us-central1/publishers/google/models/gemini-pro-vision:" + STREAM_RESOURCE;
         params.put(ENDPOINT_CONF_KEY, endpoint);
-        testCall(db, "CALL apoc.ml.vertexai.custom({contents: $contents}, $apiKey, $project, {endpoint: $endpoint})", 
-                params, 
+        testCall(db, "CALL apoc.ml.vertexai.custom({contents: $contents}, $apiKey, $project, {endpoint: $endpoint})",
+                params,
                 (row) -> assertCorrectResponse(row, "libro"));
     }
 
@@ -182,8 +163,8 @@ public class VertexAIIT {
                         CALL apoc.ml.vertexai.custom({contents: $contents},
                             $apiKey,
                             $project,
-                            $conf)""", 
-                params, 
+                            $conf)""",
+                params,
                 (row) -> assertCorrectResponse(row, "tarall"));
     }
 
@@ -192,22 +173,22 @@ public class VertexAIIT {
         HashMap<String, Object> params = new HashMap<>(parameters);
         params.put("contents", streamContents);
 
-        testCall(db, "CALL apoc.ml.vertexai.custom({contents: $contents}, $apiKey, $project)", 
-                params, 
+        testCall(db, "CALL apoc.ml.vertexai.custom({contents: $contents}, $apiKey, $project)",
+                params,
                 (row) -> assertCorrectResponse(row, "libro"));
     }
-    
+
     @Test
     public void customWithCodeBison() {
         Map<String, Object> params = new HashMap<>(parameters);
         params.put("conf", Map.of(MODEL_CONF_KEY, "codechat-bison", RESOURCE_CONF_KEY, PREDICT_RESOURCE));
-        
+
         testCall(db, """
                CALL apoc.ml.vertexai.custom({instances:
                 [{messages: [{author: "user", content: "Who are you?"}]}]
                },
                $apiKey, $project, $conf)""",
-                params, 
+                params,
                 (row) -> assertCorrectResponse(row, "language model"));
     }
 
@@ -215,31 +196,31 @@ public class VertexAIIT {
     public void customWithChatCompletion() {
         Map<String, Object> params = new HashMap<>(parameters);
         params.put("conf", Map.of(MODEL_CONF_KEY, "chat-bison", RESOURCE_CONF_KEY, PREDICT_RESOURCE));
-        
+
         testCall(db, """
             CALL apoc.ml.vertexai.custom({instances:
                 [{messages: [{author: "user", content: "What planet do human live on?"}]}]
                },
             $apiKey, $project, $conf)""",
-                params, 
-            (row) -> assertCorrectResponse(row, "earth"));
+                params,
+                (row) -> assertCorrectResponse(row, "earth"));
     }
 
     @Test
     public void customWithWrongHeader() {
         Map<String, String> headers = Map.of("Content-Type", "invalid",
                 "Authorization", "invalid");
-        
+
         try {
             testCall(db, """
                         CALL apoc.ml.vertexai.custom(
                             {
                              contents: $contents
                             }, $apiKey, $project, {headers: $headers})
-                """, Map.of("apiKey", vertexAiKey, 
-                "project", vertexAiProject, 
-                "headers", headers,
-        "contents", streamContents), (row) -> fail("Should fail due to 401 response"));
+                """, Map.of("apiKey", vertexAiKey,
+                    "project", vertexAiProject,
+                    "headers", headers,
+                    "contents", streamContents), (row) -> fail("Should fail due to 401 response"));
         } catch (RuntimeException e) {
             String errMsg = e.getMessage();
             assertTrue(errMsg.contains("Server returned HTTP response code: 401"), "Current err. message is:" + errMsg);
@@ -258,7 +239,7 @@ public class VertexAIIT {
                 parameters
         );
     }
-    
+
     @Test
     public void completionNull() {
         assertNullInputFails(db, "CALL apoc.ml.vertexai.completion(null, $apiKey, $project)",
@@ -271,5 +252,23 @@ public class VertexAIIT {
         assertNullInputFails(db, "CALL apoc.ml.vertexai.chat(null, $apiKey, $project)",
                 parameters
         );
+    }
+
+    private void customWithCompleteStringCustomModel(String model) {
+        HashMap<String, Object> params = new HashMap<>(parameters);
+        params.put("contents", List.of(
+                Map.of("role", "user",
+                        "parts", List.of(Map.of("text", "translate the word 'book' in italian"))
+                )
+        ));
+
+        String endpoint = "https://us-central1-aiplatform.googleapis.com/v1/projects/" + vertexAiProject + "/locations/us-central1/publishers/google/models/{model}:{resource}";
+        params.put(ENDPOINT_CONF_KEY, endpoint);
+        params.put(MODEL_CONF_KEY, model);
+        params.put(RESOURCE_CONF_KEY, "generateContent");
+
+        testCall(db, " CALL apoc.ml.vertexai.custom({contents: $contents}, $apiKey, null, {endpoint: $endpoint, model: $model, resource: $resource})",
+                params,
+                (row) -> assertCorrectResponse(row, "libro"));
     }
 }

@@ -19,7 +19,7 @@ Moreover, they can have the following configuration keys, as the last parameter.
 |===
 | key | description | default
 | endpoint | analogous to `apoc.ml.vertexai.url` APOC config | https://\{region\}-aiplatform.googleapis.com/v1/projects/\{project\}/locations/\{region\}/publishers/google/models/\{model\}:\{resource\}
-| headers | to add or edit the HTTP default header | 
+| headers | to add or edit the HTTP default header |
     `{``Content-Type``: "application/json", ``Accept``: "application/json", ``Authorization``: "Bearer " + <$accessToken, i.e. 2nd parameter> }`
 | model | The Vertex AI model | depends on the procedure
 | region | The Vertex AI region  | us-central1
@@ -31,7 +31,7 @@ Moreover, they can have the following configuration keys, as the last parameter.
 We can define the `endpoint` configuration as a full URL, e.g. `https://us-central1-aiplatform.googleapis.com/v1/projects/myVertexAIProject/locations/us-central1/publishers/google/models/gemini-pro-vision:streamGenerateContent`,
 or define it via parameters that will then be replaced by the other configurations.
 
-For example, if we define no `endpoint` config., 
+For example, if we define no `endpoint` config.,
 the default one `https://\{region\}-aiplatform.googleapis.com/v1/projects/\{project\}/locations/\{region\}/publishers/google/models/\{model\}:\{resource\}` will be valued, where:
 
 - `\{model\}` will be model defined by the `model` configuration
@@ -51,7 +51,7 @@ This procedure `apoc.ml.vertexai.embedding` can take a list of text strings, and
 It uses the embedding endpoint which is https://cloud.google.com/vertex-ai/docs/generative-ai/embeddings/get-text-embeddings[documented here^].
 
 API Quotas are per project/per region and you can over-ride the default us-central1 in the configuration map e.g. {region:'us-east4'}.
-GCP Regions can be found here: https://cloud.google.com/about/locations 
+GCP Regions can be found here: https://cloud.google.com/about/locations
 
 Additional configuration is passed to the API, the default model used is `textembedding-gecko`.
 
@@ -195,7 +195,7 @@ We can adjust the parameter, for example `temperature`
 
 [source,cypher]
 ----
-CALL apoc.ml.vertexai.stream([{role: "user", parts: [{text: "translate book in italian"}]}], '<accessToken>', '<projectID>', 
+CALL apoc.ml.vertexai.stream([{role: "user", parts: [{text: "translate book in italian"}]}], '<accessToken>', '<projectID>',
     {temperature: 0})
 ----
 
@@ -246,8 +246,8 @@ CALL apoc.ml.vertexai.custom({
             ]
         }
     ]
-}, 
-"<accessToken>", 
+},
+"<accessToken>",
 "<projectId>",
 {model: 'gemini-pro-vision'}
 )
@@ -266,8 +266,8 @@ CALL apoc.ml.vertexai.custom({
 
 [source,cypher]
 ----
-CALL apoc.ml.vertexai.custom({contents: {role: "user", parts: [{text: "translate book in italian"}]}}, 
-    "<accessToken>", 
+CALL apoc.ml.vertexai.custom({contents: {role: "user", parts: [{text: "translate book in italian"}]}},
+    "<accessToken>",
     "<projectId>",
     {endpoint: "https://us-central1-aiplatform.googleapis.com/v1/projects/{project}/locations/us-central1/publishers/google/models/gemini-pro-vision:streamGenerateContent"}
 )
@@ -284,7 +284,7 @@ CALL apoc.ml.vertexai.custom({contents: {role: "user", parts: [{text: "translate
 
 [source,cypher]
 ----
-CALL apoc.ml.vertexai.custom({contents: {role: "user", parts: [{text: "translate book in italian"}]}}, 
+CALL apoc.ml.vertexai.custom({contents: {role: "user", parts: [{text: "translate book in italian"}]}},
     "<accessToken>",
     null,
     {endpoint: "https://us-central1-aiplatform.googleapis.com/v1/projects/vertex-project-413513/locations/us-central1/publishers/google/models/gemini-pro-vision:streamGenerateContent"}
@@ -298,8 +298,32 @@ CALL apoc.ml.vertexai.custom({contents: {role: "user", parts: [{text: "translate
 | `[{usageMetadata: {promptTokenCount: 4, totalTokenCount: 5, candidatesTokenCount: 1}, candidates: [{content: {role: "model", parts: [{text: "libro"}]}, finishReason: "STOP", safetyRatings: [{category: "HARM_CATEGORY_HARASSMENT", probability: "NEGLIGIBLE"}, {category: "HARM_CATEGORY_HATE_SPEECH", probability: "NEGLIGIBLE"}, {category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", probability: "NEGLIGIBLE"}, {category: "HARM_CATEGORY_DANGEROUS_CONTENT", probability: "NEGLIGIBLE"}]}]}]`
 |===
 
+.Gemini Flash example
+[source,cypher]
+----
+CALL apoc.ml.vertexai.custom({
+  "contents": [
+    { "parts": [
+        {
+            "text": "translate the word 'book' in italian"
+        }],
+        "role": "user"
+    }]
+},
+"<accessToken>",
+"<projectId>",
+{model: 'gemini-1.5-flash-001'}
+)
+----
 
-Moreover, we can use with other Google API with endpoints that don't start with `https://<region>-aiplatform.googleapis.com`, 
+.Results
+[opts="header"]
+|===
+| value
+| `{ "candidates" : [ { "finishReason" : "STOP", "safetyRatings" : [ { "severity" : "HARM_SEVERITY_NEGLIGIBLE", "probabilityScore" : 0.09484524, "category" : "HARM_CATEGORY_HATE_SPEECH", "severityScore" : 0.08882029, "probability" : "NEGLIGIBLE" }, { "severity" : "HARM_SEVERITY_NEGLIGIBLE", "probabilityScore" : 0.041307304, "category" : "HARM_CATEGORY_DANGEROUS_CONTENT", "severityScore" : 0.10687688, "probability" : "NEGLIGIBLE" }, { "severity" : "HARM_SEVERITY_NEGLIGIBLE", "probabilityScore" : 0.12808825, "category" : "HARM_CATEGORY_HARASSMENT", "severityScore" : 0.047691282, "probability" : "NEGLIGIBLE" }, { "severity" : "HARM_SEVERITY_NEGLIGIBLE", "probabilityScore" : 0.100348406, "category" : "HARM_CATEGORY_SEXUALLY_EXPLICIT", "severityScore" : 0.10800066, "probability" : "NEGLIGIBLE" } ], "content" : { "parts" : [ { "text" : "The Italian word for \"book\" is **libro**. \n" } ], "role" : "model" } } ], "usageMetadata" : { "totalTokenCount" : 21, "candidatesTokenCount" : 13, "promptTokenCount" : 8 } }`
+|===
+
+Moreover, we can use with other Google API with endpoints that don't start with `https://<region>-aiplatform.googleapis.com`,
 for example we can use the https://cloud.google.com/text-to-speech/docs/reference/rest/v1/text/synthesize[Text-to-Speech API]:
 
 [source,cypher]
@@ -318,7 +342,7 @@ CALL apoc.ml.vertexai.custom(
     speakingRate:1
   }
 },
-"<accessToken>", 
+"<accessToken>",
 "<projectId>",
 {endpoint: "https://texttospeech.googleapis.com/v1/text:synthesize"})
 ----
