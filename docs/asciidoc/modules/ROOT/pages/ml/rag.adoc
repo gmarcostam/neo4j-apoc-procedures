@@ -122,7 +122,7 @@ RETURN value
 | The gold medal in curling at the 2022 Winter Olympics was won by Kristin Skaslien and Magnus Nedregotten from Norway.
 |===
 
-or:
+Moreover, it is possible to use a custom `model` by adding explicitly into configuration map as follow:
 
 .Query call with custom model
 [source,cypher]

@@ -298,6 +298,8 @@ CALL apoc.ml.vertexai.custom({contents: {role: "user", parts: [{text: "translate
 | `[{usageMetadata: {promptTokenCount: 4, totalTokenCount: 5, candidatesTokenCount: 1}, candidates: [{content: {role: "model", parts: [{text: "libro"}]}, finishReason: "STOP", safetyRatings: [{category: "HARM_CATEGORY_HARASSMENT", probability: "NEGLIGIBLE"}, {category: "HARM_CATEGORY_HATE_SPEECH", probability: "NEGLIGIBLE"}, {category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", probability: "NEGLIGIBLE"}, {category: "HARM_CATEGORY_DANGEROUS_CONTENT", probability: "NEGLIGIBLE"}]}]}]`
 |===
 
+Moreover, it is possible to use a custom `model` by adding explicitly into configuration map as follow:
+
 .Gemini Flash example
 [source,cypher]
 ----
