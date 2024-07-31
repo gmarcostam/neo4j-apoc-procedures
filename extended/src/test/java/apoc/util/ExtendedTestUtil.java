@@ -6,12 +6,15 @@ import org.neo4j.graphdb.ResultTransformer;
 import org.neo4j.graphdb.security.URLAccessChecker;
 import org.neo4j.test.assertion.Assert;
 
+import java.lang.reflect.Array;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import static apoc.util.TestUtil.testCallAssertions;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.neo4j.test.assertion.Assert.assertEventually;
@@ -38,6 +41,8 @@ public class ExtendedTestUtil {
             actual.forEach((key, value) -> {
                 if (value instanceof Map mapVal) {
                     assertMapEquals(errMsg, (Map<String, Object>) expected.get(key), mapVal);
+                } else if (value.getClass().isArray() && expected.get(key).getClass().isArray()) {
+                    assertArrayEquals(toWrapperArray(expected.get(key)), toWrapperArray(value));
                 } else {
                     assertEquals(errMsg, expected.get(key), value);
                 }
@@ -82,5 +87,25 @@ public class ExtendedTestUtil {
                 return false;
             }
         }, (v) -> v, timeout, TimeUnit.SECONDS);
+    }
+
+    public static Object[] toWrapperArray(final Object primitiveArray) {
+        Objects.requireNonNull(primitiveArray, "Null values are not supported");
+        final Class<?> cls = primitiveArray.getClass();
+        if (!cls.isArray() || !cls.getComponentType().isPrimitive()) {
+            return (Object[]) primitiveArray; // if not primitive, cast and return Object[]
+        }
+        final int length = Array.getLength(primitiveArray);
+        if (length == 0) {
+            throw new IllegalArgumentException(
+                    "Only non-empty primitive arrays are supported");
+        }
+        final Object first = Array.get(primitiveArray, 0);
+        Object[] arr = (Object[]) Array.newInstance(first.getClass(), length);
+        arr[0] = first;
+        for (int i = 1; i < length; i++) {
+            arr[i] = Array.get(primitiveArray, i);
+        }
+        return arr;
     }
 }

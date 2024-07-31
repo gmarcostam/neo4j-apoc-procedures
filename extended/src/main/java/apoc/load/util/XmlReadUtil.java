@@ -10,6 +10,7 @@ import apoc.util.FileUtils;
 import apoc.util.JsonUtil;
 import apoc.util.Util;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.WordUtils;
 import org.neo4j.graphdb.Entity;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
@@ -59,16 +60,17 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static apoc.load.util.XmlImportUtil.XmlLoadUtil.generateXmlDoctypeException;
+import static apoc.load.util.XmlReadUtil.Load.generateXmlDoctypeException;
 import static apoc.util.CompressionConfig.COMPRESSION;
+import static apoc.util.ExtendedUtil.toValidValue;
 
 /**
  * Taken from <a href="https://github.com/neo4j/apoc/blob/dev/core/src/main/java/apoc/load/Xml.java">Xml</a>
  * placed in APOC Core
  */
-public class XmlImportUtil {
+public class XmlReadUtil {
 
-    public static class XmlLoadUtil {
+    public static class Load {
         public static Stream<MapResult> xmlXpathToMapResult(
                 Object urlOrBinary, URLAccessChecker urlAccessChecker, TerminationGuard terminationGuard, Map<String, Object> config) throws Exception {
             if (config == null) config = Collections.emptyMap();
@@ -112,7 +114,6 @@ public class XmlImportUtil {
 
                 for (int i = 0; i < nodeList.getLength(); i++) {
                     final Deque<Map<String, Object>> stack = new LinkedList<>();
-
                     handleNode(stack, nodeList.item(i), simpleMode, terminationGuard);
                     for (int index = 0; index < stack.size(); index++) {
                         result.add(new MapResult(stack.pollFirst()));
@@ -270,7 +271,7 @@ public class XmlImportUtil {
      * Taken from <a href="https://github.com/neo4j/apoc/blob/dev/core/src/main/java/apoc/export/graphml/GraphMLReader.java">GraphMLReader</a>
      * placed in APOC Core
      */
-    public static class GraphMLReader {
+    public static class Import {
 
         public static final String LABEL_SPLIT = " *: *";
         private final GraphDatabaseService db;
@@ -282,37 +283,37 @@ public class XmlImportUtil {
         private Reporter reporter;
         private boolean labels;
 
-        public GraphMLReader storeNodeIds() {
+        public Import storeNodeIds() {
             this.storeNodeIds = true;
             return this;
         }
 
-        public GraphMLReader relType(String name) {
+        public Import relType(String name) {
             this.defaultRelType = RelationshipType.withName(name);
             return this;
         }
 
-        public GraphMLReader batchSize(int batchSize) {
+        public Import batchSize(int batchSize) {
             this.batchSize = batchSize;
             return this;
         }
 
-        public GraphMLReader nodeLabels(boolean readLabels) {
+        public Import nodeLabels(boolean readLabels) {
             this.labels = readLabels;
             return this;
         }
 
-        public GraphMLReader source(ExportConfig.NodeConfig sourceConfig) {
+        public Import source(ExportConfig.NodeConfig sourceConfig) {
             this.source = sourceConfig;
             return this;
         }
 
-        public GraphMLReader target(ExportConfig.NodeConfig targetConfig) {
+        public Import target(ExportConfig.NodeConfig targetConfig) {
             this.target = targetConfig;
             return this;
         }
 
-        public GraphMLReader reporter(Reporter reporter) {
+        public Import reporter(Reporter reporter) {
             this.reporter = reporter;
             return this;
         }
@@ -437,15 +438,17 @@ public class XmlImportUtil {
         public static final QName FOR = QName.valueOf("for");
         public static final QName NAME = QName.valueOf("attr.name");
         public static final QName TYPE = QName.valueOf("attr.type");
+        public static final QName DATA_TYPE = QName.valueOf("type");
         public static final QName LIST = QName.valueOf("attr.list");
         public static final QName KEY = QName.valueOf("key");
         public static final QName KIND = QName.valueOf("kind");
 
-        public GraphMLReader(GraphDatabaseService db) {
+        public Import(GraphDatabaseService db) {
             this.db = db;
         }
 
         public long parseXML(Reader input, TerminationGuard terminationGuard) throws XMLStreamException {
+            Map<String, Object> dataMap = new HashMap<>();
             Map<String, String> cache = new HashMap<>(1024 * 32);
             XMLInputFactory inputFactory = XMLInputFactory.newInstance();
             inputFactory.setProperty("javax.xml.stream.isCoalescing", true);
@@ -483,6 +486,11 @@ public class XmlImportUtil {
                         String name = element.getName().getLocalPart();
 
                         if (name.equals("graphml") || name.equals("graph") || name.equals("gexf")) continue;
+                        if (name.equals("attribute")) {
+                            String id = getAttribute(element, ID);
+                            String type = getAttribute(element, DATA_TYPE);
+                            dataMap.put(id, type);
+                        }
                         if (name.equals("key")) {
                             String id = getAttribute(element, ID);
                             Key key = new Key(
@@ -517,7 +525,8 @@ public class XmlImportUtil {
                                 if (this.labels && isNode && id.equals("labels")) {
                                     addLabels((Node) last, value.toString());
                                 } else if (!this.labels || isNode || !id.equals("label")) {
-                                    last.setProperty(key.nameOrId, value);
+                                    Object convertedValue = toValidValue(value, key.nameOrId, dataMap);
+                                    last.setProperty(key.nameOrId, convertedValue);
                                     if (reporter != null) reporter.update(0, 0, 1);
                                 }
                             } else if (next.getEventType() == XMLStreamConstants.END_ELEMENT) {
@@ -545,8 +554,8 @@ public class XmlImportUtil {
                         if (name.equals("edge")) {
                             tx.increment();
                             String label = getAttribute(element, KIND); // changed from label to kind for gexf
-                            Node from = getByNodeId(cache, tx.getTransaction(), element, XmlNodeExport.NodeType.SOURCE);
-                            Node to = getByNodeId(cache, tx.getTransaction(), element, XmlNodeExport.NodeType.TARGET);
+                            Node from = getByNodeId(cache, tx.getTransaction(), element, NodeExport.NodeType.SOURCE);
+                            Node to = getByNodeId(cache, tx.getTransaction(), element, NodeExport.NodeType.TARGET);
 
                             RelationshipType relationshipType =
                                     label == null ? getRelationshipType(reader) : RelationshipType.withName(label);
@@ -597,8 +606,8 @@ public class XmlImportUtil {
         }
 
         private Node getByNodeId(
-                Map<String, String> cache, Transaction tx, StartElement element, XmlNodeExport.NodeType nodeType) {
-            final XmlNodeExport xmlNodeInterface = nodeType.get();
+                Map<String, String> cache, Transaction tx, StartElement element, NodeExport.NodeType nodeType) {
+            final NodeExport xmlNodeInterface = nodeType.get();
             final ExportConfig.NodeConfig nodeConfig = xmlNodeInterface.getNodeConfigReader(this);
 
             final String sourceTargetValue = getAttribute(element, QName.valueOf(nodeType.getName()));
@@ -681,22 +690,22 @@ public class XmlImportUtil {
     }
 
     /**
-     * Taken from <a href="https://github.com/neo4j/apoc/blob/dev/core/src/main/java/apoc/export/graphml/XmlNodeExport.java">XmlNodeExport</a>
+     * Taken from <a href="https://github.com/neo4j/apoc/blob/dev/core/src/main/java/apoc/export/graphml/NodeExport.java">NodeExport</a>
      * placed in APOC Core
      */
-    interface XmlNodeExport {
+    interface NodeExport {
 
-        ExportConfig.NodeConfig getNodeConfigReader(GraphMLReader reader);
+        ExportConfig.NodeConfig getNodeConfigReader(Import reader);
 
         enum NodeType {
-            SOURCE("source", GraphMLReader::getSource),
+            SOURCE("source", Import::getSource),
 
-            TARGET("target", GraphMLReader::getTarget);
+            TARGET("target", Import::getTarget);
 
             private final String name;
-            private final XmlNodeExport exportNode;
+            private final NodeExport exportNode;
 
-            NodeType(String name, XmlNodeExport exportNode) {
+            NodeType(String name, NodeExport exportNode) {
                 this.name = name;
                 this.exportNode = exportNode;
             }
@@ -709,7 +718,7 @@ public class XmlImportUtil {
                 return name + "Type";
             }
 
-            XmlNodeExport get() {
+            NodeExport get() {
                 return exportNode;
             }
         }

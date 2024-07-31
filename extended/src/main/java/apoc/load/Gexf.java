@@ -5,7 +5,7 @@ import apoc.Pools;
 import apoc.export.util.CountingReader;
 import apoc.export.util.ExportConfig;
 import apoc.export.util.ProgressReporter;
-import apoc.load.util.XmlImportUtil.GraphMLReader;
+import apoc.load.util.XmlReadUtil.Import;
 import apoc.result.MapResult;
 import apoc.result.ProgressInfo;
 import apoc.util.FileUtils;
@@ -22,7 +22,7 @@ import org.neo4j.procedure.TerminationGuard;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static apoc.load.util.XmlImportUtil.XmlLoadUtil.xmlXpathToMapResult;
+import static apoc.load.util.XmlReadUtil.Load.xmlXpathToMapResult;
 
 @Extended
 public class Gexf {
@@ -61,7 +61,7 @@ public class Gexf {
                 source = "file";
             }
             ProgressReporter reporter = new ProgressReporter(null, null, new ProgressInfo(file, source, "gexf"));
-            GraphMLReader graphMLReader = new GraphMLReader(db)
+            Import graphReader = new Import(db)
                     .reporter(reporter)
                     .batchSize(exportConfig.getBatchSize())
                     .relType(exportConfig.defaultRelationshipType())
@@ -69,11 +69,11 @@ public class Gexf {
                     .target(exportConfig.getTarget())
                     .nodeLabels(exportConfig.readLabels());
 
-            if (exportConfig.storeNodeIds()) graphMLReader.storeNodeIds();
+            if (exportConfig.storeNodeIds()) graphReader.storeNodeIds();
 
             try (CountingReader reader =
                          FileUtils.readerFor(urlOrBinaryFile, exportConfig.getCompressionAlgo(), urlAccessChecker)) {
-                graphMLReader.parseXML(reader, terminationGuard);
+                graphReader.parseXML(reader, terminationGuard);
             }
 
             return reporter.getTotal();
