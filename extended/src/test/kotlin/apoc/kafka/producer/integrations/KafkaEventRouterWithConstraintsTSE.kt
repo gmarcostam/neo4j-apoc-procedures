@@ -2,8 +2,6 @@ package apoc.kafka.producer.integrations
 
 import apoc.kafka.events.*
 import apoc.kafka.extensions.execute
-// import apoc.kafka.support.setConfig
-// import apoc.kafka.support.start
 import apoc.kafka.utils.JSONUtils
 import org.junit.Before
 import org.junit.Test
@@ -20,11 +18,12 @@ class KafkaEventRouterWithConstraintsTSE: KafkaEventRouterBaseTSE() {
                     "streams.source.topic.relationships.boughtConstraints" to "BOUGHT{*}"
                   )
         */
-        db.setConfig("streams.source.topic.nodes.personConstraints", "PersonConstr{*}")
-                .setConfig("streams.source.topic.nodes.productConstraints", "ProductConstr{*}")
-                .setConfig("streams.source.topic.relationships.boughtConstraints", "BOUGHT{*}")
-                .setConfig("streams.source.schema.polling.interval", "0")
-                .start()
+        db = createDbWithKafkaConfigs("streams.source.topic.nodes.personConstraints" to "PersonConstr{*}",
+            "streams.source.topic.nodes.productConstraints" to "ProductConstr{*}",
+            "streams.source.topic.relationships.boughtConstraints" to "BOUGHT{*}"
+        )
+
+
         db.execute("CREATE CONSTRAINT FOR (p:PersonConstr) REQUIRE p.name IS UNIQUE")
         db.execute("CREATE CONSTRAINT FOR (p:ProductConstr) REQUIRE p.name IS UNIQUE")
     }

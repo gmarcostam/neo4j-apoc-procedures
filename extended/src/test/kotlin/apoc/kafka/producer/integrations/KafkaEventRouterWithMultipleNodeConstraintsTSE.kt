@@ -44,7 +44,7 @@ class KafkaEventRouterWithMultipleNodeConstraintsTSE: KafkaEventRouterBaseTSE() 
 
 
         val db = createDbWithKafkaConfigs("streams.source.schema.polling.interval" to "0",
-            "kafka.streams.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_COMPACT,
+            "kafka.streams.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_DELETE,
             "streams.source.topic.nodes.$personTopic" to "$labelStart{*}",
             "streams.source.topic.nodes.$productTopic" to "$labelEnd{*}",
             "streams.source.topic.relationships.$topicWithStrategyAll" to "$keyStrategyAll{*}",
@@ -98,7 +98,7 @@ class KafkaEventRouterWithMultipleNodeConstraintsTSE: KafkaEventRouterBaseTSE() 
             assertTrue(isValidRelationship(valueUpdate, OperationType.updated))
 
             db.execute("MATCH (p)-[rel:$keyStrategyAll]->(pp) DELETE rel")
-            val deletedRecords = consumer.poll(Duration.ofSeconds(5))
+            var deletedRecords = consumer.poll(Duration.ofSeconds(5))
             assertEquals(1, deletedRecords.count())
             val deletedRecord = deletedRecords.first()
             assertNotNull(ExtendedTestUtil.readValue(deletedRecord.key()))

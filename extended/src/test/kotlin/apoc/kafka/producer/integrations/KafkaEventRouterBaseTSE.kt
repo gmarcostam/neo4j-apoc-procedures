@@ -34,7 +34,7 @@ open class KafkaEventRouterBaseTSE { // TSE (Test Suit Element)
 //        @ClassRule
 //        var STORE_DIR = TemporaryFolder()
 
-//        lateinit var db: GraphDatabaseService
+        lateinit var db: GraphDatabaseService
         lateinit var dbms: DatabaseManagementService
         
         @BeforeClass
