@@ -1,6 +1,11 @@
 package apoc.util;
 
+import apoc.util.collection.Iterables;
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Label;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.ResultTransformer;
 import org.neo4j.graphdb.security.URLAccessChecker;
@@ -8,10 +13,13 @@ import org.neo4j.test.assertion.Assert;
 
 import java.lang.reflect.Array;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import static apoc.util.TestUtil.testCallAssertions;
 import static org.junit.Assert.assertArrayEquals;
@@ -26,6 +34,33 @@ public class ExtendedTestUtil {
      */
     public static class MockURLAccessChecker {
         public static final URLAccessChecker INSTANCE = url -> url;
+    }
+
+    public static void assertRelationship(Relationship rel,
+                                          String expectedRelType, Map<String, Object> expectedProps,
+                                          List<String> expectedStartNodeLabels,
+                                          Map<String, Object> expectedStartNodeProps,
+                                          List<String> expectedEndNodeLabels,
+                                          Map<String, Object> expectedEndNodeProps) {
+        
+        Node startNode = rel.getStartNode();
+        Node endNode = rel.getEndNode();
+
+        assertMapEquals(expectedProps, rel.getAllProperties());
+        assertEquals(RelationshipType.withName(expectedRelType), rel.getType());
+
+        Set<Label> expectedStartLabelSet = expectedStartNodeLabels.stream()
+                .map(Label::label)
+                .collect(Collectors.toSet());
+        
+        assertEquals(expectedStartLabelSet, Iterables.asSet(startNode.getLabels()));
+        assertMapEquals(expectedStartNodeProps, startNode.getAllProperties());
+
+        Set<Label> expectedEndLabelSet = expectedEndNodeLabels.stream()
+                .map(Label::label)
+                .collect(Collectors.toSet());
+        assertEquals(expectedEndLabelSet, Iterables.asSet(endNode.getLabels()));
+        assertMapEquals(expectedEndNodeProps, endNode.getAllProperties());
     }
 
     public static void assertMapEquals(Map<String, Object> expected, Map<String, Object> actual) {
