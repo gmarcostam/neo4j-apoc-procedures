@@ -1,13 +1,13 @@
 package apoc.kafka.consumer
 
+import apoc.kafka.config.StreamsConfig
+import apoc.kafka.utils.KafkaUtil
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.neo4j.kernel.availability.AvailabilityListener
 import org.neo4j.kernel.internal.GraphDatabaseAPI
 import org.neo4j.plugin.configuration.EventType
-import apoc.kafka.config.StreamsConfig
-import apoc.kafka.utils.StreamsUtils
 import java.util.concurrent.ConcurrentHashMap
 
 class StreamsEventSinkAvailabilityListener(dependencies: StreamsEventSinkExtensionFactory.Dependencies): AvailabilityListener {
@@ -52,7 +52,7 @@ class StreamsEventSinkAvailabilityListener(dependencies: StreamsEventSinkExtensi
         fun setAvailable(db: GraphDatabaseAPI, isAvailable: Boolean): Unit = available.set(db.databaseName(), isAvailable)
 
         fun remove(db: GraphDatabaseAPI) {
-            available.remove(StreamsUtils.getName(db))
+            available.remove(KafkaUtil.getName(db))
             StreamsConfig.removeInstance(db)
         }
     }

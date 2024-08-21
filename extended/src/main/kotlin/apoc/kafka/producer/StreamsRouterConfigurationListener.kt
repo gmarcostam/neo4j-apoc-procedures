@@ -14,7 +14,8 @@ import apoc.kafka.events.StreamsPluginStatus
 import apoc.kafka.extensions.isDefaultDb
 import apoc.kafka.producer.kafka.KafkaConfiguration
 //import apoc.kafka.producer.procedures.StreamsProcedures
-import apoc.kafka.utils.KafkaValidationUtils
+import apoc.kafka.utils.KafkaUtil
+import apoc.kafka.utils.KafkaUtil.getConsumerProperties
 
 class StreamsRouterConfigurationListener(private val db: GraphDatabaseAPI,
                                          private val log: Log) : ConfigurationLifecycleListener {
@@ -27,7 +28,7 @@ class StreamsRouterConfigurationListener(private val db: GraphDatabaseAPI,
 
     private var lastConfig: KafkaConfiguration? = null
 
-    private val consumerConfig = KafkaValidationUtils.getConsumerProperties()
+    private val consumerConfig = getConsumerProperties()
 
     private fun KafkaConfiguration.excludeSinkProps() = this.asProperties()
         ?.filterNot { consumerConfig.contains(it.key)

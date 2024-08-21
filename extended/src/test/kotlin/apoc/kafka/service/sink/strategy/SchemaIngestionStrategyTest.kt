@@ -3,7 +3,7 @@ package apoc.kafka.service.sink.strategy
 import org.junit.Test
 import apoc.kafka.events.*
 import apoc.kafka.service.StreamsSinkEntity
-import apoc.kafka.utils.StreamsUtils
+import apoc.kafka.utils.KafkaUtil
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -77,7 +77,7 @@ class SchemaIngestionStrategyTest {
         assertEquals(1, nodeEvents.size)
         val nodeQuery = nodeEvents[0].query
         val expectedNodeQuery = """
-            |${StreamsUtils.UNWIND}
+            |${KafkaUtil.UNWIND}
             |MERGE (n:User{surname: event.properties.surname, name: event.properties.name})
             |SET n = event.properties
         """.trimMargin()
@@ -94,7 +94,7 @@ class SchemaIngestionStrategyTest {
         assertEquals(1, relationshipEvents.size)
         val relQuery = relationshipEvents[0].query
         val expectedRelQuery = """
-            |${StreamsUtils.UNWIND}
+            |${KafkaUtil.UNWIND}
             |MERGE (start:User{name: event.start.name, surname: event.start.surname})
             |MERGE (end:User{name: event.end.name, surname: event.end.surname})
             |MERGE (start)-[r:`KNOWS WHO`]->(end)
@@ -157,7 +157,7 @@ class SchemaIngestionStrategyTest {
         assertEquals(1, nodeEvents.size)
         val nodeQuery = nodeEvents[0].query
         val expectedNodeQuery = """
-            |${StreamsUtils.UNWIND}
+            |${KafkaUtil.UNWIND}
             |MERGE (n:User{surname: event.properties.surname, name: event.properties.name})
             |SET n = event.properties
             |SET n:NewLabel
@@ -209,7 +209,7 @@ class SchemaIngestionStrategyTest {
         assertEquals(1, relationshipEvents.size)
         val relQuery = relationshipEvents[0].query
         val expectedRelQuery = """
-            |${StreamsUtils.UNWIND}
+            |${KafkaUtil.UNWIND}
             |MERGE (start:`User Ext`{name: event.start.name, surname: event.start.surname})
             |MERGE (end:`Product Ext`{name: event.end.name})
             |MERGE (start)-[r:`HAS BOUGHT`]->(end)
@@ -281,7 +281,7 @@ class SchemaIngestionStrategyTest {
         assertEquals(1, relationshipEvents.size)
         val relQuery = relationshipEvents[0].query
         val expectedRelQuery = """
-            |${StreamsUtils.UNWIND}
+            |${KafkaUtil.UNWIND}
             |MERGE (start:`User Ext`{address: event.start.address})
             |MERGE (end:`Product Ext`{code: event.end.code})
             |MERGE (start)-[r:`HAS BOUGHT`]->(end)
@@ -356,14 +356,14 @@ class SchemaIngestionStrategyTest {
         assertEquals(1, relationshipEvents.size)
         val relQuery = relationshipEvents[0].query
         val expectedRelQueryOne = """
-            |${StreamsUtils.UNWIND}
+            |${KafkaUtil.UNWIND}
             |MERGE (start:`User AAA`:`User Ext`{another_two: event.start.another_two})
             |MERGE (end:`Product Ext`{code: event.end.code})
             |MERGE (start)-[r:`HAS BOUGHT`]->(end)
             |SET r = event.properties
         """.trimMargin()
         val expectedRelQueryTwo = """
-            |${StreamsUtils.UNWIND}
+            |${KafkaUtil.UNWIND}
             |MERGE (start:`User Ext`:`User AAA`{another_two: event.start.another_two})
             |MERGE (end:`Product Ext`{code: event.end.code})
             |MERGE (start)-[r:`HAS BOUGHT`]->(end)
@@ -427,7 +427,7 @@ class SchemaIngestionStrategyTest {
         assertEquals(0, nodeEvents.size)
         val nodeQuery = nodeDeleteEvents[0].query
         val expectedNodeQuery = """
-            |${StreamsUtils.UNWIND}
+            |${KafkaUtil.UNWIND}
             |MATCH (n:User{surname: event.properties.surname, name: event.properties.name})
             |DETACH DELETE n
         """.trimMargin()
@@ -476,7 +476,7 @@ class SchemaIngestionStrategyTest {
         assertEquals(0, relationshipEvents.size)
         val relQuery = relationshipDeleteEvents[0].query
         val expectedRelQuery = """
-            |${StreamsUtils.UNWIND}
+            |${KafkaUtil.UNWIND}
             |MATCH (start:User{name: event.start.name, surname: event.start.surname})
             |MATCH (end:User{name: event.end.name, surname: event.end.surname})
             |MATCH (start)-[r:`KNOWS WHO`]->(end)

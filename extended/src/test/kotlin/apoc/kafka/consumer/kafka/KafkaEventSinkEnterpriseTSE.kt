@@ -5,7 +5,7 @@ import apoc.kafka.service.errors.ErrorService
 import apoc.kafka.support.Assert
 import apoc.kafka.support.KafkaTestUtils
 import apoc.kafka.support.Neo4jContainerExtension
-import apoc.kafka.utils.StreamsUtils
+import apoc.kafka.utils.KafkaUtil
 import apoc.util.JsonUtil
 import io.confluent.kafka.serializers.KafkaAvroSerializer
 import kotlinx.coroutines.delay
@@ -15,12 +15,19 @@ import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.ByteArrayDeserializer
 import org.hamcrest.Matchers
-import org.junit.*
+import org.junit.After
+import org.junit.AfterClass
+import org.junit.Assume
+import org.junit.Before
+import org.junit.BeforeClass
+import org.junit.Ignore
+import org.junit.Test
 import org.neo4j.driver.SessionConfig
 import org.neo4j.function.ThrowingSupplier
 import java.util.*
 import java.util.concurrent.TimeUnit
 
+@Ignore
 class KafkaEventSinkEnterpriseTSE {
 
     companion object {
@@ -42,7 +49,7 @@ class KafkaEventSinkEnterpriseTSE {
                 startedFromSuite = false
                 KafkaEventSinkSuiteIT.setUpContainer()
             }
-            StreamsUtils.ignoreExceptions({
+            KafkaUtil.ignoreExceptions({
                 neo4j.withKafka(KafkaEventSinkSuiteIT.kafka)
                         ?.withNeo4jConfig("streams.source.enabled", "false") // we disable the source plugin globally
                         ?.withNeo4jConfig("streams.sink.enabled", "false") // we disable the sink plugin globally

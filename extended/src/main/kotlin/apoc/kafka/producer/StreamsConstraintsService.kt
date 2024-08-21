@@ -14,7 +14,7 @@ import org.neo4j.graphdb.Label
 import org.neo4j.graphdb.RelationshipType
 import org.neo4j.graphdb.TransactionFailureException
 import apoc.kafka.events.Constraint
-import apoc.kafka.utils.StreamsUtils
+import apoc.kafka.utils.KafkaUtil
 import java.io.Closeable
 import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
@@ -27,14 +27,14 @@ class StreamsConstraintsService(private val db: GraphDatabaseService, private va
     private lateinit var job: Job
 
     override fun close() {
-        StreamsUtils.ignoreExceptions({ runBlocking { job.cancelAndJoin() } }, UninitializedPropertyAccessException::class.java)
+        KafkaUtil.ignoreExceptions({ runBlocking { job.cancelAndJoin() } }, UninitializedPropertyAccessException::class.java)
     }
 
     fun start() {
         job = GlobalScope.launch(Dispatchers.IO) {
             while (isActive) {
                 if (!db.isAvailable(5000)) return@launch
-                StreamsUtils.ignoreExceptions({
+                KafkaUtil.ignoreExceptions({
                     db.beginTx().use {
                         val constraints = it.schema().constraints
                         constraints

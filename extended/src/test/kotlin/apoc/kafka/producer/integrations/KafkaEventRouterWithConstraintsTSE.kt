@@ -2,30 +2,49 @@ package apoc.kafka.producer.integrations
 
 import apoc.kafka.events.*
 import apoc.kafka.extensions.execute
+import apoc.kafka.producer.integrations.KafkaEventRouterTestCommon.initDbWithLogStrategy
 import apoc.kafka.utils.JSONUtils
+import org.apache.kafka.common.config.TopicConfig
 import org.junit.Before
 import org.junit.Test
+import java.util.*
 import kotlin.test.assertEquals
 
 class KafkaEventRouterWithConstraintsTSE: KafkaEventRouterBaseTSE() {
+    val keyStrategyAll = "BOUGHT"
+    val keyStrategyDefault = "ONE_PROP"
+    val noKeyStrategy = "DEFAULT"
+
+    val labelStart = "PersonConstr"
+    val labelEnd = "ProductConstr"
+
+    val personTopic = UUID.randomUUID().toString()
+    val productTopic = UUID.randomUUID().toString()
+    val topicWithStrategyAll = UUID.randomUUID().toString()
+    val topicWithStrategyDefault = UUID.randomUUID().toString()
+    val topicWithoutStrategy = UUID.randomUUID().toString()
 
     @Before
     fun setUpInner() {
-        /* todo - creare variabile in questo modo invece di fare con setConfig e vedere se va:
-            
-                  val db = createDbWithKafkaConfigs("streams.source.topic.nodes.personConstraints" to "PersonConstr{*}",
-                    "streams.source.topic.nodes.productConstraints" to "ProductConstr{*}",
-                    "streams.source.topic.relationships.boughtConstraints" to "BOUGHT{*}"
-                  )
-        */
-        db = createDbWithKafkaConfigs("streams.source.topic.nodes.personConstraints" to "PersonConstr{*}",
+        val sourceTopics = mapOf("streams.source.topic.nodes.$personTopic" to "$labelStart{*}",
+            "streams.source.topic.nodes.$productTopic" to "$labelEnd{*}",
+            "streams.source.topic.relationships.$topicWithStrategyAll" to "$keyStrategyAll{*}",
+            "streams.source.topic.relationships.$topicWithStrategyDefault" to "$keyStrategyDefault{*}",
+            "streams.source.topic.relationships.$topicWithoutStrategy" to "$noKeyStrategy{*}",
+            "streams.source.topic.relationships.$topicWithStrategyAll.key_strategy" to RelKeyStrategy.ALL.toString().toLowerCase(),
+            "streams.source.topic.relationships.$topicWithStrategyDefault.key_strategy" to RelKeyStrategy.DEFAULT.toString().toLowerCase())
+
+        db = createDbWithKafkaConfigs("streams.source.schema.polling.interval" to "0",
+            "kafka.streams.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_DELETE,
+            "streams.source.topic.nodes.personConstraints" to "PersonConstr{*}",
             "streams.source.topic.nodes.productConstraints" to "ProductConstr{*}",
             "streams.source.topic.relationships.boughtConstraints" to "BOUGHT{*}"
-        )
+            )
 
+        val queries = listOf("CREATE CONSTRAINT FOR (p:$labelStart) REQUIRE p.name IS UNIQUE",
+            "CREATE CONSTRAINT FOR (p:$labelEnd) REQUIRE p.name IS UNIQUE")
 
-        db.execute("CREATE CONSTRAINT FOR (p:PersonConstr) REQUIRE p.name IS UNIQUE")
-        db.execute("CREATE CONSTRAINT FOR (p:ProductConstr) REQUIRE p.name IS UNIQUE")
+        initDbWithLogStrategy(db, TopicConfig.CLEANUP_POLICY_DELETE, sourceTopics, queries)
     }
 
 

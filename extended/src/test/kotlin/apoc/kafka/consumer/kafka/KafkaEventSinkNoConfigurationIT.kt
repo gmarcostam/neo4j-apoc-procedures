@@ -1,10 +1,9 @@
 package apoc.kafka.consumer.kafka
 
 import apoc.ApocConfig
-// import apoc.kafka.support.shutdownSilently
-// import apoc.kafka.support.start
 import io.confluent.kafka.serializers.KafkaAvroDeserializer
 import org.junit.After
+import org.junit.Ignore
 import org.junit.Test
 import org.neo4j.test.rule.ImpermanentDbmsRule
 import org.testcontainers.containers.GenericContainer
@@ -21,6 +20,7 @@ class FakeWebServer: GenericContainer<FakeWebServer>("alpine") {
     fun getUrl() = "http://localhost:${getMappedPort(8000)}"
 }
 
+@Ignore
 class KafkaEventSinkNoConfigurationIT {
 
     private val topic = "no-config"

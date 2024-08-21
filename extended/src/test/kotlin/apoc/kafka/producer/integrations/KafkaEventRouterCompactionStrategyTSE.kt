@@ -34,10 +34,10 @@ class KafkaEventRouterCompactionStrategyTSE : KafkaEventRouterBaseTSE() {
             "kafka.streams.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_COMPACT)
         
         val topic = UUID.randomUUID().toString()
-//        initDbWithLogStrategy(db, TopicConfig.CLEANUP_POLICY_COMPACT)
+
         KafkaEventRouterTestCommon.createTopic(topic, bootstrapServerMap)
 
-        KafkaEventRouterSuiteIT.registerPublishProcedure(db)
+//        KafkaEventRouterSuiteIT.registerPublishProcedure(db)
         kafkaConsumer.subscribe(listOf(topic))
 
         val keyRecord = "test"

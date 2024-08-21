@@ -21,19 +21,9 @@ import org.neo4j.graphdb.GraphDatabaseService
 import org.neo4j.kernel.api.procedure.GlobalProcedures
 import org.neo4j.test.TestDatabaseManagementServiceBuilder
 
-// import apoc.kafka.support.setConfig
-// import apoc.kafka.support.shutdownSilently
-
 open class KafkaEventSinkBaseTSE {
     
     companion object {
-
-
-        
-//        @JvmField
-//        @ClassRule
-//        var db: DbmsRule = ImpermanentDbmsRule()
-//        
         private var startedFromSuite = true
         
         lateinit var db: GraphDatabaseService
@@ -47,11 +37,6 @@ open class KafkaEventSinkBaseTSE {
                 startedFromSuite = false
                 KafkaEventSinkSuiteIT.setUpContainer()
             }
-
-
-
-//            TestUtil.registerProcedure(db,
-//                StreamsSinkProcedures::class.java, PublishProcedures::class.java)
         }
 
         @AfterClass
@@ -76,29 +61,12 @@ open class KafkaEventSinkBaseTSE {
     // Test data
     val dataProperties = mapOf("prop1" to "foo", "bar" to 1)
     val data = mapOf("id" to 1, "properties" to dataProperties)
-
-//    
-//    @BeforeAll
-//    fun beforeAll() {
-//
-//
-//    }
     
     @Before
     @BeforeEach
     fun setUp() {
-//        val db = extracted()
-//        db = dbms.database(GraphDatabaseSettings.DEFAULT_DATABASE_NAME)
-//        TestUtil.registerProcedure(db, PublishProcedures::class.java);
-
-//        db.graphDatabaseAPI
-//        db.ensureStarted()
-//        ApocConfig.apocConfig().setProperty("kafka.bootstrap.servers", KafkaEventSinkSuiteIT.kafka.bootstrapServers)
-//        ApocConfig.apocConfig().setProperty("streams.sink.enabled", "true")
         kafkaProducer = KafkaTestUtils.createProducer(
                 bootstrapServers = KafkaEventSinkSuiteIT.kafka.bootstrapServers
-//            ,
-//            keySerializer = ByteArraySerializer::class.java.name
         )
         kafkaAvroProducer = KafkaTestUtils.createProducer(
                 bootstrapServers = KafkaEventSinkSuiteIT.kafka.bootstrapServers,
@@ -132,10 +100,6 @@ open class KafkaEventSinkBaseTSE {
     @After
     @AfterEach
     fun tearDown() {
-//        if (::db.isInitialized) {
-//            db.shutdownSilently()
-//        }
-
         dbms.shutdown()
 
         dbms = TestDatabaseManagementServiceBuilder(temporaryFolder.root.toPath()).build()

@@ -14,7 +14,7 @@ class ProcedureUtilsTest {
 
     @Test
     fun shouldCheckIfIsACluster() {
-        val isCluster = ProcedureUtils.isCluster(db)
+        val isCluster = KafkaUtil.isCluster(db)
         assertFalse { isCluster }
     }
 

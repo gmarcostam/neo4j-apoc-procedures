@@ -2,7 +2,7 @@ package apoc.kafka.service.sink.strategy
 
 import org.junit.Test
 import apoc.kafka.service.StreamsSinkEntity
-import apoc.kafka.utils.StreamsUtils
+import apoc.kafka.utils.KafkaUtil
 import kotlin.test.assertEquals
 
 class RelationshipPatternIngestionStrategyTest {
@@ -26,7 +26,7 @@ class RelationshipPatternIngestionStrategyTest {
         // then
         assertEquals(1, queryEvents.size)
         assertEquals("""
-            |${StreamsUtils.UNWIND}
+            |${KafkaUtil.UNWIND}
             |MERGE (start:LabelA{idStart: event.start.keys.idStart})
             |SET start = event.start.properties
             |SET start += event.start.keys
@@ -63,7 +63,7 @@ class RelationshipPatternIngestionStrategyTest {
         // then
         assertEquals(1, queryEvents.size)
         assertEquals("""
-            |${StreamsUtils.UNWIND}
+            |${KafkaUtil.UNWIND}
             |MERGE (start:LabelA{idStart: event.start.keys.idStart})
             |SET start = event.start.properties
             |SET start += event.start.keys
@@ -100,7 +100,7 @@ class RelationshipPatternIngestionStrategyTest {
         // then
         assertEquals(1, queryEvents.size)
         assertEquals("""
-            |${StreamsUtils.UNWIND}
+            |${KafkaUtil.UNWIND}
             |MERGE (start:LabelA{idStart: event.start.keys.idStart})
             |SET start = event.start.properties
             |SET start += event.start.keys
@@ -139,7 +139,7 @@ class RelationshipPatternIngestionStrategyTest {
         // then
         assertEquals(1, queryEvents.size)
         assertEquals("""
-            |${StreamsUtils.UNWIND}
+            |${KafkaUtil.UNWIND}
             |MERGE (start:LabelA{idStart: event.start.keys.idStart})
             |SET start = event.start.properties
             |SET start += event.start.keys
@@ -178,7 +178,7 @@ class RelationshipPatternIngestionStrategyTest {
         // then
         assertEquals(1, queryEvents.size)
         assertEquals("""
-            |${StreamsUtils.UNWIND}
+            |${KafkaUtil.UNWIND}
             |MATCH (start:LabelA{idStart: event.start.keys.idStart})
             |MATCH (end:LabelB{idEnd: event.end.keys.idEnd})
             |MATCH (start)-[r:REL_TYPE]->(end)

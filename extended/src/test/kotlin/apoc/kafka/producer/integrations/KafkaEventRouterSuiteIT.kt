@@ -1,14 +1,10 @@
 package apoc.kafka.producer.integrations
 
-//import apoc.kafka.producer.procedures.StreamsProcedures
-import apoc.kafka.PublishProcedures
-import apoc.kafka.utils.StreamsUtils
+import apoc.kafka.utils.KafkaUtil
 import org.junit.AfterClass
 import org.junit.Assume
 import org.junit.BeforeClass
 import org.neo4j.graphdb.GraphDatabaseService
-import org.neo4j.kernel.api.procedure.GlobalProcedures
-import org.neo4j.kernel.internal.GraphDatabaseAPI
 import org.testcontainers.containers.KafkaContainer
 import org.testcontainers.containers.Network
 
@@ -36,7 +32,7 @@ class KafkaEventRouterSuiteIT {
         @BeforeClass @JvmStatic
         fun setUpContainer() {
             var exists = false
-            StreamsUtils.ignoreExceptions({
+            KafkaUtil.ignoreExceptions({
                 kafka = KafkaContainer(confluentPlatformVersion)
                     .withNetwork(Network.newNetwork())
                 kafka.start()
@@ -48,7 +44,7 @@ class KafkaEventRouterSuiteIT {
 
         @AfterClass @JvmStatic
         fun tearDownContainer() {
-            StreamsUtils.ignoreExceptions({
+            KafkaUtil.ignoreExceptions({
                 kafka.stop()
             }, UninitializedPropertyAccessException::class.java)
         }

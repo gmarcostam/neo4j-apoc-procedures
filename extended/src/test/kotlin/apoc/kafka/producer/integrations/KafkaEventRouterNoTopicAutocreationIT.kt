@@ -5,6 +5,7 @@ import apoc.kafka.support.KafkaTestUtils
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import org.apache.kafka.common.config.TopicConfig
 import org.junit.Test
 import kotlin.test.assertEquals
 
@@ -37,12 +38,14 @@ class KafkaEventRouterNoTopicAutocreationIT: KafkaEventRouterBaseTSE() {
         db = createDbWithKafkaConfigs(
             "kafka.bootstrap.servers" to KafkaEventRouterSuiteIT.kafka.bootstrapServers,
             "streams.source.topic.nodes.$personTopic" to "Person{*}",
-            "streams.source.topic.nodes.$customerTopic" to "Customer{*}"
+            "streams.source.topic.nodes.$customerTopic" to "Customer{*}",
+            "streams.source.schema.polling.interval" to "0",
+            "kafka.streams.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_COMPACT
         )
 
         // we create a new node an check that the source plugin is working
         db.execute("CREATE (p:Person{id: 1})")
-//        val config = KafkaConfiguration(bootstrapServers = KafkaEventRouterSuiteIT.kafka.bootstrapServers)
+
         val consumer = KafkaTestUtils.createConsumer<String, ByteArray>(bootstrapServers = KafkaEventRouterSuiteIT.kafka.bootstrapServers)
         consumer.subscribe(expectedTopics)
         // the consumer consumes the message from the topic

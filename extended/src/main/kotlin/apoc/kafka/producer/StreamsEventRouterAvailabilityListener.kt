@@ -8,7 +8,7 @@ import org.neo4j.kernel.internal.GraphDatabaseAPI
 import org.neo4j.logging.internal.LogService
 import org.neo4j.plugin.configuration.EventType
 import apoc.kafka.config.StreamsConfig
-import apoc.kafka.utils.StreamsUtils
+import apoc.kafka.utils.KafkaUtil
 import java.util.concurrent.ConcurrentHashMap
 
 class StreamsEventRouterAvailabilityListener(private val db: GraphDatabaseAPI,
@@ -53,7 +53,7 @@ class StreamsEventRouterAvailabilityListener(private val db: GraphDatabaseAPI,
         fun setAvailable(db: GraphDatabaseAPI, isAvailable: Boolean): Unit = available.set(db.databaseName(), isAvailable)
 
         fun remove(db: GraphDatabaseAPI) {
-            available.remove(StreamsUtils.getName(db))
+            available.remove(KafkaUtil.getName(db))
             StreamsConfig.removeInstance(db)
         }
 

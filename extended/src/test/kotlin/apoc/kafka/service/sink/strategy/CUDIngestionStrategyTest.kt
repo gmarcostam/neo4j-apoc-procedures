@@ -1,9 +1,9 @@
 package apoc.kafka.service.sink.strategy
 
-import org.junit.Test
 import apoc.kafka.extensions.quote
 import apoc.kafka.service.StreamsSinkEntity
-import apoc.kafka.utils.StreamsUtils
+import apoc.kafka.utils.KafkaUtil
+import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -65,40 +65,40 @@ class CUDIngestionStrategyTest {
         assertEquals(6, nodeEvents.size)
         assertEquals(10, nodeEvents.map { it.events.size }.sum())
         val createNodeFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |CREATE (n:Foo:Bar)
                 |SET n = event.properties
             """.trimMargin(), nodeEvents)
         assertEquals(3, createNodeFooBar.events.size)
         val createNodeFooBarLabel = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |CREATE (n:Foo:Bar:Label)
                 |SET n = event.properties
             """.trimMargin(), nodeEvents)
         assertEquals(2, createNodeFooBarLabel.events.size)
         val mergeNodeFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MERGE (n:Foo:Bar {${key.quote()}: event.${CUDIngestionStrategy.ID_KEY}.${key.quote()}})
                 |SET n += event.properties
             """.trimMargin(), nodeEvents)
         assertEquals(1, mergeNodeFooBar.events.size)
         assertNodeEventsContainsKey(mergeNodeFooBar, key)
         val mergeNodeFooBarLabel = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MERGE (n:Foo:Bar:Label {${key.quote()}: event.${CUDIngestionStrategy.ID_KEY}.${key.quote()}})
                 |SET n += event.properties
             """.trimMargin(), nodeEvents)
         assertEquals(2, mergeNodeFooBarLabel.events.size)
         assertNodeEventsContainsKey(mergeNodeFooBarLabel, key)
         val updateNodeFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (n:Foo:Bar {${key.quote()}: event.${CUDIngestionStrategy.ID_KEY}.${key.quote()}})
                 |SET n += event.properties
             """.trimMargin(), nodeEvents)
         assertEquals(1, updateNodeFooBar.events.size)
         assertNodeEventsContainsKey(updateNodeFooBar, key)
         val updateNodeFooBarLabel = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (n:Foo:Bar:Label {${key.quote()}: event.${CUDIngestionStrategy.ID_KEY}.${key.quote()}})
                 |SET n += event.properties
             """.trimMargin(), nodeEvents)
@@ -144,40 +144,40 @@ class CUDIngestionStrategyTest {
         assertEquals(6, nodeEvents.size)
         assertEquals(9, nodeEvents.map { it.events.size }.sum())
         val createNodeFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |CREATE (n:WellBehaved:`C̸r̵a̵z̵y̵ ̶.̵ ̶ ̴ ̸ ̶ ̶ ̵ ̴L̴a̵b̸e̶l`)
                 |SET n = event.properties
             """.trimMargin(), nodeEvents)
         assertEquals(2, createNodeFooBar.events.size)
         val createNodeFooBarLabel = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |CREATE (n:WellBehaved:`C̸r̵a̵z̵y̵ ̶.̵ ̶ ̴ ̸ ̶ ̶ ̵ ̴L̴a̵b̸e̶l`:Label)
                 |SET n = event.properties
             """.trimMargin(), nodeEvents)
         assertEquals(2, createNodeFooBarLabel.events.size)
         val mergeNodeFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MERGE (n:WellBehaved:`C̸r̵a̵z̵y̵ ̶.̵ ̶ ̴ ̸ ̶ ̶ ̵ ̴L̴a̵b̸e̶l` {`$key`: event.${CUDIngestionStrategy.ID_KEY}.`$key`})
                 |SET n += event.properties
             """.trimMargin(), nodeEvents)
         assertEquals(1, mergeNodeFooBar.events.size)
         assertNodeEventsContainsKey(mergeNodeFooBar, key)
         val mergeNodeFooBarLabel = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MERGE (n:WellBehaved:`C̸r̵a̵z̵y̵ ̶.̵ ̶ ̴ ̸ ̶ ̶ ̵ ̴L̴a̵b̸e̶l`:Label {`$key`: event.${CUDIngestionStrategy.ID_KEY}.`$key`})
                 |SET n += event.properties
             """.trimMargin(), nodeEvents)
         assertEquals(2, mergeNodeFooBarLabel.events.size)
         assertNodeEventsContainsKey(mergeNodeFooBarLabel, key)
         val updateNodeFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (n:WellBehaved:`C̸r̵a̵z̵y̵ ̶.̵ ̶ ̴ ̸ ̶ ̶ ̵ ̴L̴a̵b̸e̶l` {`$key`: event.${CUDIngestionStrategy.ID_KEY}.`$key`})
                 |SET n += event.properties
             """.trimMargin(), nodeEvents)
         assertEquals(1, updateNodeFooBar.events.size)
         assertNodeEventsContainsKey(updateNodeFooBar, key)
         val updateNodeFooBarLabel = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (n:WellBehaved:`C̸r̵a̵z̵y̵ ̶.̵ ̶ ̴ ̸ ̶ ̶ ̵ ̴L̴a̵b̸e̶l`:Label {`$key`: event.${CUDIngestionStrategy.ID_KEY}.`$key`})
                 |SET n += event.properties
             """.trimMargin(), nodeEvents)
@@ -187,7 +187,7 @@ class CUDIngestionStrategyTest {
         assertEquals(1, nodeDeleteEvents.size)
         val nodeDeleteEvent = nodeDeleteEvents.first()
         assertEquals("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (n:WellBehaved:`C̸r̵a̵z̵y̵ ̶.̵ ̶ ̴ ̸ ̶ ̶ ̵ ̴L̴a̵b̸e̶l` {`$key`: event.${CUDIngestionStrategy.ID_KEY}.`$key`})
                 |DETACH DELETE n
             """.trimMargin(), nodeDeleteEvent.query)
@@ -229,13 +229,13 @@ class CUDIngestionStrategyTest {
         assertEquals(2, nodeEvents.size)
         assertEquals(7, nodeEvents.map { it.events.size }.sum())
         val createNodeFooBarLabel = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |CREATE (n:Foo:Bar:Label)
                 |SET n = event.properties
             """.trimMargin(),nodeEvents)
         assertEquals(4, createNodeFooBarLabel.events.size)
         val mergeNodeFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (n) WHERE id(n) = event.ids._id
                 |SET n += event.properties
             """.trimMargin(), nodeEvents)
@@ -278,9 +278,9 @@ class CUDIngestionStrategyTest {
         assertEquals(2, relationshipEvents.size)
         assertEquals(6, relationshipEvents.map { it.events.size }.sum())
         val createRelFooBarLabel = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |CREATE (from:Foo:Bar:Label {key: event.from.${CUDIngestionStrategy.ID_KEY}.key})
-                |${StreamsUtils.WITH_EVENT_FROM}
+                |${KafkaUtil.WITH_EVENT_FROM}
                 |MATCH (to:Foo:Bar:Label {key: event.to.${CUDIngestionStrategy.ID_KEY}.key})
                 |CREATE (from)-[r:MY_REL]->(to)
                 |SET r = event.properties
@@ -288,9 +288,9 @@ class CUDIngestionStrategyTest {
         assertEquals(3, createRelFooBarLabel.events.size)
         assertRelationshipEventsContainsKey(createRelFooBarLabel, key, key)
         val mergeRelFooBarLabel = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |CREATE (from:Foo:Bar:Label {key: event.from.${CUDIngestionStrategy.ID_KEY}.key})
-                |${StreamsUtils.WITH_EVENT_FROM}
+                |${KafkaUtil.WITH_EVENT_FROM}
                 |MATCH (to:Foo:Bar:Label {key: event.to.${CUDIngestionStrategy.ID_KEY}.key})
                 |MERGE (from)-[r:MY_REL]->(to)
                 |SET r += event.properties
@@ -331,7 +331,7 @@ class CUDIngestionStrategyTest {
         assertEquals(4, nodeDeleteEvents.size)
         assertEquals(10, nodeDeleteEvents.map { it.events.size }.sum())
         val deleteNodeFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (n) WHERE id(n) = event.${CUDIngestionStrategy.ID_KEY}._id
                 |DELETE n
             """.trimMargin(), nodeDeleteEvents)
@@ -339,21 +339,21 @@ class CUDIngestionStrategyTest {
         val key = "_id"
         assertNodeEventsContainsKey(deleteNodeFooBar, key)
         val deleteNodeFooBarDetach = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (n) WHERE id(n) = event.${CUDIngestionStrategy.ID_KEY}._id
                 |DETACH DELETE n
             """.trimMargin(), nodeDeleteEvents)
         assertEquals(2, deleteNodeFooBarDetach.events.size)
         assertNodeEventsContainsKey(deleteNodeFooBarDetach, key)
         val deleteNodeFooBarLabel = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (n) WHERE id(n) = event.${CUDIngestionStrategy.ID_KEY}._id
                 |DELETE n
             """.trimMargin(), nodeDeleteEvents)
         assertEquals(3, deleteNodeFooBarLabel.events.size)
         assertNodeEventsContainsKey(deleteNodeFooBarLabel, key)
         val deleteNodeFooBarLabelDetach = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (n) WHERE id(n) = event.${CUDIngestionStrategy.ID_KEY}._id
                 |DETACH DELETE n
             """.trimMargin(), nodeDeleteEvents)
@@ -397,19 +397,19 @@ class CUDIngestionStrategyTest {
         assertEquals(3, nodeEvents.size)
         assertEquals(10, nodeEvents.map { it.events.size }.sum())
         val createNodeFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |CREATE (n:Foo:Bar)
                 |SET n = event.properties
             """.trimMargin(), nodeEvents)
         assertEquals(3, createNodeFooBar.events.size)
         val createNodeFooBarLabel = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |CREATE (n:Foo:Bar:Label)
                 |SET n = event.properties
             """.trimMargin(),nodeEvents)
         assertEquals(2, createNodeFooBarLabel.events.size)
         val mergeNodeFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (n) WHERE id(n) = event.ids._id
                 |SET n += event.properties
             """.trimMargin(), nodeEvents)
@@ -453,9 +453,9 @@ class CUDIngestionStrategyTest {
         assertEquals(6, relationshipEvents.size)
         assertEquals(10, relationshipEvents.map { it.events.size }.sum())
         val createRelFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (from:Foo:Bar {key: event.from.${CUDIngestionStrategy.ID_KEY}.key})
-                |${StreamsUtils.WITH_EVENT_FROM}
+                |${KafkaUtil.WITH_EVENT_FROM}
                 |MATCH (to:Foo:Bar {key: event.to.${CUDIngestionStrategy.ID_KEY}.key})
                 |CREATE (from)-[r:MY_REL]->(to)
                 |SET r = event.properties
@@ -463,9 +463,9 @@ class CUDIngestionStrategyTest {
         assertEquals(3, createRelFooBar.events.size)
         assertRelationshipEventsContainsKey(createRelFooBar, key, key)
         val mergeRelFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (from:Foo:Bar {key: event.from.${CUDIngestionStrategy.ID_KEY}.key})
-                |${StreamsUtils.WITH_EVENT_FROM}
+                |${KafkaUtil.WITH_EVENT_FROM}
                 |MATCH (to:Foo:Bar {key: event.to.${CUDIngestionStrategy.ID_KEY}.key})
                 |MERGE (from)-[r:MY_REL]->(to)
                 |SET r += event.properties
@@ -473,7 +473,7 @@ class CUDIngestionStrategyTest {
         assertEquals(1, mergeRelFooBar.events.size)
         assertRelationshipEventsContainsKey(mergeRelFooBar, key, key)
         val updateRelFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (from:Foo:Bar {key: event.from.${CUDIngestionStrategy.ID_KEY}.key})
                 |MATCH (to:Foo:Bar {key: event.to.${CUDIngestionStrategy.ID_KEY}.key})
                 |MATCH (from)-[r:MY_REL]->(to)
@@ -482,9 +482,9 @@ class CUDIngestionStrategyTest {
         assertEquals(1, updateRelFooBar.events.size)
         assertRelationshipEventsContainsKey(updateRelFooBar, key, key)
         val createRelFooBarLabel = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (from:Foo:Bar:Label {key: event.from.${CUDIngestionStrategy.ID_KEY}.key})
-                |${StreamsUtils.WITH_EVENT_FROM}
+                |${KafkaUtil.WITH_EVENT_FROM}
                 |MATCH (to:Foo:Bar:Label {key: event.to.${CUDIngestionStrategy.ID_KEY}.key})
                 |CREATE (from)-[r:MY_REL]->(to)
                 |SET r = event.properties
@@ -492,9 +492,9 @@ class CUDIngestionStrategyTest {
         assertEquals(2, createRelFooBarLabel.events.size)
         assertRelationshipEventsContainsKey(createRelFooBarLabel, key, key)
         val mergeRelFooBarLabel = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (from:Foo:Bar:Label {key: event.from.${CUDIngestionStrategy.ID_KEY}.key})
-                |${StreamsUtils.WITH_EVENT_FROM}
+                |${KafkaUtil.WITH_EVENT_FROM}
                 |MATCH (to:Foo:Bar:Label {key: event.to.${CUDIngestionStrategy.ID_KEY}.key})
                 |MERGE (from)-[r:MY_REL]->(to)
                 |SET r += event.properties
@@ -502,7 +502,7 @@ class CUDIngestionStrategyTest {
         assertEquals(2, mergeRelFooBarLabel.events.size)
         assertRelationshipEventsContainsKey(mergeRelFooBarLabel, key, key)
         val updateRelFooBarLabel = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (from:Foo:Bar:Label {key: event.from.${CUDIngestionStrategy.ID_KEY}.key})
                 |MATCH (to:Foo:Bar:Label {key: event.to.${CUDIngestionStrategy.ID_KEY}.key})
                 |MATCH (from)-[r:MY_REL]->(to)
@@ -532,16 +532,16 @@ class CUDIngestionStrategyTest {
 
         assertEquals(2, relationshipEvents.size)
         val createRel = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (from:$startNode {key: event.from.${CUDIngestionStrategy.ID_KEY}.key})
-                |${StreamsUtils.WITH_EVENT_FROM}
+                |${KafkaUtil.WITH_EVENT_FROM}
                 |MATCH (to:$endNode {key: event.to.${CUDIngestionStrategy.ID_KEY}.key})
                 |CREATE (from)-[r:$relType]->(to)
                 |SET r = event.properties
             """.trimMargin(), relationshipEvents)
         assertEquals(1, createRel.events.size)
         val updateRel = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (from:$startNode {key: event.from.${CUDIngestionStrategy.ID_KEY}.key})
                 |MATCH (to:$endNode {key: event.to.${CUDIngestionStrategy.ID_KEY}.key})
                 |MATCH (from)-[r:MY_REL]->(to)
@@ -551,7 +551,7 @@ class CUDIngestionStrategyTest {
 
         assertEquals(1, relationshipDeleteEvents.size)
         val deleteRel = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (from:$startNode {key: event.from.${CUDIngestionStrategy.ID_KEY}.key})
                 |MATCH (to:$endNode {key: event.to.${CUDIngestionStrategy.ID_KEY}.key})
                 |MATCH (from)-[r:$relType]->(to)
@@ -596,9 +596,9 @@ class CUDIngestionStrategyTest {
         assertEquals(6, relationshipEvents.size)
         assertEquals(10, relationshipEvents.map { it.events.size }.sum())
         val createRelFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MERGE (from:Foo:Bar {key: event.from.${CUDIngestionStrategy.ID_KEY}.key})
-                |${StreamsUtils.WITH_EVENT_FROM}
+                |${KafkaUtil.WITH_EVENT_FROM}
                 |MERGE (to:Foo:Bar {key: event.to.${CUDIngestionStrategy.ID_KEY}.key})
                 |CREATE (from)-[r:MY_REL]->(to)
                 |SET r = event.properties
@@ -606,9 +606,9 @@ class CUDIngestionStrategyTest {
         assertEquals(3, createRelFooBar.events.size)
         assertRelationshipEventsContainsKey(createRelFooBar, key, key)
         val mergeRelFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MERGE (from:Foo:Bar {key: event.from.${CUDIngestionStrategy.ID_KEY}.key})
-                |${StreamsUtils.WITH_EVENT_FROM}
+                |${KafkaUtil.WITH_EVENT_FROM}
                 |MERGE (to:Foo:Bar {key: event.to.${CUDIngestionStrategy.ID_KEY}.key})
                 |MERGE (from)-[r:MY_REL]->(to)
                 |SET r += event.properties
@@ -616,7 +616,7 @@ class CUDIngestionStrategyTest {
         assertEquals(1, mergeRelFooBar.events.size)
         assertRelationshipEventsContainsKey(mergeRelFooBar, key, key)
         val updateRelFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (from:Foo:Bar {key: event.from.${CUDIngestionStrategy.ID_KEY}.key})
                 |MATCH (to:Foo:Bar {key: event.to.${CUDIngestionStrategy.ID_KEY}.key})
                 |MATCH (from)-[r:MY_REL]->(to)
@@ -625,9 +625,9 @@ class CUDIngestionStrategyTest {
         assertEquals(1, updateRelFooBar.events.size)
         assertRelationshipEventsContainsKey(updateRelFooBar, key, key)
         val createRelFooBarLabel = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MERGE (from:Foo:Bar:Label {key: event.from.${CUDIngestionStrategy.ID_KEY}.key})
-                |${StreamsUtils.WITH_EVENT_FROM}
+                |${KafkaUtil.WITH_EVENT_FROM}
                 |MERGE (to:Foo:Bar:Label {key: event.to.${CUDIngestionStrategy.ID_KEY}.key})
                 |CREATE (from)-[r:MY_REL]->(to)
                 |SET r = event.properties
@@ -635,9 +635,9 @@ class CUDIngestionStrategyTest {
         assertEquals(2, createRelFooBarLabel.events.size)
         assertRelationshipEventsContainsKey(createRelFooBarLabel, key, key)
         val mergeRelFooBarLabel = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MERGE (from:Foo:Bar:Label {key: event.from.${CUDIngestionStrategy.ID_KEY}.key})
-                |${StreamsUtils.WITH_EVENT_FROM}
+                |${KafkaUtil.WITH_EVENT_FROM}
                 |MERGE (to:Foo:Bar:Label {key: event.to.${CUDIngestionStrategy.ID_KEY}.key})
                 |MERGE (from)-[r:MY_REL]->(to)
                 |SET r += event.properties
@@ -645,7 +645,7 @@ class CUDIngestionStrategyTest {
         assertEquals(2, mergeRelFooBarLabel.events.size)
         assertRelationshipEventsContainsKey(mergeRelFooBarLabel, key, key)
         val updateRelFooBarLabel = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (from:Foo:Bar:Label {key: event.from.${CUDIngestionStrategy.ID_KEY}.key})
                 |MATCH (to:Foo:Bar:Label {key: event.to.${CUDIngestionStrategy.ID_KEY}.key})
                 |MATCH (from)-[r:MY_REL]->(to)
@@ -691,9 +691,9 @@ class CUDIngestionStrategyTest {
         assertEquals(6, relationshipEvents.size)
         assertEquals(10, relationshipEvents.map { it.events.size }.sum())
         val createRelFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (from:Foo:Bar {key: event.from.${CUDIngestionStrategy.ID_KEY}.key})
-                |${StreamsUtils.WITH_EVENT_FROM}
+                |${KafkaUtil.WITH_EVENT_FROM}
                 |MERGE (to:Foo:Bar {key: event.to.${CUDIngestionStrategy.ID_KEY}.key})
                 |CREATE (from)-[r:MY_REL]->(to)
                 |SET r = event.properties
@@ -701,9 +701,9 @@ class CUDIngestionStrategyTest {
         assertEquals(2, createRelFooBar.events.size)
         assertRelationshipEventsContainsKey(createRelFooBar, key, key)
         val mergeRelFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (from:Foo:Bar {key: event.from.${CUDIngestionStrategy.ID_KEY}.key})
-                |${StreamsUtils.WITH_EVENT_FROM}
+                |${KafkaUtil.WITH_EVENT_FROM}
                 |MERGE (to:Foo:Bar {key: event.to.${CUDIngestionStrategy.ID_KEY}.key})
                 |MERGE (from)-[r:MY_REL]->(to)
                 |SET r += event.properties
@@ -711,9 +711,9 @@ class CUDIngestionStrategyTest {
         assertEquals(2, mergeRelFooBar.events.size)
         assertRelationshipEventsContainsKey(mergeRelFooBar, key, key)
         val matchMergeAndMergeRelFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (from:Foo:Bar {key: event.from.${CUDIngestionStrategy.ID_KEY}.key})
-                |${StreamsUtils.WITH_EVENT_FROM}
+                |${KafkaUtil.WITH_EVENT_FROM}
                 |MERGE (to:Foo:Bar {key: event.to.${CUDIngestionStrategy.ID_KEY}.key})
                 |MERGE (from)-[r:MY_REL]->(to)
                 |SET r += event.properties
@@ -721,9 +721,9 @@ class CUDIngestionStrategyTest {
         assertEquals(2, matchMergeAndMergeRelFooBar.events.size)
         assertRelationshipEventsContainsKey(matchMergeAndMergeRelFooBar, key, key)
         val matchMergeAndCreateRelFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (from:Foo:Bar {key: event.from.${CUDIngestionStrategy.ID_KEY}.key})
-                |${StreamsUtils.WITH_EVENT_FROM}
+                |${KafkaUtil.WITH_EVENT_FROM}
                 |CREATE (to:Foo:Bar {key: event.to.${CUDIngestionStrategy.ID_KEY}.key})
                 |MERGE (from)-[r:MY_REL]->(to)
                 |SET r += event.properties
@@ -731,7 +731,7 @@ class CUDIngestionStrategyTest {
         assertEquals(1, matchMergeAndCreateRelFooBar.events.size)
         assertRelationshipEventsContainsKey(matchMergeAndCreateRelFooBar, key, key)
         val updateRelFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (from:Foo:Bar {key: event.from.${CUDIngestionStrategy.ID_KEY}.key})
                 |MATCH (to:Foo:Bar {key: event.to.${CUDIngestionStrategy.ID_KEY}.key})
                 |MATCH (from)-[r:MY_REL]->(to)
@@ -740,9 +740,9 @@ class CUDIngestionStrategyTest {
         assertEquals(1, updateRelFooBar.events.size)
         assertRelationshipEventsContainsKey(updateRelFooBar, key, key)
         val mergeRelFooBarLabel = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (from:Foo:Bar {key: event.from.${CUDIngestionStrategy.ID_KEY}.key})
-                |${StreamsUtils.WITH_EVENT_FROM}
+                |${KafkaUtil.WITH_EVENT_FROM}
                 |CREATE (to:Foo:Bar {key: event.to.${CUDIngestionStrategy.ID_KEY}.key})
                 |CREATE (from)-[r:MY_REL]->(to)
                 |SET r = event.properties
@@ -787,9 +787,9 @@ class CUDIngestionStrategyTest {
         assertEquals(6, relationshipEvents.size)
         assertEquals(10, relationshipEvents.map { it.events.size }.sum())
         val createRelFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MERGE (from:Foo:Bar {key: event.from.${CUDIngestionStrategy.ID_KEY}.key})
-                |${StreamsUtils.WITH_EVENT_FROM}
+                |${KafkaUtil.WITH_EVENT_FROM}
                 |MATCH (to:Foo:Bar {key: event.to.${CUDIngestionStrategy.ID_KEY}.key})
                 |CREATE (from)-[r:MY_REL]->(to)
                 |SET r = event.properties
@@ -797,9 +797,9 @@ class CUDIngestionStrategyTest {
         assertEquals(2, createRelFooBar.events.size)
         assertRelationshipEventsContainsKey(createRelFooBar, key, key)
         val mergeRelFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MERGE (from:Foo:Bar {key: event.from.${CUDIngestionStrategy.ID_KEY}.key})
-                |${StreamsUtils.WITH_EVENT_FROM}
+                |${KafkaUtil.WITH_EVENT_FROM}
                 |MATCH (to:Foo:Bar {key: event.to.${CUDIngestionStrategy.ID_KEY}.key})
                 |MERGE (from)-[r:MY_REL]->(to)
                 |SET r += event.properties
@@ -807,9 +807,9 @@ class CUDIngestionStrategyTest {
         assertEquals(2, mergeRelFooBar.events.size)
         assertRelationshipEventsContainsKey(mergeRelFooBar, key, key)
         val matchMergeAndMergeRelFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MERGE (from:Foo:Bar {key: event.from.${CUDIngestionStrategy.ID_KEY}.key})
-                |${StreamsUtils.WITH_EVENT_FROM}
+                |${KafkaUtil.WITH_EVENT_FROM}
                 |MATCH (to:Foo:Bar {key: event.to.${CUDIngestionStrategy.ID_KEY}.key})
                 |MERGE (from)-[r:MY_REL]->(to)
                 |SET r += event.properties
@@ -817,9 +817,9 @@ class CUDIngestionStrategyTest {
         assertEquals(2, matchMergeAndMergeRelFooBar.events.size)
         assertRelationshipEventsContainsKey(matchMergeAndMergeRelFooBar, key, key)
         val matchMergeAndCreateRelFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |CREATE (from:Foo:Bar {key: event.from.${CUDIngestionStrategy.ID_KEY}.key})
-                |${StreamsUtils.WITH_EVENT_FROM}
+                |${KafkaUtil.WITH_EVENT_FROM}
                 |MATCH (to:Foo:Bar {key: event.to.${CUDIngestionStrategy.ID_KEY}.key})
                 |MERGE (from)-[r:MY_REL]->(to)
                 |SET r += event.properties
@@ -827,7 +827,7 @@ class CUDIngestionStrategyTest {
         assertEquals(1, matchMergeAndCreateRelFooBar.events.size)
         assertRelationshipEventsContainsKey(matchMergeAndCreateRelFooBar, key, key)
         val updateRelFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (from:Foo:Bar {key: event.from.${CUDIngestionStrategy.ID_KEY}.key})
                 |MATCH (to:Foo:Bar {key: event.to.${CUDIngestionStrategy.ID_KEY}.key})
                 |MATCH (from)-[r:MY_REL]->(to)
@@ -836,9 +836,9 @@ class CUDIngestionStrategyTest {
         assertEquals(1, updateRelFooBar.events.size)
         assertRelationshipEventsContainsKey(updateRelFooBar, key, key)
         val mergeRelFooBarLabel = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |CREATE (from:Foo:Bar {key: event.from.${CUDIngestionStrategy.ID_KEY}.key})
-                |${StreamsUtils.WITH_EVENT_FROM}
+                |${KafkaUtil.WITH_EVENT_FROM}
                 |MATCH (to:Foo:Bar {key: event.to.${CUDIngestionStrategy.ID_KEY}.key})
                 |CREATE (from)-[r:MY_REL]->(to)
                 |SET r = event.properties
@@ -876,7 +876,7 @@ class CUDIngestionStrategyTest {
         assertEquals(2, relationshipDeleteEvents.size)
         assertEquals(10, relationshipDeleteEvents.map { it.events.size }.sum())
         val deleteRelFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (from:Foo:Bar {key: event.from.${CUDIngestionStrategy.ID_KEY}.key})
                 |MATCH (to:Foo:Bar {key: event.to.${CUDIngestionStrategy.ID_KEY}.key})
                 |MATCH (from)-[r:MY_REL]->(to)
@@ -885,7 +885,7 @@ class CUDIngestionStrategyTest {
         assertEquals(5, deleteRelFooBar.events.size)
         assertRelationshipEventsContainsKey(deleteRelFooBar, key, key)
         val deleteRelFooBarLabel = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (from:Foo:Bar:Label {key: event.from.${CUDIngestionStrategy.ID_KEY}.key})
                 |MATCH (to:Foo:Bar:Label {key: event.to.${CUDIngestionStrategy.ID_KEY}.key})
                 |MATCH (from)-[r:MY_REL]->(to)
@@ -925,7 +925,7 @@ class CUDIngestionStrategyTest {
         assertEquals(2, relationshipDeleteEvents.size)
         assertEquals(10, relationshipDeleteEvents.map { it.events.size }.sum())
         val deleteRel = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (from) WHERE id(from) = event.from.${CUDIngestionStrategy.ID_KEY}._id
                 |MATCH (to) WHERE id(to) = event.to.${CUDIngestionStrategy.ID_KEY}._id
                 |MATCH (from)-[r:MY_REL]->(to)
@@ -935,7 +935,7 @@ class CUDIngestionStrategyTest {
         assertRelationshipEventsContainsKey(deleteRel, key, key)
         val relKey = "key"
         val deleteRelFooBarLabel = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (from) WHERE id(from) = event.from.${CUDIngestionStrategy.ID_KEY}._id
                 |MATCH (to:Foo:Bar:Label {$relKey: event.to.${CUDIngestionStrategy.ID_KEY}.$relKey})
                 |MATCH (from)-[r:MY_REL]->(to)
@@ -980,9 +980,9 @@ class CUDIngestionStrategyTest {
         assertEquals(3, relationshipEvents.size)
         assertEquals(10, relationshipEvents.map { it.events.size }.sum())
         val createRelFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (from) WHERE id(from) = event.from.${CUDIngestionStrategy.ID_KEY}._id
-                |${StreamsUtils.WITH_EVENT_FROM}
+                |${KafkaUtil.WITH_EVENT_FROM}
                 |MATCH (to) WHERE id(to) = event.to.${CUDIngestionStrategy.ID_KEY}._id
                 |CREATE (from)-[r:MY_REL]->(to)
                 |SET r = event.properties
@@ -991,9 +991,9 @@ class CUDIngestionStrategyTest {
         val key = "_id"
         assertRelationshipEventsContainsKey(createRelFooBar, key, key)
         val mergeRelFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (from) WHERE id(from) = event.from.${CUDIngestionStrategy.ID_KEY}._id
-                |${StreamsUtils.WITH_EVENT_FROM}
+                |${KafkaUtil.WITH_EVENT_FROM}
                 |MATCH (to) WHERE id(to) = event.to.${CUDIngestionStrategy.ID_KEY}._id
                 |MERGE (from)-[r:MY_REL]->(to)
                 |SET r += event.properties
@@ -1001,7 +1001,7 @@ class CUDIngestionStrategyTest {
         assertEquals(3, mergeRelFooBar.events.size)
         assertRelationshipEventsContainsKey(mergeRelFooBar, key, key)
         val updateRelFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (from) WHERE id(from) = event.from.${CUDIngestionStrategy.ID_KEY}._id
                 |MATCH (to) WHERE id(to) = event.to.${CUDIngestionStrategy.ID_KEY}._id
                 |MATCH (from)-[r:MY_REL]->(to)
@@ -1050,20 +1050,20 @@ class CUDIngestionStrategyTest {
         assertEquals(6, nodeEvents.size)
         assertEquals(9, nodeEvents.map { it.events.size }.sum())
         val createNodeFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |CREATE (n:WellBehaved:`C̸r̵a̵z̵y̵ ̶.̵ ̶ ̴ ̸ ̶ ̶ ̵ ̴L̴a̵b̸e̶l`)
                 |SET n = event.properties
             """.trimMargin(), nodeEvents)
         assertEquals(2, createNodeFooBar.events.size)
         val createNodeFooBarLabel = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |CREATE (n:WellBehaved:`C̸r̵a̵z̵y̵ ̶.̵ ̶ ̴ ̸ ̶ ̶ ̵ ̴L̴a̵b̸e̶l`:Label)
                 |SET n = event.properties
             """.trimMargin(), nodeEvents)
         assertEquals(2, createNodeFooBarLabel.events.size)
 
         val mergeNodeFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MERGE (n:WellBehaved:`C̸r̵a̵z̵y̵ ̶.̵ ̶ ̴ ̸ ̶ ̶ ̵ ̴L̴a̵b̸e̶l` {${firstKey.quote()}: event.${CUDIngestionStrategy.ID_KEY}.${firstKey.quote()}, ${secondKey.quote()}: event.${CUDIngestionStrategy.ID_KEY}.${secondKey.quote()}})
                 |SET n += event.properties
             """.trimMargin(), nodeEvents)
@@ -1071,7 +1071,7 @@ class CUDIngestionStrategyTest {
         assertNodeEventsContainsKey(mergeNodeFooBar, firstKey, secondKey)
 
         val mergeNodeFooBarLabel = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MERGE (n:WellBehaved:`C̸r̵a̵z̵y̵ ̶.̵ ̶ ̴ ̸ ̶ ̶ ̵ ̴L̴a̵b̸e̶l`:Label {${firstKey.quote()}: event.${CUDIngestionStrategy.ID_KEY}.${firstKey.quote()}, ${secondKey.quote()}: event.${CUDIngestionStrategy.ID_KEY}.${secondKey.quote()}})
                 |SET n += event.properties
             """.trimMargin(), nodeEvents)
@@ -1079,7 +1079,7 @@ class CUDIngestionStrategyTest {
         assertNodeEventsContainsKey(mergeNodeFooBarLabel, firstKey, secondKey)
 
         val updateNodeFooBar = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (n:WellBehaved:`C̸r̵a̵z̵y̵ ̶.̵ ̶ ̴ ̸ ̶ ̶ ̵ ̴L̴a̵b̸e̶l` {${firstKey.quote()}: event.${CUDIngestionStrategy.ID_KEY}.${firstKey.quote()}, ${secondKey.quote()}: event.${CUDIngestionStrategy.ID_KEY}.${secondKey.quote()}})
                 |SET n += event.properties
             """.trimMargin(), nodeEvents)
@@ -1087,7 +1087,7 @@ class CUDIngestionStrategyTest {
         assertNodeEventsContainsKey(updateNodeFooBar, firstKey, secondKey)
 
         val updateNodeFooBarLabel = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (n:WellBehaved:`C̸r̵a̵z̵y̵ ̶.̵ ̶ ̴ ̸ ̶ ̶ ̵ ̴L̴a̵b̸e̶l`:Label {${firstKey.quote()}: event.${CUDIngestionStrategy.ID_KEY}.${firstKey.quote()}, ${secondKey.quote()}: event.${CUDIngestionStrategy.ID_KEY}.${secondKey.quote()}})
                 |SET n += event.properties
             """.trimMargin(), nodeEvents)
@@ -1097,7 +1097,7 @@ class CUDIngestionStrategyTest {
         assertEquals(1, nodeDeleteEvents.size)
         val nodeDeleteEvent = nodeDeleteEvents.first()
         assertEquals("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (n:WellBehaved:`C̸r̵a̵z̵y̵ ̶.̵ ̶ ̴ ̸ ̶ ̶ ̵ ̴L̴a̵b̸e̶l` {${firstKey.quote()}: event.${CUDIngestionStrategy.ID_KEY}.${firstKey.quote()}, ${secondKey.quote()}: event.${CUDIngestionStrategy.ID_KEY}.${secondKey.quote()}})
                 |DETACH DELETE n
             """.trimMargin(), nodeDeleteEvent.query)
@@ -1143,14 +1143,14 @@ class CUDIngestionStrategyTest {
         assertEquals(3, nodeEvents.size)
         assertEquals(9, nodeEvents.map { it.events.size }.sum())
         val createNode = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |CREATE (n)
                 |SET n = event.properties
             """.trimMargin(), nodeEvents)
         assertEquals(4, createNode.events.size)
 
         val mergeNode = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MERGE (n {${key.quote()}: event.${CUDIngestionStrategy.ID_KEY}.${key.quote()}})
                 |SET n += event.properties
             """.trimMargin(), nodeEvents)
@@ -1158,7 +1158,7 @@ class CUDIngestionStrategyTest {
         assertNodeEventsContainsKey(mergeNode, key)
 
         val updateNode = findEventByQuery("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (n {${key.quote()}: event.${CUDIngestionStrategy.ID_KEY}.${key.quote()}})
                 |SET n += event.properties
             """.trimMargin(), nodeEvents)
@@ -1168,7 +1168,7 @@ class CUDIngestionStrategyTest {
         assertEquals(1, nodeDeleteEvents.size)
         val nodeDeleteEvent = nodeDeleteEvents.first()
         assertEquals("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (n {${key.quote()}: event.${CUDIngestionStrategy.ID_KEY}.${key.quote()}})
                 |DETACH DELETE n
             """.trimMargin(), nodeDeleteEvent.query)

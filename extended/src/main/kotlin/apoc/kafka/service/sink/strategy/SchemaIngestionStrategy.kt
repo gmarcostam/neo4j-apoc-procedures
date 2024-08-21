@@ -3,11 +3,11 @@ package apoc.kafka.service.sink.strategy
 import apoc.kafka.events.*
 import apoc.kafka.extensions.quote
 import apoc.kafka.service.StreamsSinkEntity
-import apoc.kafka.utils.IngestionUtils.getLabelsAsString
-import apoc.kafka.utils.IngestionUtils.getNodeKeysAsString
-import apoc.kafka.utils.SchemaUtils.getNodeKeys
-import apoc.kafka.utils.SchemaUtils.toStreamsTransactionEvent
-import apoc.kafka.utils.StreamsUtils
+import apoc.kafka.utils.KafkaUtil
+import apoc.kafka.utils.KafkaUtil.getLabelsAsString
+import apoc.kafka.utils.KafkaUtil.getNodeKeysAsString
+import apoc.kafka.utils.KafkaUtil.getNodeKeys
+import apoc.kafka.utils.KafkaUtil.toStreamsTransactionEvent
 
 
 class SchemaIngestionStrategy: IngestionStrategy {
@@ -77,7 +77,7 @@ class SchemaIngestionStrategy: IngestionStrategy {
                 .map {
                     val label = it.key.label.quote()
                     val query = """
-                        |${StreamsUtils.UNWIND}
+                        |${KafkaUtil.UNWIND}
                         |MERGE (start${getLabelsAsString(it.key.startLabels)}{${getNodeKeysAsString("start", it.key.startKeys)}})
                         |MERGE (end${getLabelsAsString(it.key.endLabels)}{${getNodeKeysAsString("end", it.key.endKeys)}})
                         |MERGE (start)-[r:$label]->(end)
@@ -94,7 +94,7 @@ class SchemaIngestionStrategy: IngestionStrategy {
                 .map {
                     val label = it.key.label.quote()
                     val query = """
-                        |${StreamsUtils.UNWIND}
+                        |${KafkaUtil.UNWIND}
                         |MATCH (start${getLabelsAsString(it.key.startLabels)}{${getNodeKeysAsString("start", it.key.startKeys)}})
                         |MATCH (end${getLabelsAsString(it.key.endLabels)}{${getNodeKeysAsString("end", it.key.endKeys)}})
                         |MATCH (start)-[r:$label]->(end)
@@ -121,7 +121,7 @@ class SchemaIngestionStrategy: IngestionStrategy {
                     val labels = it.key.mapNotNull { it.label }
                     val nodeKeys = it.key.flatMap { it.properties }.toSet()
                     val query = """
-                        |${StreamsUtils.UNWIND}
+                        |${KafkaUtil.UNWIND}
                         |MATCH (n${getLabelsAsString(labels)}{${getNodeKeysAsString(keys = nodeKeys)}})
                         |DETACH DELETE n
                     """.trimMargin()
@@ -165,7 +165,7 @@ class SchemaIngestionStrategy: IngestionStrategy {
                 .groupBy({ it.first }, { it.second })
                 .map { map ->
                     var query = """
-                        |${StreamsUtils.UNWIND}
+                        |${KafkaUtil.UNWIND}
                         |MERGE (n${getLabelsAsString(map.key.constraints.mapNotNull { it.label })}{${getNodeKeysAsString(keys = map.key.keys)}})
                         |SET n = event.properties
                     """.trimMargin()

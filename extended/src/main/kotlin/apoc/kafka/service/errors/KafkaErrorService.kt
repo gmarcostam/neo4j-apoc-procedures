@@ -9,7 +9,7 @@ import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.record.RecordBatch
 import org.apache.kafka.common.serialization.ByteArraySerializer
 import org.neo4j.util.VisibleForTesting
-import apoc.kafka.utils.ValidationUtils.validateConnection
+import apoc.kafka.utils.KafkaUtil.validateConnection
 import java.util.*
 
 class KafkaErrorService(private val producer: Producer<ByteArray, ByteArray>?, private val errorConfig: ErrorConfig, private val log: (String, Exception?)->Unit): ErrorService() {

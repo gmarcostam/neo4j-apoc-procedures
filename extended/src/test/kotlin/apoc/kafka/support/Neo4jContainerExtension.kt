@@ -1,6 +1,6 @@
 package apoc.kafka.support
 
-import apoc.kafka.utils.StreamsUtils
+import apoc.kafka.utils.KafkaUtil
 import org.neo4j.driver.AuthToken
 import org.neo4j.driver.AuthTokens
 import org.neo4j.driver.Driver
@@ -16,7 +16,6 @@ import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.AbstractWaitStrategy
 import org.testcontainers.containers.wait.strategy.WaitAllStrategy
 import org.testcontainers.containers.wait.strategy.WaitStrategy
-import org.testcontainers.utility.MountableFile
 import java.io.File
 import java.time.Duration
 import java.util.concurrent.TimeUnit
@@ -32,7 +31,7 @@ private class DatabasesWaitStrategy(private val auth: AuthToken): AbstractWaitSt
     override fun waitUntilReady() {
         val boltUrl = "bolt://${waitStrategyTarget.containerIpAddress}:${waitStrategyTarget.getMappedPort(7687)}"
         val driver = GraphDatabase.driver(boltUrl, auth)
-        val systemSession = driver.session(SessionConfig.forDatabase(StreamsUtils.SYSTEM_DATABASE_NAME))
+        val systemSession = driver.session(SessionConfig.forDatabase(KafkaUtil.SYSTEM_DATABASE_NAME))
         systemSession.beginTransaction().use { tx ->
             databases.forEach { tx.run("CREATE DATABASE $it IF NOT EXISTS") }
             tx.commit()

@@ -1,9 +1,9 @@
 package apoc.kafka.utils
 
+import apoc.kafka.utils.KafkaUtil.retryForException
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import java.io.IOException
-import java.lang.ClassCastException
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -13,7 +13,7 @@ class CoroutineUtilsTest {
     fun `should success after retry for known exception`() = runBlocking {
         var count = 0
         var excuted = false
-        retryForException<Unit>(exceptions = arrayOf(RuntimeException::class.java),
+        retryForException(exceptions = arrayOf(RuntimeException::class.java),
                 retries = 4, delayTime = 100) {
             if (count < 2) {
                 ++count
@@ -30,7 +30,7 @@ class CoroutineUtilsTest {
     fun `should fail after retry for known exception`() {
         var retries = 3
         runBlocking {
-            retryForException<Unit>(exceptions = arrayOf(RuntimeException::class.java),
+            retryForException(exceptions = arrayOf(RuntimeException::class.java),
                     retries = 3, delayTime = 100) {
                 if (retries >= 0) {
                     --retries
@@ -46,7 +46,7 @@ class CoroutineUtilsTest {
         var isIOException = false
         try {
             runBlocking {
-                retryForException<Unit>(exceptions = arrayOf(RuntimeException::class.java),
+                retryForException(exceptions = arrayOf(RuntimeException::class.java),
                         retries = 3, delayTime = 100) {
                     if (iteration >= 0) {
                         ++iteration

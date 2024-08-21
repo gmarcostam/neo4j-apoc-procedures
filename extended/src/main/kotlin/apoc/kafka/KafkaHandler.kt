@@ -2,6 +2,7 @@ package apoc.kafka
 
 import apoc.TTLConfig
 import apoc.kafka.config.StreamsConfig
+import apoc.kafka.consumer.StreamsEventSinkAvailabilityListener
 import apoc.kafka.consumer.StreamsSinkConfigurationListener
 import apoc.kafka.producer.StreamsRouterConfigurationListener
 import org.neo4j.kernel.availability.AvailabilityListener
@@ -38,22 +39,22 @@ class KafkaHandler(): LifecycleAdapter(), AvailabilityListener {
 
     override fun start() {
         println("start db......")
-        initListeners(db, log)
-    }
 
-    override fun stop() {
-        println("stop db..........")
-        // TODO - mettere i shutdown di StreamsRouterConfigurationListener e StreamsSinkConfigurationListener
-        
-    }
+        StreamsEventSinkAvailabilityListener.setAvailable(db!! , true);
 
-    fun initListeners(db: GraphDatabaseAPI?, log: Log?) {
-        // todo - check if there is a better way, 
-        //  maybe with if( ApocConfig.apocConfig().getBoolean("apoc.kafka.enabled") )
         StreamsRouterConfigurationListener(db!!, log!!
         ).start(StreamsConfig.getConfiguration())
 
         StreamsSinkConfigurationListener(db!!, log!!
         ).start(StreamsConfig.getConfiguration())
+    }
+
+    override fun stop() {
+        println("stop db..........")
+        //         todo - mettere StreamsEventSinkAvailabilityListener.setAvailable(db, false);
+        db?.let { StreamsEventSinkAvailabilityListener.setAvailable(it, false) }
+        // TODO - mettere i shutdown di StreamsRouterConfigurationListener e StreamsSinkConfigurationListener
+        StreamsRouterConfigurationListener(db!!, log!!).shutdown()
+        StreamsSinkConfigurationListener(db!!, log!!).shutdown()
     }
 }

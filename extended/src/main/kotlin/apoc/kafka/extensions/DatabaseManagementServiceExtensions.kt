@@ -1,11 +1,10 @@
 package apoc.kafka.extensions
 
+import apoc.kafka.utils.KafkaUtil
 import org.neo4j.dbms.api.DatabaseManagementService
 import org.neo4j.kernel.internal.GraphDatabaseAPI
-import apoc.kafka.utils.StreamsUtils
-import java.util.concurrent.TimeUnit
 
-fun DatabaseManagementService.getSystemDb() = this.database(StreamsUtils.SYSTEM_DATABASE_NAME) as GraphDatabaseAPI
+fun DatabaseManagementService.getSystemDb() = this.database(KafkaUtil.SYSTEM_DATABASE_NAME) as GraphDatabaseAPI
 
 fun DatabaseManagementService.getDefaultDbName() = getSystemDb().let {
     try {

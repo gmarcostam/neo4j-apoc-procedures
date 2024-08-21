@@ -8,6 +8,7 @@ import apoc.util.JsonUtil
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.apache.kafka.clients.producer.ProducerRecord
+import org.apache.kafka.common.config.TopicConfig
 import org.hamcrest.Matchers
 import org.junit.Test
 import org.neo4j.function.ThrowingSupplier
@@ -22,10 +23,7 @@ class KafkaEventSinkSimpleTSE: KafkaEventSinkBaseTSE() {
 
     @Test
     fun shouldWriteDataFromSink() = runBlocking {
-        createDbWithKafkaConfigs("streams.sink.topic.cypher.shouldWriteCypherQuery" to cypherQueryTemplate)
-        
-//        db.setConfig("streams.sink.topic.cypher.shouldWriteCypherQuery", cypherQueryTemplate)
-        // db.start()
+        db = createDbWithKafkaConfigs("streams.sink.topic.cypher.shouldWriteCypherQuery" to cypherQueryTemplate)
 
         val producerRecord = ProducerRecord(topics[0], "{\"a\":1}", JsonUtil.writeValueAsBytes(data))
         kafkaProducer.send(producerRecord).get()
@@ -168,7 +166,7 @@ class KafkaEventSinkSimpleTSE: KafkaEventSinkBaseTSE() {
 
     @Test
     fun shouldNotStartInASingleInstance() {
-        createDbWithKafkaConfigs("streams.sink.topic.cypher.shouldWriteCypherQuery" to cypherQueryTemplate,
+        val db = createDbWithKafkaConfigs("streams.sink.topic.cypher.shouldWriteCypherQuery" to cypherQueryTemplate,
             "streams.cluster.only" to "true")
         
 //        db.setConfig("streams.sink.topic.cypher.shouldWriteCypherQuery", cypherQueryTemplate)
@@ -190,7 +188,7 @@ class KafkaEventSinkSimpleTSE: KafkaEventSinkBaseTSE() {
 
     @Test
     fun `neo4j should start normally in case kafka is not reachable`() {
-        createDbWithKafkaConfigs("streams.sink.topic.cypher.shouldWriteCypherQuery" to cypherQueryTemplate,
+        db = createDbWithKafkaConfigs("streams.sink.topic.cypher.shouldWriteCypherQuery" to cypherQueryTemplate,
             "kafka.bootstrap.servers" to "foo",
             "kafka.default.api.timeout.ms" to "5000")
 //        db.setConfig("streams.sink.topic.cypher.shouldWriteCypherQuery", cypherQueryTemplate)

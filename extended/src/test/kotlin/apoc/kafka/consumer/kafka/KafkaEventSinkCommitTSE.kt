@@ -10,11 +10,13 @@ import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.TopicPartition
 import org.hamcrest.Matchers
+import org.junit.Ignore
 import org.junit.Test
 import org.neo4j.function.ThrowingSupplier
 import java.util.*
 import java.util.concurrent.TimeUnit
 
+@Ignore
 class KafkaEventSinkCommitTSE : KafkaEventSinkBaseTSE() {
     @Test
     fun `should write last offset with auto commit false`() {

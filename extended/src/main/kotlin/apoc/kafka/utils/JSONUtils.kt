@@ -1,11 +1,15 @@
 package apoc.kafka.utils
 
-import apoc.kafka.events.*
+import apoc.kafka.events.StreamsTransactionEvent
+import apoc.kafka.events.StreamsTransactionNodeEvent
+import apoc.kafka.events.StreamsTransactionRelationshipEvent
 import com.fasterxml.jackson.core.JsonGenerator
-import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.core.JsonProcessingException
-import com.fasterxml.jackson.core.exc.StreamReadException
-import com.fasterxml.jackson.databind.*
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.JsonSerializer
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.databind.SerializerProvider
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -15,7 +19,6 @@ import org.neo4j.graphdb.spatial.Point
 import org.neo4j.values.storable.CoordinateReferenceSystem
 import java.io.IOException
 import java.time.temporal.TemporalAccessor
-import kotlin.reflect.full.isSubclassOf
 
 abstract class StreamsPoint { abstract val crs: String }
 data class StreamsPointCartesian(override val crs: String, val x: Double, val y: Double, val z: Double? = null): StreamsPoint()
@@ -77,7 +80,7 @@ class TemporalAccessorSerializer : JsonSerializer<TemporalAccessor>() {
     }
 }
 
-// TODO - different from apoc.JSONUtil.OBJECT_MAPPER
+// NOTE: it works differently from apoc.JSONUtil
 object JSONUtils {
 
     private val OBJECT_MAPPER: ObjectMapper = jacksonObjectMapper()
@@ -85,8 +88,8 @@ object JSONUtils {
 
     init {
         val module = SimpleModule("Neo4jKafkaSerializer")
-        StreamsUtils.ignoreExceptions({ module.addSerializer(Point::class.java, PointSerializer()) }, NoClassDefFoundError::class.java) // in case is loaded from
-        StreamsUtils.ignoreExceptions({ module.addSerializer(PointValue::class.java, PointValueSerializer()) }, NoClassDefFoundError::class.java) // in case is loaded from
+        KafkaUtil.ignoreExceptions({ module.addSerializer(Point::class.java, PointSerializer()) }, NoClassDefFoundError::class.java) // in case is loaded from
+        KafkaUtil.ignoreExceptions({ module.addSerializer(PointValue::class.java, PointValueSerializer()) }, NoClassDefFoundError::class.java) // in case is loaded from
         module.addSerializer(TemporalAccessor::class.java, TemporalAccessorSerializer())
         OBJECT_MAPPER.registerModule(module)
         OBJECT_MAPPER.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
@@ -118,36 +121,6 @@ object JSONUtils {
     fun readValue(value: ByteArray): Any {
         return getObjectMapper().readValue(value)
     }
-
-//    fun <T> readValue(src: ByteArray?, valueType: Class<T>?): T {
-//        _assertNotNull("src", src)
-//        return _readMapAndClose(_jsonFactory.createParser(src), _typeFactory.constructType(valueType)) as T
-//    }
-
-//    inline fun <reified T> readValue(value: Any,
-//                                     stringWhenFailure: Boolean = false,
-//                                     objectMapper: ObjectMapper = getObjectMapper()): T {
-//        return try {
-//            when (value) {
-//                is String -> objectMapper.readValue(value)
-//                is ByteArray -> objectMapper.readValue(value)
-//                else -> objectMapper.convertValue(value)
-//            }
-//        } catch (e: JsonParseException) {
-//            if (stringWhenFailure && String::class.isSubclassOf(T::class)) {
-//                val strValue = when (value) {
-//                    is ByteArray -> String(value)
-//                    null -> ""
-//                    else -> value.toString()
-//                }
-//                strValue.trimStart().let {
-//                    if (it[0] == '{' || it[0] == '[') throw e
-//                    else it as T
-//                }
-//            }
-//            else throw e
-//        }
-//    }
 
     inline fun <reified T> convertValue(value: Any, objectMapper: ObjectMapper = getObjectMapper()): T {
         return objectMapper.convertValue(value)

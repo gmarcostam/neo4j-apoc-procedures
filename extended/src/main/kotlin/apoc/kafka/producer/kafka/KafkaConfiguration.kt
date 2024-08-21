@@ -9,7 +9,7 @@ import org.neo4j.logging.Log
 import apoc.kafka.extensions.getInt
 import apoc.kafka.extensions.toPointCase
 import apoc.kafka.utils.JSONUtils
-import apoc.kafka.utils.ValidationUtils.validateConnection
+import apoc.kafka.utils.KafkaUtil.validateConnection
 import java.util.Properties
 import java.util.concurrent.TimeUnit
 

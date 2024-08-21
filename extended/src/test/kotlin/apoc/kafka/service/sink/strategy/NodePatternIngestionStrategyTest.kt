@@ -2,7 +2,7 @@ package apoc.kafka.service.sink.strategy
 
 import org.junit.Test
 import apoc.kafka.service.StreamsSinkEntity
-import apoc.kafka.utils.StreamsUtils
+import apoc.kafka.utils.KafkaUtil
 import kotlin.test.assertEquals
 
 class NodePatternIngestionStrategyTest {
@@ -20,7 +20,7 @@ class NodePatternIngestionStrategyTest {
 
         // then
         assertEquals("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MERGE (n:LabelA:LabelB{id: event.keys.id})
                 |SET n = event.properties
                 |SET n += event.keys
@@ -48,7 +48,7 @@ class NodePatternIngestionStrategyTest {
         // then
         assertEquals(1, queryEvents.size)
         assertEquals("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MERGE (n:LabelA:LabelB{id: event.keys.id})
                 |SET n = event.properties
                 |SET n += event.keys
@@ -76,7 +76,7 @@ class NodePatternIngestionStrategyTest {
         // then
         assertEquals(1, queryEvents.size)
         assertEquals("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MERGE (n:LabelA:LabelB{id: event.keys.id})
                 |SET n = event.properties
                 |SET n += event.keys
@@ -104,7 +104,7 @@ class NodePatternIngestionStrategyTest {
         // then
         assertEquals(1, queryEvents.size)
         assertEquals("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MERGE (n:LabelA:LabelB{id: event.keys.id})
                 |SET n = event.properties
                 |SET n += event.keys
@@ -132,7 +132,7 @@ class NodePatternIngestionStrategyTest {
         // then
         assertEquals(1, queryEvents.size)
         assertEquals("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MERGE (n:LabelA:LabelB{id: event.keys.id})
                 |SET n = event.properties
                 |SET n += event.keys
@@ -156,7 +156,7 @@ class NodePatternIngestionStrategyTest {
 
         // then
         assertEquals("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MERGE (n:LabelA:LabelB{id: event.keys.id})
                 |SET n = event.properties
                 |SET n += event.keys
@@ -180,7 +180,7 @@ class NodePatternIngestionStrategyTest {
 
         // then
         assertEquals("""
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (n:LabelA:LabelB{id: event.keys.id})
                 |DETACH DELETE n
             """.trimMargin(), queryEvents[0].query)

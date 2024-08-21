@@ -1,14 +1,22 @@
 package apoc.kafka.producer
 
+import apoc.kafka.events.EntityType
+import apoc.kafka.events.NodeChange
+import apoc.kafka.events.NodePayload
+import apoc.kafka.events.OperationType
+import apoc.kafka.events.RelationshipNodeChange
+import apoc.kafka.events.RelationshipPayload
+import apoc.kafka.events.Schema
+import apoc.kafka.events.StreamsConstraintType
+import apoc.kafka.events.StreamsTransactionEvent
+import apoc.kafka.extensions.labelNames
+import apoc.kafka.utils.KafkaUtil.getNodeKeys
 import org.apache.kafka.clients.producer.RecordMetadata
 import org.apache.kafka.common.config.TopicConfig
 import org.neo4j.graphdb.Node
 import org.neo4j.graphdb.Relationship
 import org.neo4j.graphdb.schema.ConstraintDefinition
 import org.neo4j.graphdb.schema.ConstraintType
-import apoc.kafka.events.*
-import apoc.kafka.extensions.labelNames
-import apoc.kafka.utils.SchemaUtils
 
 fun Node.toMap(): Map<String, Any?> {
     return mapOf("id" to id.toString(), "properties" to allProperties, "labels" to labelNames(), "type" to EntityType.node)
@@ -58,7 +66,7 @@ private fun nodePayloadAsMessageKey(payload: NodePayload, schema: Schema) = run 
     val nodeChange: NodeChange = payload.after ?: payload.before!!
     val labels = nodeChange.labels ?: emptyList()
     val props: Map<String, Any> = nodeChange.properties ?: emptyMap()
-    val keys = SchemaUtils.getNodeKeys(labels, props.keys, schema.constraints)
+    val keys = getNodeKeys(labels, props.keys, schema.constraints)
     val ids = props.filterKeys { keys.contains(it) }
 
     if (ids.isEmpty()) payload.id else mapOf("ids" to ids, "labels" to labels)

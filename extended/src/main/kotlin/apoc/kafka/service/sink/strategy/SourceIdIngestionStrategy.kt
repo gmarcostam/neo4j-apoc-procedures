@@ -1,11 +1,15 @@
 package apoc.kafka.service.sink.strategy
 
-import apoc.kafka.events.*
+import apoc.kafka.events.EntityType
+import apoc.kafka.events.NodeChange
+import apoc.kafka.events.OperationType
+import apoc.kafka.events.RelationshipChange
+import apoc.kafka.events.RelationshipPayload
 import apoc.kafka.extensions.quote
 import apoc.kafka.service.StreamsSinkEntity
-import apoc.kafka.utils.IngestionUtils.getLabelsAsString
-import apoc.kafka.utils.SchemaUtils
-import apoc.kafka.utils.StreamsUtils
+import apoc.kafka.utils.KafkaUtil
+import apoc.kafka.utils.KafkaUtil.getLabelsAsString
+import apoc.kafka.utils.KafkaUtil.toStreamsTransactionEvent
 
 data class SourceIdIngestionStrategyConfig(val labelName: String = "SourceEvent", val idName: String = "sourceId")
 
@@ -16,7 +20,7 @@ class SourceIdIngestionStrategy(config: SourceIdIngestionStrategyConfig = Source
 
     override fun mergeRelationshipEvents(events: Collection<StreamsSinkEntity>): List<QueryEvents> {
         return events
-                .mapNotNull { SchemaUtils.toStreamsTransactionEvent(it) { it.payload.type == EntityType.relationship && it.meta.operation != OperationType.deleted } }
+                .mapNotNull { toStreamsTransactionEvent(it) { it.payload.type == EntityType.relationship && it.meta.operation != OperationType.deleted } }
                 .map { data ->
                     val payload = data.payload as RelationshipPayload
                     val changeEvt = when (data.meta.operation) {
@@ -31,7 +35,7 @@ class SourceIdIngestionStrategy(config: SourceIdIngestionStrategyConfig = Source
                 .groupBy({ it.first }, { it.second })
                 .map {
                     val query = """
-                        |${StreamsUtils.UNWIND}
+                        |${KafkaUtil.UNWIND}
                         |MERGE (start:$quotedLabelName{$quotedIdName: event.start})
                         |MERGE (end:$quotedLabelName{$quotedIdName: event.end})
                         |MERGE (start)-[r:${it.key.quote()}{$quotedIdName: event.id}]->(end)
@@ -44,32 +48,32 @@ class SourceIdIngestionStrategy(config: SourceIdIngestionStrategyConfig = Source
 
     override fun deleteRelationshipEvents(events: Collection<StreamsSinkEntity>): List<QueryEvents> {
         return events
-                .mapNotNull { SchemaUtils.toStreamsTransactionEvent(it) { it.payload.type == EntityType.relationship && it.meta.operation == OperationType.deleted } }
+                .mapNotNull { toStreamsTransactionEvent(it) { it.payload.type == EntityType.relationship && it.meta.operation == OperationType.deleted } }
                 .map { data ->
                     val payload = data.payload as RelationshipPayload
                     payload.label to mapOf("id" to data.payload.id)
                 }
                 .groupBy({ it.first }, { it.second })
                 .map {
-                    val query = "${StreamsUtils.UNWIND} MATCH ()-[r:${it.key.quote()}{$quotedIdName: event.id}]-() DELETE r"
+                    val query = "${KafkaUtil.UNWIND} MATCH ()-[r:${it.key.quote()}{$quotedIdName: event.id}]-() DELETE r"
                     QueryEvents(query, it.value)
                 }
     }
 
     override fun deleteNodeEvents(events: Collection<StreamsSinkEntity>): List<QueryEvents> {
         val data = events
-                .mapNotNull { SchemaUtils.toStreamsTransactionEvent(it) { it.payload.type == EntityType.node && it.meta.operation == OperationType.deleted } }
+                .mapNotNull { toStreamsTransactionEvent(it) { it.payload.type == EntityType.node && it.meta.operation == OperationType.deleted } }
                 .map { mapOf("id" to it.payload.id) }
         if (data.isNullOrEmpty()) {
             return emptyList()
         }
-        val query = "${StreamsUtils.UNWIND} MATCH (n:$quotedLabelName{$quotedIdName: event.id}) DETACH DELETE n"
+        val query = "${KafkaUtil.UNWIND} MATCH (n:$quotedLabelName{$quotedIdName: event.id}) DETACH DELETE n"
         return listOf(QueryEvents(query, data))
     }
 
     override fun mergeNodeEvents(events: Collection<StreamsSinkEntity>): List<QueryEvents> {
         return events
-                .mapNotNull { SchemaUtils.toStreamsTransactionEvent(it) { it.payload.type == EntityType.node && it.meta.operation != OperationType.deleted } }
+                .mapNotNull { toStreamsTransactionEvent(it) { it.payload.type == EntityType.node && it.meta.operation != OperationType.deleted } }
                 .map { data ->
                     val changeEvtAfter = data.payload.after as NodeChange
                     val labelsAfter = changeEvtAfter.labels ?: emptyList()
@@ -88,7 +92,7 @@ class SourceIdIngestionStrategy(config: SourceIdIngestionStrategyConfig = Source
                 .groupBy({ it.first }, { it.second })
                 .map {
                     var query = """
-                        |${StreamsUtils.UNWIND}
+                        |${KafkaUtil.UNWIND}
                         |MERGE (n:$quotedLabelName{$quotedIdName: event.id})
                         |SET n = event.properties
                         |SET n.$quotedIdName = event.id

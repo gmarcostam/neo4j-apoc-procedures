@@ -10,15 +10,16 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.apache.kafka.clients.admin.AdminClient
 import org.neo4j.logging.Log
-import apoc.kafka.utils.KafkaValidationUtils
-import apoc.kafka.utils.StreamsUtils
+import apoc.kafka.utils.KafkaUtil.isAutoCreateTopicsEnabled
+import apoc.kafka.utils.KafkaUtil.getInvalidTopics
+import apoc.kafka.utils.KafkaUtil
 import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
 
 class KafkaAdminService(private val props: KafkaConfiguration, private val allTopics: List<String>, private val log: Log) {
     private val client = AdminClient.create(props.asProperties())
     private val kafkaTopics: MutableSet<String> = Collections.newSetFromMap(ConcurrentHashMap<String, Boolean>())
-    private val isAutoCreateTopicsEnabled = KafkaValidationUtils.isAutoCreateTopicsEnabled(client)
+    private val isAutoCreateTopicsEnabled = isAutoCreateTopicsEnabled(client)
     private lateinit var job: Job
 
     fun start() {
@@ -40,7 +41,7 @@ class KafkaAdminService(private val props: KafkaConfiguration, private val allTo
     }
 
     fun stop() {
-        StreamsUtils.ignoreExceptions({
+        KafkaUtil.ignoreExceptions({
             runBlocking {
                 job.cancelAndJoin()
             }
@@ -52,5 +53,5 @@ class KafkaAdminService(private val props: KafkaConfiguration, private val allTo
         else -> kafkaTopics.contains(topic)
     }
 
-    fun getInvalidTopics() = KafkaValidationUtils.getInvalidTopics(client, allTopics)
+    fun getInvalidTopics() = getInvalidTopics(client, allTopics)
 }

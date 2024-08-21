@@ -1,5 +1,17 @@
 package apoc.kafka.producer.kafka
 
+import apoc.kafka.events.StreamsEvent
+import apoc.kafka.events.StreamsPluginStatus
+import apoc.kafka.events.StreamsTransactionEvent
+import apoc.kafka.extensions.isDefaultDb
+import apoc.kafka.producer.StreamsEventRouter
+import apoc.kafka.producer.StreamsEventRouterConfiguration
+import apoc.kafka.producer.asSourceRecordKey
+import apoc.kafka.producer.asSourceRecordValue
+import apoc.kafka.producer.toMap
+import apoc.kafka.utils.JSONUtils
+import apoc.kafka.utils.KafkaUtil
+import apoc.kafka.utils.KafkaUtil.getInvalidTopicsError
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -11,20 +23,7 @@ import org.apache.kafka.common.errors.OutOfOrderSequenceException
 import org.apache.kafka.common.errors.ProducerFencedException
 import org.neo4j.graphdb.GraphDatabaseService
 import org.neo4j.logging.Log
-import apoc.kafka.producer.StreamsEventRouterConfiguration
-import apoc.kafka.producer.asSourceRecordKey
-import apoc.kafka.producer.asSourceRecordValue
-import apoc.kafka.producer.toMap
-import apoc.kafka.producer.StreamsEventRouter
-import apoc.kafka.events.StreamsEvent
-import apoc.kafka.events.StreamsPluginStatus
-import apoc.kafka.events.StreamsTransactionEvent
-import apoc.kafka.extensions.isDefaultDb
-import apoc.kafka.utils.JSONUtils
-import apoc.kafka.utils.KafkaValidationUtils.getInvalidTopicsError
-import apoc.kafka.utils.StreamsUtils
-import java.util.Properties
-import java.util.UUID
+import java.util.*
 
 
 class KafkaEventRouter(private val config: Map<String, String>,
@@ -72,9 +71,9 @@ class KafkaEventRouter(private val config: Map<String, String>,
             if (status(producer) == StreamsPluginStatus.STOPPED) {
                 return@runBlocking
             }
-            StreamsUtils.ignoreExceptions({ producer?.flush() }, UninitializedPropertyAccessException::class.java)
-            StreamsUtils.ignoreExceptions({ producer?.close() }, UninitializedPropertyAccessException::class.java)
-            StreamsUtils.ignoreExceptions({ kafkaAdminService.stop() }, UninitializedPropertyAccessException::class.java)
+            KafkaUtil.ignoreExceptions({ producer?.flush() }, UninitializedPropertyAccessException::class.java)
+            KafkaUtil.ignoreExceptions({ producer?.close() }, UninitializedPropertyAccessException::class.java)
+            KafkaUtil.ignoreExceptions({ kafkaAdminService.stop() }, UninitializedPropertyAccessException::class.java)
             producer = null
         }
     }

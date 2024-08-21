@@ -1,5 +1,12 @@
 package apoc.kafka.consumer.procedures
 
+import apoc.kafka.config.StreamsConfig
+import apoc.kafka.consumer.StreamsEventConsumer
+import apoc.kafka.consumer.StreamsEventSink
+import apoc.kafka.consumer.StreamsSinkConfiguration
+import apoc.kafka.events.StreamsPluginStatus
+import apoc.kafka.extensions.isDefaultDb
+import apoc.kafka.utils.KafkaUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -14,13 +21,6 @@ import org.neo4j.procedure.Mode
 import org.neo4j.procedure.Name
 import org.neo4j.procedure.Procedure
 import org.neo4j.procedure.TerminationGuard
-import apoc.kafka.config.StreamsConfig
-import apoc.kafka.consumer.*
-import apoc.kafka.events.StreamsPluginStatus
-import apoc.kafka.extensions.isDefaultDb
-import apoc.kafka.producer.StreamsRouterConfigurationListener
-import apoc.kafka.utils.Neo4jUtils
-import apoc.kafka.utils.StreamsUtils
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.ConcurrentHashMap
 import java.util.stream.Collectors
@@ -42,10 +42,6 @@ class StreamsSinkProcedures {
     @JvmField @Context
     var terminationGuard: TerminationGuard? = null
 
-
-    
-
-    
     @Procedure(mode = Mode.READ, name = "streams.consume")
     @Description("streams.consume(topic, {timeout: <long value>, from: <string>, groupId: <string>, commit: <boolean>, partitions:[{partition: <number>, offset: <number>}]}) " +
             "YIELD event - Allows to consume custom topics")
@@ -56,14 +52,8 @@ class StreamsSinkProcedures {
             log?.info("Topic empty, no message sent")
             Stream.empty<StreamResult>()
         } else {
-            val properties = config?.mapValues { it.value.toString() } ?: emptyMap()
+//            val properties = config?.mapValues { it.value.toString() } ?: emptyMap()
             val configuration = StreamsConfig.getConfiguration()
-//            val configuration = StreamsEventSinkConfigMapper(StreamsConfig.getConfiguration(), 
-//                
-//                StreamsConfig.getConfiguration()// getStreamsEventSink(db!!)!!
-//                .getEventSinkConfigMapper()
-//                .convert(config = properties)
-
             readData(topic, config ?: emptyMap(), configuration)
         }
     }
@@ -135,7 +125,7 @@ class StreamsSinkProcedures {
         }
     }
 
-    private fun checkLeader(lambda: () -> Stream<KeyValueResult>): Stream<KeyValueResult> = if (Neo4jUtils.isWriteableInstance(db as GraphDatabaseAPI)) {
+    private fun checkLeader(lambda: () -> Stream<KeyValueResult>): Stream<KeyValueResult> = if (KafkaUtil.isWriteableInstance(db as GraphDatabaseAPI)) {
         lambda()
     } else {
         Stream.of(KeyValueResult("error", "You can use this procedure only in the LEADER or in a single instance configuration."))
@@ -213,13 +203,13 @@ class StreamsSinkProcedures {
 //        
         private val streamsEventSinkStore = ConcurrentHashMap<String, StreamsEventSink>()
 
-        private fun getStreamsEventSink(db: GraphDatabaseService) = streamsEventSinkStore[StreamsUtils.getName(db)]
+        private fun getStreamsEventSink(db: GraphDatabaseService) = streamsEventSinkStore[KafkaUtil.getName(db)]
 
         fun registerStreamsEventSink(db: GraphDatabaseAPI, streamsEventSink: StreamsEventSink) {
-            streamsEventSinkStore[StreamsUtils.getName(db)] = streamsEventSink
+            streamsEventSinkStore[KafkaUtil.getName(db)] = streamsEventSink
         }
 
-        fun unregisterStreamsEventSink(db: GraphDatabaseAPI) = streamsEventSinkStore.remove(StreamsUtils.getName(db))
+        fun unregisterStreamsEventSink(db: GraphDatabaseAPI) = streamsEventSinkStore.remove(KafkaUtil.getName(db))
 
         fun hasStatus(db: GraphDatabaseAPI, status: StreamsPluginStatus) = getStreamsEventSink(db)?.status() == status
 

@@ -3,7 +3,7 @@ package apoc.kafka.service.sink.strategy
 import org.junit.Test
 import apoc.kafka.events.*
 import apoc.kafka.service.StreamsSinkEntity
-import apoc.kafka.utils.StreamsUtils
+import apoc.kafka.utils.KafkaUtil
 import kotlin.test.assertEquals
 
 class SourceIdIngestionStrategyTest {
@@ -76,7 +76,7 @@ class SourceIdIngestionStrategyTest {
         assertEquals(1, nodeEvents.size)
         val nodeQuery = nodeEvents[0].query
         val expectedNodeQuery = """
-            |${StreamsUtils.UNWIND}
+            |${KafkaUtil.UNWIND}
             |MERGE (n:`Custom SourceEvent`{`custom Id`: event.id})
             |SET n = event.properties
             |SET n.`custom Id` = event.id
@@ -95,7 +95,7 @@ class SourceIdIngestionStrategyTest {
         assertEquals(1, relationshipEvents.size)
         val relQuery = relationshipEvents[0].query
         val expectedRelQuery = """
-            |${StreamsUtils.UNWIND}
+            |${KafkaUtil.UNWIND}
             |MERGE (start:`Custom SourceEvent`{`custom Id`: event.start})
             |MERGE (end:`Custom SourceEvent`{`custom Id`: event.end})
             |MERGE (start)-[r:`KNOWS WHO`{`custom Id`: event.id}]->(end)
@@ -158,7 +158,7 @@ class SourceIdIngestionStrategyTest {
         assertEquals(1, nodeEvents.size)
         val nodeQuery = nodeEvents[0].query
         val expectedNodeQuery = """
-            |${StreamsUtils.UNWIND}
+            |${KafkaUtil.UNWIND}
             |MERGE (n:SourceEvent{sourceId: event.id})
             |SET n = event.properties
             |SET n.sourceId = event.id
@@ -208,7 +208,7 @@ class SourceIdIngestionStrategyTest {
         assertEquals(1, relationshipEvents.size)
         val relQuery = relationshipEvents[0].query
         val expectedRelQuery = """
-            |${StreamsUtils.UNWIND}
+            |${KafkaUtil.UNWIND}
             |MERGE (start:SourceEvent{sourceId: event.start})
             |MERGE (end:SourceEvent{sourceId: event.end})
             |MERGE (start)-[r:`KNOWS WHO`{sourceId: event.id}]->(end)
@@ -271,7 +271,7 @@ class SourceIdIngestionStrategyTest {
         assertEquals(0, nodeEvents.size)
         val nodeQuery = nodeDeleteEvents[0].query
         val expectedNodeQuery = """
-            |${StreamsUtils.UNWIND} MATCH (n:SourceEvent{sourceId: event.id}) DETACH DELETE n
+            |${KafkaUtil.UNWIND} MATCH (n:SourceEvent{sourceId: event.id}) DETACH DELETE n
         """.trimMargin()
         assertEquals(expectedNodeQuery, nodeQuery.trimIndent())
         val eventsNodeList = nodeDeleteEvents[0].events
@@ -316,7 +316,7 @@ class SourceIdIngestionStrategyTest {
         assertEquals(0, relationshipEvents.size)
         val relQuery = relationshipDeleteEvents[0].query
         val expectedRelQuery = """
-            |${StreamsUtils.UNWIND} MATCH ()-[r:`KNOWS WHO`{sourceId: event.id}]-() DELETE r
+            |${KafkaUtil.UNWIND} MATCH ()-[r:`KNOWS WHO`{sourceId: event.id}]-() DELETE r
         """.trimMargin()
         assertEquals(expectedRelQuery, relQuery.trimIndent())
         val eventsRelList = relationshipDeleteEvents[0].events

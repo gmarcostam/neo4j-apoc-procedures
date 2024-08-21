@@ -1,9 +1,12 @@
 package apoc.kafka.consumer
 
-import apoc.kafka.consumer.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import apoc.kafka.config.StreamsConfig
+import apoc.kafka.consumer.kafka.KafkaSinkConfiguration
+import apoc.kafka.consumer.procedures.StreamsSinkProcedures
+import apoc.kafka.consumer.utils.ConsumerUtils
+import apoc.kafka.extensions.isDefaultDb
+import apoc.kafka.utils.KafkaUtil
+import apoc.kafka.utils.KafkaUtil.getProducerProperties
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -13,15 +16,6 @@ import org.neo4j.logging.Log
 import org.neo4j.plugin.configuration.ConfigurationLifecycleUtils
 import org.neo4j.plugin.configuration.EventType
 import org.neo4j.plugin.configuration.listners.ConfigurationLifecycleListener
-import apoc.kafka.config.StreamsConfig
-import apoc.kafka.extensions.isDefaultDb
-import apoc.kafka.consumer.kafka.KafkaSinkConfiguration
-import apoc.kafka.consumer.procedures.StreamsSinkProcedures
-import apoc.kafka.consumer.utils.ConsumerUtils
-import apoc.kafka.utils.KafkaValidationUtils
-import apoc.kafka.utils.Neo4jUtils
-import apoc.kafka.utils.ProcedureUtils
-import apoc.kafka.utils.StreamsUtils
 
 class StreamsSinkConfigurationListener(private val db: GraphDatabaseAPI,
                                        private val log: Log) : ConfigurationLifecycleListener {
@@ -34,7 +28,7 @@ class StreamsSinkConfigurationListener(private val db: GraphDatabaseAPI,
 
     private var lastConfig: KafkaSinkConfiguration? = null
 
-    private val producerConfig = KafkaValidationUtils.getProducerProperties()
+    private val producerConfig = getProducerProperties()
 
     private fun KafkaSinkConfiguration.excludeSourceProps() = this.asProperties()
         ?.filterNot { producerConfig.contains(it.key) || it.key.toString().startsWith("streams.source") }
@@ -121,7 +115,7 @@ class StreamsSinkConfigurationListener(private val db: GraphDatabaseAPI,
         try {
             if (streamsSinkConfiguration.enabled) {
                 log.info("[Sink] The Streams Sink module is starting")
-                if (ProcedureUtils.isCluster(db)) {
+                if (KafkaUtil.isCluster(db)) {
                     initSinkModule(streamsSinkConfiguration)
                 } else {
                     runInASingleInstance(streamsSinkConfiguration)
@@ -155,29 +149,6 @@ class StreamsSinkConfigurationListener(private val db: GraphDatabaseAPI,
     }
 
     private fun initSinkModule(streamsSinkConfiguration: StreamsSinkConfiguration) {
-//        if (streamsSinkConfiguration.checkApocTimeout > -1) {
-//            waitForApoc()
-//        } else {
             initSink()
-//        }
     }
-
-//    private fun waitForApoc() {
-//        GlobalScope.launch(Dispatchers.IO) {
-//            val success = StreamsUtils.blockUntilFalseOrTimeout(eventSink!!.streamsSinkConfiguration.checkApocTimeout,
-//                eventSink!!.streamsSinkConfiguration.checkApocInterval) {
-//                val hasApoc = Neo4jUtils.hasApoc(db)
-//                if (!hasApoc && log.isDebugEnabled) {
-//                    log.debug("[Sink] APOC not loaded yet, next check in ${eventSink!!.streamsSinkConfiguration.checkApocInterval} ms")
-//                }
-//                hasApoc
-//            }
-//            if (success) {
-//                initSink()
-//            } else {
-//                log.info("[Sink] Streams Sink plugin not loaded as APOC are not installed")
-//            }
-//        }
-//    }
-
 }

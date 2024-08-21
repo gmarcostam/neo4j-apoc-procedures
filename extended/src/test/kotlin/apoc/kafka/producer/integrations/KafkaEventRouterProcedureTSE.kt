@@ -23,7 +23,6 @@ class KafkaEventRouterProcedureTSE : KafkaEventRouterBaseTSE() {
     fun testProcedure() {
         val db = createDbWithKafkaConfigs()
 
-        // db.start()
         val topic = UUID.randomUUID().toString()
         KafkaEventRouterSuiteIT.registerPublishProcedure(db)
         kafkaConsumer.subscribe(listOf(topic))
@@ -32,8 +31,6 @@ class KafkaEventRouterProcedureTSE : KafkaEventRouterBaseTSE() {
         val records = kafkaConsumer.poll(5000)
         assertEquals(1, records.count())
         assertTrue { records.all {
-//            val readValue = jacksonObjectMapper().readValue(it.value(), StreamsEvent::class.java)
-
             JSONUtils.readValue(it.value(), StreamsEvent::class.java).let {
                 message == it.payload
             }
@@ -43,7 +40,6 @@ class KafkaEventRouterProcedureTSE : KafkaEventRouterBaseTSE() {
     @Test
     fun testProcedureWithKey() {
         val db = createDbWithKafkaConfigs()
-        // db.start()
         val topic = UUID.randomUUID().toString()
         KafkaEventRouterSuiteIT.registerPublishProcedure(db)
         kafkaConsumer.subscribe(listOf(topic))
@@ -61,7 +57,6 @@ class KafkaEventRouterProcedureTSE : KafkaEventRouterBaseTSE() {
     @Test
     fun testProcedureWithKeyAsMap() {
         val db = createDbWithKafkaConfigs()
-        // db.start()
         val topic = UUID.randomUUID().toString()
         KafkaEventRouterSuiteIT.registerPublishProcedure(db)
         kafkaConsumer.subscribe(listOf(topic))
@@ -72,7 +67,6 @@ class KafkaEventRouterProcedureTSE : KafkaEventRouterBaseTSE() {
         assertEquals(1, records.count())
         assertTrue { records.all {
             JSONUtils.readValue(it.value(), StreamsEvent::class.java).payload == message
-//            && JSONUtils.readValue(it.key(), Map::class.java) == keyRecord
         }}
     }
 
@@ -217,7 +211,6 @@ class KafkaEventRouterProcedureTSE : KafkaEventRouterBaseTSE() {
     @Test
     fun testProcedureSyncWithConfig() {
         val db = createDbWithKafkaConfigs()
-        // db.start()
         AdminClient.create(mapOf("bootstrap.servers" to KafkaEventRouterSuiteIT.kafka.bootstrapServers)).use {
             val topic = UUID.randomUUID().toString()
 
@@ -248,7 +241,6 @@ class KafkaEventRouterProcedureTSE : KafkaEventRouterBaseTSE() {
     @Test
     fun testProcedureWithTopicWithMultiplePartitionAndKey() {
         val db = createDbWithKafkaConfigs()
-        // db.start()
         AdminClient.create(mapOf("bootstrap.servers" to KafkaEventRouterSuiteIT.kafka.bootstrapServers)).use {
             val topic = UUID.randomUUID().toString()
 
@@ -277,7 +269,6 @@ class KafkaEventRouterProcedureTSE : KafkaEventRouterBaseTSE() {
     @Test
     fun testProcedureSendMessageToNotExistentPartition() {
         val db = createDbWithKafkaConfigs()
-        // db.start()
         AdminClient.create(mapOf("bootstrap.servers" to KafkaEventRouterSuiteIT.kafka.bootstrapServers)).use {
             val topic = UUID.randomUUID().toString()
 
@@ -298,8 +289,6 @@ class KafkaEventRouterProcedureTSE : KafkaEventRouterBaseTSE() {
     }
 
     private fun setUpProcedureTests() {
-        // db.start()
-//        KafkaEventRouterSuiteIT.registerPublishProcedure(db)
         kafkaConsumer.subscribe(listOf("neo4j"))
     }
 

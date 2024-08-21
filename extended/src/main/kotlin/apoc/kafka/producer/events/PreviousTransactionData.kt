@@ -6,7 +6,7 @@ import org.neo4j.graphdb.Relationship
 import org.neo4j.graphdb.event.LabelEntry
 import org.neo4j.graphdb.event.PropertyEntry
 import apoc.kafka.extensions.labelNames
-import apoc.kafka.utils.SchemaUtils.getNodeKeys
+import apoc.kafka.utils.KafkaUtil.getNodeKeys
 
 data class PreviousNodeTransactionData(val nodeProperties: Map<Long, Map<String, Any>>,
                                        val nodeLabels: Map<Long, List<String>>,

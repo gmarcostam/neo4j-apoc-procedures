@@ -12,7 +12,7 @@ import apoc.kafka.extensions.labelNames
 import apoc.kafka.extensions.registerTransactionEventListener
 import apoc.kafka.extensions.unregisterTransactionEventListener
 import apoc.kafka.producer.events.*
-import apoc.kafka.utils.SchemaUtils.getNodeKeys
+import apoc.kafka.utils.KafkaUtil.getNodeKeys
 import java.net.InetAddress
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference

@@ -2,13 +2,13 @@ package apoc.kafka.service.sink.strategy
 
 import apoc.kafka.events.EntityType
 import apoc.kafka.extensions.quote
-import apoc.kafka.utils.JSONUtils
 import apoc.kafka.service.StreamsSinkEntity
 import apoc.kafka.service.sink.strategy.CUDIngestionStrategy.Companion.FROM_KEY
 import apoc.kafka.service.sink.strategy.CUDIngestionStrategy.Companion.TO_KEY
-import apoc.kafka.utils.IngestionUtils.getLabelsAsString
-import apoc.kafka.utils.IngestionUtils.getNodeKeysAsString
-import apoc.kafka.utils.StreamsUtils
+import apoc.kafka.utils.JSONUtils
+import apoc.kafka.utils.KafkaUtil.getLabelsAsString
+import apoc.kafka.utils.KafkaUtil.getNodeKeysAsString
+import apoc.kafka.utils.KafkaUtil
 
 
 enum class CUDOperations { create, merge, update, delete, match }
@@ -87,46 +87,46 @@ class CUDIngestionStrategy: IngestionStrategy {
     }
 
     private fun buildNodeCreateStatement(labels: List<String>): String = """
-            |${StreamsUtils.UNWIND}
+            |${KafkaUtil.UNWIND}
             |CREATE (n${getLabelsAsString(labels)})
             |SET n = event.properties
         """.trimMargin()
 
     private fun buildRelCreateStatement(from: NodeRelMetadata, to: NodeRelMetadata,
                                         rel_type: String): String = """
-            |${StreamsUtils.UNWIND}
+            |${KafkaUtil.UNWIND}
             |${buildNodeLookupByIds(keyword = from.getOperation(), ids = from.ids, labels = from.labels, identifier = FROM_KEY, field = FROM_KEY)}
-            |${StreamsUtils.WITH_EVENT_FROM}
+            |${KafkaUtil.WITH_EVENT_FROM}
             |${buildNodeLookupByIds(keyword = to.getOperation(), ids = to.ids, labels = to.labels, identifier = TO_KEY, field = TO_KEY)}
             |CREATE ($FROM_KEY)-[r:${rel_type.quote()}]->($TO_KEY)
             |SET r = event.properties
         """.trimMargin()
 
     private fun buildNodeMergeStatement(labels: List<String>, ids: Set<String>): String = """
-            |${StreamsUtils.UNWIND}
+            |${KafkaUtil.UNWIND}
             |${buildNodeLookupByIds(keyword = "MERGE", ids = ids, labels = labels)}
             |SET n += event.properties
         """.trimMargin()
 
     private fun buildRelMergeStatement(from: NodeRelMetadata, to: NodeRelMetadata,
                                         rel_type: String): String = """
-            |${StreamsUtils.UNWIND}
+            |${KafkaUtil.UNWIND}
             |${buildNodeLookupByIds(keyword = from.getOperation(), ids = from.ids, labels = from.labels, identifier = FROM_KEY, field = FROM_KEY)}
-            |${StreamsUtils.WITH_EVENT_FROM}
+            |${KafkaUtil.WITH_EVENT_FROM}
             |${buildNodeLookupByIds(keyword = to.getOperation(), ids = to.ids, labels = to.labels, identifier = TO_KEY, field = TO_KEY)}
             |MERGE ($FROM_KEY)-[r:${rel_type.quote()}]->($TO_KEY)
             |SET r += event.properties
         """.trimMargin()
 
     private fun buildNodeUpdateStatement(labels: List<String>, ids: Set<String>): String = """
-            |${StreamsUtils.UNWIND}
+            |${KafkaUtil.UNWIND}
             |${buildNodeLookupByIds(ids = ids, labels = labels)}
             |SET n += event.properties
         """.trimMargin()
 
     private fun buildRelUpdateStatement(from: NodeRelMetadata, to: NodeRelMetadata,
                                        rel_type: String): String = """
-            |${StreamsUtils.UNWIND}
+            |${KafkaUtil.UNWIND}
             |${buildNodeLookupByIds(ids = from.ids, labels = from.labels, identifier = FROM_KEY, field = FROM_KEY)}
             |${buildNodeLookupByIds(ids = to.ids, labels = to.labels, identifier = TO_KEY, field = TO_KEY)}
             |MATCH ($FROM_KEY)-[r:${rel_type.quote()}]->($TO_KEY)
@@ -134,14 +134,14 @@ class CUDIngestionStrategy: IngestionStrategy {
         """.trimMargin()
 
     private fun buildDeleteStatement(labels: List<String>, ids: Set<String>, detach: Boolean): String = """
-            |${StreamsUtils.UNWIND}
+            |${KafkaUtil.UNWIND}
             |${buildNodeLookupByIds(ids = ids, labels = labels)}
             |${if (detach) "DETACH " else ""}DELETE n
         """.trimMargin()
 
     private fun buildRelDeleteStatement(from: NodeRelMetadata, to: NodeRelMetadata,
                                         rel_type: String): String = """
-            |${StreamsUtils.UNWIND}
+            |${KafkaUtil.UNWIND}
             |${buildNodeLookupByIds(ids = from.ids, labels = from.labels, identifier = FROM_KEY, field = FROM_KEY)}
             |${buildNodeLookupByIds(ids = to.ids, labels = to.labels, identifier = TO_KEY, field = TO_KEY)}
             |MATCH ($FROM_KEY)-[r:${rel_type.quote()}]->($TO_KEY)

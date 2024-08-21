@@ -1,22 +1,10 @@
 package apoc.kafka
 
-/**
- * todo - ISSUE: https://github.com/neo4j-contrib/neo4j-apoc-procedures/issues/3799
- * 
- * TODO - import from StreamsProcedures.kt
- * TODO change names e.g. from streams.publish.sync to apoc.kafka.publish.sync
- * TODO - insert needed dependencies into extended/build.gradle compileOnly e testImpl
- * TODO - insert the same dependencies into extra-dependencies/kafka/build.gradle stesse dipendenze di sopra ma come implementation
- * TODO - controllare assertEquals di kotlin
- * TODO - spostare variabili da StreamsConfig.kt in ExtendedApocConfig
- * TODO - Controllare Neo4jContainerExtension
- * TODO - controllare JSONUtils e JSONUtil common
- */
-import apoc.kafka.consumer.procedures.StreamsSinkProcedures
 import apoc.kafka.producer.StreamsEventRouter
 import apoc.kafka.producer.StreamsTransactionEventHandler
+import apoc.kafka.producer.events.StreamsEventBuilder
+import apoc.kafka.utils.KafkaUtil
 import kotlinx.coroutines.runBlocking
-import org.neo4j.graphdb.GraphDatabaseService
 import org.neo4j.kernel.internal.GraphDatabaseAPI
 import org.neo4j.logging.Log
 import org.neo4j.procedure.Context
@@ -24,10 +12,6 @@ import org.neo4j.procedure.Description
 import org.neo4j.procedure.Mode
 import org.neo4j.procedure.Name
 import org.neo4j.procedure.Procedure
-
-import apoc.kafka.producer.events.StreamsEventBuilder
-import apoc.kafka.utils.StreamsUtils
-
 import java.util.concurrent.ConcurrentHashMap
 import java.util.stream.Stream
 
@@ -123,11 +107,11 @@ class PublishProcedures {
             evtRouter: StreamsEventRouter,
             txHandler: StreamsTransactionEventHandler
         ) {
-            streamsEventRouterStore[StreamsUtils.getName(db)] = StreamsEventSinkStoreEntry(evtRouter, txHandler)
+            streamsEventRouterStore[KafkaUtil.getName(db)] = StreamsEventSinkStoreEntry(evtRouter, txHandler)
         }
 
         fun unregister(db: GraphDatabaseAPI) {
-            streamsEventRouterStore.remove(StreamsUtils.getName(db))
+            streamsEventRouterStore.remove(KafkaUtil.getName(db))
         }
     }
 }

@@ -1,17 +1,17 @@
 package apoc.kafka.service.sink.strategy
 
 import apoc.kafka.extensions.flatten
-import apoc.kafka.utils.JSONUtils
 import apoc.kafka.service.StreamsSinkEntity
-import apoc.kafka.utils.IngestionUtils.containsProp
-import apoc.kafka.utils.IngestionUtils.getLabelsAsString
-import apoc.kafka.utils.IngestionUtils.getNodeMergeKeys
-import apoc.kafka.utils.StreamsUtils
+import apoc.kafka.utils.JSONUtils
+import apoc.kafka.utils.KafkaUtil.containsProp
+import apoc.kafka.utils.KafkaUtil.getLabelsAsString
+import apoc.kafka.utils.KafkaUtil.getNodeMergeKeys
+import apoc.kafka.utils.KafkaUtil
 
 class NodePatternIngestionStrategy(private val nodePatternConfiguration: NodePatternConfiguration): IngestionStrategy {
 
     private val mergeNodeTemplate: String = """
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MERGE (n${getLabelsAsString(nodePatternConfiguration.labels)}{${
                     getNodeMergeKeys("keys", nodePatternConfiguration.keys)
                 }})
@@ -20,7 +20,7 @@ class NodePatternIngestionStrategy(private val nodePatternConfiguration: NodePat
             """.trimMargin()
 
     private val deleteNodeTemplate: String = """
-                |${StreamsUtils.UNWIND}
+                |${KafkaUtil.UNWIND}
                 |MATCH (n${getLabelsAsString(nodePatternConfiguration.labels)}{${
                     getNodeMergeKeys("keys", nodePatternConfiguration.keys)
                 }})

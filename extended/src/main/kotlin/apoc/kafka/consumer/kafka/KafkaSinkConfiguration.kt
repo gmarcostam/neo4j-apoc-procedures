@@ -7,8 +7,8 @@ import org.apache.kafka.common.serialization.ByteArrayDeserializer
 import apoc.kafka.consumer.StreamsSinkConfiguration
 import apoc.kafka.extensions.toPointCase
 import apoc.kafka.utils.JSONUtils
-import apoc.kafka.utils.KafkaValidationUtils.getInvalidTopics
-import apoc.kafka.utils.ValidationUtils.validateConnection
+import apoc.kafka.utils.KafkaUtil.getInvalidTopics
+import apoc.kafka.utils.KafkaUtil.validateConnection
 import java.util.Properties
 
 

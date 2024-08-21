@@ -1,10 +1,10 @@
 package apoc.kafka.service.sink.strategy
 
 import apoc.kafka.service.StreamsSinkEntity
-import apoc.kafka.utils.StreamsUtils
+import apoc.kafka.utils.KafkaUtil
 
 class CypherTemplateStrategy(query: String): IngestionStrategy {
-    private val fullQuery = "${StreamsUtils.UNWIND} $query"
+    private val fullQuery = "${KafkaUtil.UNWIND} $query"
     override fun mergeNodeEvents(events: Collection<StreamsSinkEntity>): List<QueryEvents> {
         return listOf(QueryEvents(fullQuery, events.mapNotNull { it.value as? Map<String, Any> }))
     }

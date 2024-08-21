@@ -1,24 +1,21 @@
 package apoc.kafka.config
 
 import apoc.ApocConfig
+import apoc.kafka.extensions.databaseManagementService
+import apoc.kafka.extensions.getDefaultDbName
+import apoc.kafka.extensions.isAvailable
+import apoc.kafka.utils.KafkaUtil
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import org.apache.commons.configuration2.ConfigurationMap
 import org.neo4j.dbms.api.DatabaseManagementService
 import org.neo4j.kernel.internal.GraphDatabaseAPI
 import org.neo4j.logging.Log
 import org.neo4j.logging.internal.LogService
 import org.neo4j.plugin.configuration.ConfigurationLifecycle
-import org.neo4j.plugin.configuration.ConfigurationLifecycleUtils
 import org.neo4j.plugin.configuration.EventType
 import org.neo4j.plugin.configuration.listners.ConfigurationLifecycleListener
-import apoc.kafka.extensions.databaseManagementService
-import apoc.kafka.extensions.getDefaultDbName
-import apoc.kafka.extensions.isAvailable
-import apoc.kafka.utils.Neo4jUtils
-import apoc.kafka.utils.ProcedureUtils
-import apoc.kafka.utils.StreamsUtils
-import org.apache.commons.configuration2.ConfigurationMap
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
@@ -67,14 +64,14 @@ class StreamsConfig(private val log: Log, private val dbms: DatabaseManagementSe
                 .firstOrNull() ?: DEFAULT_PATH
         }
 
-        fun getInstance(db: GraphDatabaseAPI): StreamsConfig = cache.computeIfAbsent(StreamsUtils.getName(db)) {
+        fun getInstance(db: GraphDatabaseAPI): StreamsConfig = cache.computeIfAbsent(KafkaUtil.getName(db)) {
             StreamsConfig(log = db.dependencyResolver
                 .resolveDependency(LogService::class.java)
                 .getUserLog(StreamsConfig::class.java), db.databaseManagementService())
         }
 
         fun removeInstance(db: GraphDatabaseAPI) {
-            val instance = cache.remove(StreamsUtils.getName(db))
+            val instance = cache.remove(KafkaUtil.getName(db))
             instance?.stop(true)
         }
 
@@ -118,7 +115,7 @@ class StreamsConfig(private val log: Log, private val dbms: DatabaseManagementSe
             if (status.get() == Status.RUNNING) return@runBlocking
             try {
                 // wait for all database to be ready
-                val isInstanceReady = StreamsUtils.blockUntilFalseOrTimeout(getInstanceWaitTimeout()) {
+                val isInstanceReady = KafkaUtil.blockUntilFalseOrTimeout(getInstanceWaitTimeout()) {
                     if (log.isDebugEnabled) {
                         log.debug("Waiting for the Neo4j instance to be ready...")
                     }
@@ -128,10 +125,10 @@ class StreamsConfig(private val log: Log, private val dbms: DatabaseManagementSe
                     log.warn("${getInstanceWaitTimeout()} ms have passed and the instance is not online, the Streams plugin will not started")
                     return@runBlocking
                 }
-                if (ProcedureUtils.isCluster(dbms)) {
-                    log.info("We're in cluster instance waiting for the ${StreamsUtils.LEADER}s to be elected in each database")
+                if (KafkaUtil.isCluster(dbms)) {
+                    log.info("We're in cluster instance waiting for the ${KafkaUtil.LEADER}s to be elected in each database")
                     // in case is a cluster we wait for the correct cluster formation => LEADER elected
-                    Neo4jUtils.waitForTheLeaders(dbms, log) { configStart() }
+                    KafkaUtil.waitForTheLeaders(dbms, log) { configStart() }
                 } else {
                     configStart()
                 }

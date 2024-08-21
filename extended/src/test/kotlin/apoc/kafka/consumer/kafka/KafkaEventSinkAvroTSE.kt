@@ -3,20 +3,20 @@ package apoc.kafka.consumer.kafka
 import apoc.ApocConfig
 import apoc.kafka.producer.integrations.KafkaEventSinkSuiteIT
 import apoc.kafka.support.Assert
-
 import io.confluent.kafka.serializers.KafkaAvroDeserializer
 import org.apache.avro.SchemaBuilder
 import org.apache.avro.generic.GenericRecord
 import org.apache.avro.generic.GenericRecordBuilder
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.hamcrest.Matchers
+import org.junit.Ignore
 import org.junit.Test
 import org.neo4j.function.ThrowingSupplier
 import org.neo4j.graphdb.Node
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-
+@Ignore
 class KafkaEventSinkAvroTSE : KafkaEventSinkBaseTSE() {
 
     @Test

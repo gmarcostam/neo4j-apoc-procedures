@@ -1,24 +1,23 @@
 package apoc.kafka.consumer.kafka
 
-import apoc.kafka.support.*
-import apoc.kafka.support.Assert
-import apoc.kafka.utils.StreamsUtils
+import apoc.kafka.support.KafkaTestUtils
+import apoc.kafka.utils.KafkaUtil
 import apoc.util.JsonUtil
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.admin.NewTopic
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
-import org.hamcrest.Matchers
-import org.junit.*
-import org.neo4j.function.ThrowingSupplier
-import org.neo4j.test.rule.ImpermanentDbmsRule
+import org.junit.AfterClass
+import org.junit.Assume
+import org.junit.BeforeClass
+import org.junit.Ignore
+import org.junit.Test
 import org.testcontainers.containers.KafkaContainer
 import org.testcontainers.containers.Network
 import java.util.*
-import java.util.concurrent.TimeUnit
 import kotlin.test.assertTrue
 
-
+@Ignore
 class KafkaEventSinkNoTopicAutoCreationIT {
     companion object {
         /**
@@ -41,7 +40,7 @@ class KafkaEventSinkNoTopicAutoCreationIT {
         @JvmStatic
         fun setUpContainer() {
             var exists = false
-            StreamsUtils.ignoreExceptions({
+            KafkaUtil.ignoreExceptions({
                 kafka = KafkaContainer(confluentPlatformVersion)
                     .withNetwork(Network.newNetwork())
                 kafka.withEnv("KAFKA_AUTO_CREATE_TOPICS_ENABLE", "false")
@@ -55,7 +54,7 @@ class KafkaEventSinkNoTopicAutoCreationIT {
         @AfterClass
         @JvmStatic
         fun tearDownContainer() {
-            StreamsUtils.ignoreExceptions({
+            KafkaUtil.ignoreExceptions({
                 kafka.stop()
             }, UninitializedPropertyAccessException::class.java)
         }

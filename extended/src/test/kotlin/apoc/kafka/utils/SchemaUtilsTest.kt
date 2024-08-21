@@ -4,7 +4,7 @@ import org.junit.Test
 import apoc.kafka.events.Constraint
 import apoc.kafka.events.RelKeyStrategy
 import apoc.kafka.events.StreamsConstraintType
-import apoc.kafka.utils.SchemaUtils.getNodeKeys
+import apoc.kafka.utils.KafkaUtil.getNodeKeys
 import kotlin.test.assertEquals
 
 class SchemaUtilsTest {
