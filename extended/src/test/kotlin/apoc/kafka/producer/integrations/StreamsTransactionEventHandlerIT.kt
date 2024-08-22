@@ -15,7 +15,7 @@ class StreamsTransactionEventHandlerIT: KafkaEventRouterBaseTSE() {
 
     @Before
     fun setUpInner() {
-        db = createDbWithKafkaConfigs("streams.router" to "apoc.kafka.producer.mocks.MockStreamsEventRouter")
+        db = createDbWithKafkaConfigs("apoc.kafka.router" to "apoc.kafka.producer.mocks.MockStreamsEventRouter")
         MockStreamsEventRouter.reset()
     }
 

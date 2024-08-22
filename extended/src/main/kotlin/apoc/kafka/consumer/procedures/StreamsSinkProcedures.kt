@@ -42,8 +42,8 @@ class StreamsSinkProcedures {
     @JvmField @Context
     var terminationGuard: TerminationGuard? = null
 
-    @Procedure(mode = Mode.READ, name = "streams.consume")
-    @Description("streams.consume(topic, {timeout: <long value>, from: <string>, groupId: <string>, commit: <boolean>, partitions:[{partition: <number>, offset: <number>}]}) " +
+    @Procedure(mode = Mode.READ, name = "apoc.kafka.consume")
+    @Description("apoc.kafka.consume(topic, {timeout: <long value>, from: <string>, groupId: <string>, commit: <boolean>, partitions:[{partition: <number>, offset: <number>}]}) " +
             "YIELD event - Allows to consume custom topics")
     fun consume(@Name("topic") topic: String?,
                 @Name(value = "config", defaultValue = "{}") config: Map<String, Any>?): Stream<StreamResult> = runBlocking {
@@ -62,7 +62,7 @@ class StreamsSinkProcedures {
         }
     }
 
-    @Procedure("streams.sink.start")
+    @Procedure("apoc.kafka.sink.start")
     fun sinkStart(): Stream<KeyValueResult> {
         checkEnabled()
         return checkLeader {
@@ -77,7 +77,7 @@ class StreamsSinkProcedures {
         }
     }
 
-    @Procedure("streams.sink.stop")
+    @Procedure("apoc.kafka.sink.stop")
     fun sinkStop(): Stream<KeyValueResult> {
         checkEnabled()
         return checkLeader {
@@ -92,7 +92,7 @@ class StreamsSinkProcedures {
         }
     }
 
-    @Procedure("streams.sink.restart")
+    @Procedure("apoc.kafka.sink.restart")
     fun sinkRestart(): Stream<KeyValueResult> {
         val stopped = sinkStop().collect(Collectors.toList())
         val hasError = stopped.any { it.name == "exception" }
@@ -102,8 +102,8 @@ class StreamsSinkProcedures {
         return sinkStart()
     }
 
-    @Procedure("streams.sink.config")
-    @Deprecated("Please use streams.configuration.get")
+    @Procedure("apoc.kafka.sink.config")
+    @Deprecated("Please use apoc.kafka.configuration.get")
     fun sinkConfig(): Stream<KeyValueResult> {
         checkEnabled()
         return checkLeader {
@@ -120,7 +120,7 @@ class StreamsSinkProcedures {
         }
     }
 
-    @Procedure("streams.sink.status")
+    @Procedure("apoc.kafka.sink.status")
     fun sinkStatus(): Stream<KeyValueResult> {
         checkEnabled()
         return run {
@@ -187,7 +187,7 @@ class StreamsSinkProcedures {
 //        initListeners(db!!, log!!)
         
         if (!StreamsConfig.getInstance(db!! as GraphDatabaseAPI).hasProceduresEnabled(db?.databaseName() ?: ""))  {
-            throw RuntimeException("In order to use the procedure you must set streams.procedures.enabled=true")
+            throw RuntimeException("In order to use the procedure you must set apoc.kafka.procedures.enabled=true")
         }
         
         

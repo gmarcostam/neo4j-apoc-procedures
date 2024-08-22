@@ -40,20 +40,20 @@ class StreamsConfig(private val log: Log, private val dbms: DatabaseManagementSe
         
         private const val SUN_JAVA_COMMAND = "sun.java.command"
         private const val CONF_DIR_ARG = "config-dir="
-        const val SOURCE_ENABLED = "streams.source.enabled"
+        const val SOURCE_ENABLED = "apoc.kafka.source.enabled"
         const val SOURCE_ENABLED_VALUE = true
-        const val PROCEDURES_ENABLED = "streams.procedures.enabled"
+        const val PROCEDURES_ENABLED = "apoc.kafka.procedures.enabled"
         const val PROCEDURES_ENABLED_VALUE = true
-        const val SINK_ENABLED = "streams.sink.enabled"
+        const val SINK_ENABLED = "apoc.kafka.sink.enabled"
         const val SINK_ENABLED_VALUE = false
-        const val CHECK_APOC_TIMEOUT = "streams.check.apoc.timeout"
-        const val CHECK_APOC_INTERVAL = "streams.check.apoc.interval"
-        const val CLUSTER_ONLY = "streams.cluster.only"
-        const val CHECK_WRITEABLE_INSTANCE_INTERVAL = "streams.check.writeable.instance.interval"
-        const val SYSTEM_DB_WAIT_TIMEOUT = "streams.systemdb.wait.timeout"
+        const val CHECK_APOC_TIMEOUT = "apoc.kafka.check.apoc.timeout"
+        const val CHECK_APOC_INTERVAL = "apoc.kafka.check.apoc.interval"
+        const val CLUSTER_ONLY = "apoc.kafka.cluster.only"
+        const val CHECK_WRITEABLE_INSTANCE_INTERVAL = "apoc.kafka.check.writeable.instance.interval"
+        const val SYSTEM_DB_WAIT_TIMEOUT = "apoc.kafka.systemdb.wait.timeout"
         const val SYSTEM_DB_WAIT_TIMEOUT_VALUE = 10000L
-        const val POLL_INTERVAL = "streams.sink.poll.interval"
-        const val INSTANCE_WAIT_TIMEOUT = "streams.wait.timeout"
+        const val POLL_INTERVAL = "apoc.kafka.sink.poll.interval"
+        const val INSTANCE_WAIT_TIMEOUT = "apoc.kafka.wait.timeout"
         const val INSTANCE_WAIT_TIMEOUT_VALUE = 120000L
 
         private const val DEFAULT_TRIGGER_PERIOD: Int = 10000
@@ -101,13 +101,13 @@ class StreamsConfig(private val log: Log, private val dbms: DatabaseManagementSe
         fun convert(props: Map<String,String>, config: Map<String, String>): Map<String, String> {
             val mutProps = props.toMutableMap()
             val mappingKeys = mapOf(
-                "broker" to "kafka.${ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG}",
-                "from" to "kafka.${ConsumerConfig.AUTO_OFFSET_RESET_CONFIG}",
-                "autoCommit" to "kafka.${ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG}",
-                "keyDeserializer" to "kafka.${ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG}",
-                "valueDeserializer" to "kafka.${ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG}",
-                "schemaRegistryUrl" to "kafka.schema.registry.url",
-                "groupId" to "kafka.${ConsumerConfig.GROUP_ID_CONFIG}")
+                "broker" to "apoc.kafka.${ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG}",
+                "from" to "apoc.kafka.${ConsumerConfig.AUTO_OFFSET_RESET_CONFIG}",
+                "autoCommit" to "apoc.kafka.${ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG}",
+                "keyDeserializer" to "apoc.kafka.${ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG}",
+                "valueDeserializer" to "apoc.kafka.${ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG}",
+                "schemaRegistryUrl" to "apoc.kafka.schema.registry.url",
+                "groupId" to "apoc.kafka.${ConsumerConfig.GROUP_ID_CONFIG}")
             mutProps += config.mapKeys { mappingKeys.getOrDefault(it.key, it.key) }
             return mutProps
         }
@@ -124,8 +124,8 @@ class StreamsConfig(private val log: Log, private val dbms: DatabaseManagementSe
     init {
         val neo4jConfFolder = System.getenv().getOrDefault("NEO4J_CONF", getNeo4jConfFolder())
         configLifecycle = ConfigurationLifecycle(DEFAULT_TRIGGER_PERIOD,
-            "$neo4jConfFolder${File.separator}streams.conf",
-            true, log, true, "streams.", "kafka.")
+            "$neo4jConfFolder${File.separator}apoc.kafka.conf",
+            true, log, true, "apoc.kafka.", "apoc.kafka.")
     }
 
     fun start() = runBlocking {

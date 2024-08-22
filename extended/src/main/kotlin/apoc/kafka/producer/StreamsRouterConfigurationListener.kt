@@ -32,11 +32,11 @@ class StreamsRouterConfigurationListener(private val db: GraphDatabaseAPI,
 
     private fun KafkaConfiguration.excludeSinkProps() = this.asProperties()
         ?.filterNot { consumerConfig.contains(it.key)
-                || it.key.toString().startsWith("streams.sink")
+                || it.key.toString().startsWith("apoc.kafka.sink")
                 // these are not yet used by the streams Source module
-                || it.key == "streams.cluster.only"
-                || it.key == "streams.check.apoc.timeout"
-                || it.key == "streams.check.apoc.interval" }
+                || it.key == "apoc.kafka.cluster.only"
+                || it.key == "apoc.kafka.check.apoc.timeout"
+                || it.key == "apoc.kafka.check.apoc.interval" }
 
     override fun onShutdown() {
         runBlocking {
@@ -48,8 +48,8 @@ class StreamsRouterConfigurationListener(private val db: GraphDatabaseAPI,
 
     // visible for testing
     fun isConfigurationChanged(configMap: Map<String, String>) = when (configMap
-        .getOrDefault("streams.router", "streams.kafka.KafkaEventRouter")) {
-        "streams.kafka.KafkaEventRouter" ->  {
+        .getOrDefault("apoc.kafka.router", "apoc.kafka.kafka.KafkaEventRouter")) {
+        "apoc.kafka.kafka.KafkaEventRouter" ->  {
             // we validate all properties except for the ones related to the Consumer
             // we use this strategy because there are some properties related to the Confluent Platform
             // that we're not able to track from the Apache Packages

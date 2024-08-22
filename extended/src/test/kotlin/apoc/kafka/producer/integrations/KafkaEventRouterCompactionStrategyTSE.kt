@@ -32,8 +32,8 @@ class KafkaEventRouterCompactionStrategyTSE : KafkaEventRouterBaseTSE() {
 
     @Test
     fun `compact message with streams publish`() {
-        val db = createDbWithKafkaConfigs("streams.source.schema.polling.interval" to "0",
-            "kafka.streams.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_COMPACT)
+        val db = createDbWithKafkaConfigs("apoc.kafka.source.schema.polling.interval" to "0",
+            "apoc.kafka.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_COMPACT)
         
         val topic = UUID.randomUUID().toString()
 
@@ -45,15 +45,15 @@ class KafkaEventRouterCompactionStrategyTSE : KafkaEventRouterBaseTSE() {
         val keyRecord = "test"
         // we sent 5 messages, 3 of them with the same key, so we expect that
         // with the log compaction activated we expect to have just one message with the key equal to 'test'
-        db.execute("CALL streams.publish('$topic', 'Compaction 0', {key: 'Baz'})")
-        db.execute("CALL streams.publish('$topic', 'Compaction 1', {key: '$keyRecord'})")
-        db.execute("CALL streams.publish('$topic', 'Compaction 2', {key: '$keyRecord'})")
-        db.execute("CALL streams.publish('$topic', 'Compaction 3', {key: 'Foo'})")
-        db.execute("CALL streams.publish('$topic', 'Compaction 4', {key: '$keyRecord'})")
+        db.execute("CALL apoc.kafka.publish('$topic', 'Compaction 0', {key: 'Baz'})")
+        db.execute("CALL apoc.kafka.publish('$topic', 'Compaction 1', {key: '$keyRecord'})")
+        db.execute("CALL apoc.kafka.publish('$topic', 'Compaction 2', {key: '$keyRecord'})")
+        db.execute("CALL apoc.kafka.publish('$topic', 'Compaction 3', {key: 'Foo'})")
+        db.execute("CALL apoc.kafka.publish('$topic', 'Compaction 4', {key: '$keyRecord'})")
 
         // to activate the log compaction process we publish dummy messages
         // and waiting for messages population in topic
-        db.execute("UNWIND range(1,999) as id CALL streams.publish('$topic', id, {key: id}) RETURN null") {
+        db.execute("UNWIND range(1,999) as id CALL apoc.kafka.publish('$topic', id, {key: id}) RETURN null") {
             assertEquals(999, Iterators.count(it))
         }
 
@@ -71,13 +71,13 @@ class KafkaEventRouterCompactionStrategyTSE : KafkaEventRouterBaseTSE() {
     fun `delete single tombstone relation with strategy compact and constraints`() {
         val topic = UUID.randomUUID().toString()
         val keyRel = "KNOWS"
-        val db = createDbWithKafkaConfigs("streams.source.schema.polling.interval" to "0",
-            "kafka.streams.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_COMPACT,
-            "streams.source.topic.nodes.$topic" to "Person{*}",
-            "streams.source.topic.relationships.$topic" to "$keyRel{*}")
+        val db = createDbWithKafkaConfigs("apoc.kafka.source.schema.polling.interval" to "0",
+            "apoc.kafka.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_COMPACT,
+            "apoc.kafka.source.topic.nodes.$topic" to "Person{*}",
+            "apoc.kafka.source.topic.relationships.$topic" to "$keyRel{*}")
         // we create a topic with strategy compact
-        val sourceTopics = mapOf("streams.source.topic.nodes.$topic" to "Person{*}",
-                "streams.source.topic.relationships.$topic" to "$keyRel{*}")
+        val sourceTopics = mapOf("apoc.kafka.source.topic.nodes.$topic" to "Person{*}",
+                "apoc.kafka.source.topic.relationships.$topic" to "$keyRel{*}")
         val queries = listOf("CREATE CONSTRAINT FOR (p:Person) REQUIRE p.name IS UNIQUE")
         initDbWithLogStrategy(db, TopicConfig.CLEANUP_POLICY_COMPACT, sourceTopics, queries)
         KafkaEventRouterTestCommon.createTopic(topic, bootstrapServerMap)
@@ -110,13 +110,13 @@ class KafkaEventRouterCompactionStrategyTSE : KafkaEventRouterBaseTSE() {
         // we create a topic with strategy compact
         val relType = "KNOWS"
         val topic = UUID.randomUUID().toString()
-        val sourceTopics = mapOf("streams.source.topic.nodes.$topic" to "Person{*}",
-                "streams.source.topic.relationships.$topic" to "$relType{*}")
+        val sourceTopics = mapOf("apoc.kafka.source.topic.nodes.$topic" to "Person{*}",
+                "apoc.kafka.source.topic.relationships.$topic" to "$relType{*}")
 
-        val db = createDbWithKafkaConfigs("streams.source.schema.polling.interval" to "0",
-            "kafka.streams.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_COMPACT,
-            "streams.source.topic.nodes.$topic" to "Person{*}",
-            "streams.source.topic.relationships.$topic" to "$relType{*}")
+        val db = createDbWithKafkaConfigs("apoc.kafka.source.schema.polling.interval" to "0",
+            "apoc.kafka.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_COMPACT,
+            "apoc.kafka.source.topic.nodes.$topic" to "Person{*}",
+            "apoc.kafka.source.topic.relationships.$topic" to "$relType{*}")
         initDbWithLogStrategy(db, TopicConfig.CLEANUP_POLICY_COMPACT, sourceTopics)
         KafkaEventRouterTestCommon.createTopic(topic, bootstrapServerMap)
 
@@ -149,11 +149,11 @@ class KafkaEventRouterCompactionStrategyTSE : KafkaEventRouterBaseTSE() {
     @Test
     fun `delete tombstone node with strategy compact`() {
         val topic = UUID.randomUUID().toString()
-        val sourceTopics = mapOf("streams.source.topic.nodes.$topic" to "Person{*}")
+        val sourceTopics = mapOf("apoc.kafka.source.topic.nodes.$topic" to "Person{*}")
 
-        val db = createDbWithKafkaConfigs("streams.source.schema.polling.interval" to "0",
-            "kafka.streams.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_COMPACT,
-            "streams.source.topic.nodes.$topic" to "Person{*}")
+        val db = createDbWithKafkaConfigs("apoc.kafka.source.schema.polling.interval" to "0",
+            "apoc.kafka.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_COMPACT,
+            "apoc.kafka.source.topic.nodes.$topic" to "Person{*}")
         initDbWithLogStrategy(db, TopicConfig.CLEANUP_POLICY_COMPACT, sourceTopics)
         KafkaEventRouterTestCommon.createTopic(topic, bootstrapServerMap)
 
@@ -178,12 +178,12 @@ class KafkaEventRouterCompactionStrategyTSE : KafkaEventRouterBaseTSE() {
     @Test
     fun `delete node tombstone with strategy compact and constraint`() {
         val topic = UUID.randomUUID().toString()
-        val sourceTopics = mapOf("streams.source.topic.nodes.$topic" to "Person{*}")
+        val sourceTopics = mapOf("apoc.kafka.source.topic.nodes.$topic" to "Person{*}")
         val queries = listOf("CREATE CONSTRAINT FOR (p:Person) REQUIRE p.name IS UNIQUE")
 
-        val db = createDbWithKafkaConfigs("streams.source.schema.polling.interval" to "0",
-            "kafka.streams.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_COMPACT,
-            "streams.source.topic.nodes.$topic" to "Person{*}")
+        val db = createDbWithKafkaConfigs("apoc.kafka.source.schema.polling.interval" to "0",
+            "apoc.kafka.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_COMPACT,
+            "apoc.kafka.source.topic.nodes.$topic" to "Person{*}")
         initDbWithLogStrategy(db, TopicConfig.CLEANUP_POLICY_COMPACT, sourceTopics, queries)
         KafkaEventRouterTestCommon.createTopic(topic, bootstrapServerMap)
 
@@ -210,9 +210,9 @@ class KafkaEventRouterCompactionStrategyTSE : KafkaEventRouterBaseTSE() {
     fun `test relationship with multiple constraint and strategy compact`() {
         val relType = "BUYS"
         val topic = listOf(UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString())
-        val sourceTopics = mapOf("streams.source.topic.nodes.${topic[0]}" to "Person{*}",
-                "streams.source.topic.relationships.${topic[1]}" to "$relType{*}",
-                "streams.source.topic.nodes.${topic[2]}" to "Product{*}"
+        val sourceTopics = mapOf("apoc.kafka.source.topic.nodes.${topic[0]}" to "Person{*}",
+                "apoc.kafka.source.topic.relationships.${topic[1]}" to "$relType{*}",
+                "apoc.kafka.source.topic.nodes.${topic[2]}" to "Product{*}"
         )
         val queries = listOf("CREATE CONSTRAINT FOR (p:Product) REQUIRE p.code IS UNIQUE",
                 "CREATE CONSTRAINT FOR (p:Other) REQUIRE p.address IS UNIQUE",
@@ -220,11 +220,11 @@ class KafkaEventRouterCompactionStrategyTSE : KafkaEventRouterBaseTSE() {
         )
 
 
-        val db = createDbWithKafkaConfigs("streams.source.schema.polling.interval" to "0",
-            "kafka.streams.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_COMPACT,
-            "streams.source.topic.nodes.${topic[0]}" to "Person{*}",
-            "streams.source.topic.relationships.${topic[1]}" to "$relType{*}",
-            "streams.source.topic.nodes.${topic[2]}" to "Product{*}"
+        val db = createDbWithKafkaConfigs("apoc.kafka.source.schema.polling.interval" to "0",
+            "apoc.kafka.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_COMPACT,
+            "apoc.kafka.source.topic.nodes.${topic[0]}" to "Person{*}",
+            "apoc.kafka.source.topic.relationships.${topic[1]}" to "$relType{*}",
+            "apoc.kafka.source.topic.nodes.${topic[2]}" to "Product{*}"
         )
         initDbWithLogStrategy(db, TopicConfig.CLEANUP_POLICY_COMPACT, sourceTopics, queries)
         kafkaConsumer.subscribe(topic)
@@ -269,13 +269,13 @@ class KafkaEventRouterCompactionStrategyTSE : KafkaEventRouterBaseTSE() {
     @Test
     fun `test label with multiple constraints and strategy compact`() {
         val topic = UUID.randomUUID().toString()
-        val sourceTopics = mapOf("streams.source.topic.nodes.$topic" to "Person:Neo4j{*}")
+        val sourceTopics = mapOf("apoc.kafka.source.topic.nodes.$topic" to "Person:Neo4j{*}")
         val queries = listOf("CREATE CONSTRAINT FOR (p:Person) REQUIRE p.name IS UNIQUE",
                 "CREATE CONSTRAINT FOR (p:Neo4j) REQUIRE p.surname IS UNIQUE")
 
-        val db = createDbWithKafkaConfigs("streams.source.schema.polling.interval" to "0",
-            "kafka.streams.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_COMPACT,
-            "streams.source.topic.nodes.$topic" to "Person:Neo4j{*}"
+        val db = createDbWithKafkaConfigs("apoc.kafka.source.schema.polling.interval" to "0",
+            "apoc.kafka.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_COMPACT,
+            "apoc.kafka.source.topic.nodes.$topic" to "Person:Neo4j{*}"
         )
         initDbWithLogStrategy(db, TopicConfig.CLEANUP_POLICY_COMPACT, sourceTopics, queries)
         kafkaConsumer.subscribe(listOf(topic))
@@ -308,10 +308,10 @@ class KafkaEventRouterCompactionStrategyTSE : KafkaEventRouterBaseTSE() {
     @Test
     fun `node without constraint and topic compact`() {
         val topic = UUID.randomUUID().toString()
-        val sourceTopics = mapOf("streams.source.topic.nodes.$topic" to "Person{*}")
-        val db = createDbWithKafkaConfigs("streams.source.schema.polling.interval" to "0",
-            "kafka.streams.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_COMPACT,
-            "streams.source.topic.nodes.$topic" to "Person{*}"
+        val sourceTopics = mapOf("apoc.kafka.source.topic.nodes.$topic" to "Person{*}")
+        val db = createDbWithKafkaConfigs("apoc.kafka.source.schema.polling.interval" to "0",
+            "apoc.kafka.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_COMPACT,
+            "apoc.kafka.source.topic.nodes.$topic" to "Person{*}"
         )
         initDbWithLogStrategy(db, TopicConfig.CLEANUP_POLICY_COMPACT, sourceTopics)
         kafkaConsumer.subscribe(listOf(topic))
@@ -339,11 +339,11 @@ class KafkaEventRouterCompactionStrategyTSE : KafkaEventRouterBaseTSE() {
     @Test
     fun `node with constraint and topic compact`() {
         val topic = UUID.randomUUID().toString()
-        val sourceTopics = mapOf("streams.source.topic.nodes.$topic" to "Person{*}")
+        val sourceTopics = mapOf("apoc.kafka.source.topic.nodes.$topic" to "Person{*}")
         val queries = listOf("CREATE CONSTRAINT FOR (p:Person) REQUIRE p.name IS UNIQUE")
-        val db = createDbWithKafkaConfigs("streams.source.schema.polling.interval" to "0",
-            "kafka.streams.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_COMPACT,
-            "streams.source.topic.nodes.$topic" to "Person{*}"
+        val db = createDbWithKafkaConfigs("apoc.kafka.source.schema.polling.interval" to "0",
+            "apoc.kafka.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_COMPACT,
+            "apoc.kafka.source.topic.nodes.$topic" to "Person{*}"
         )
         initDbWithLogStrategy(db, TopicConfig.CLEANUP_POLICY_COMPACT, sourceTopics, queries)
         kafkaConsumer.subscribe(listOf(topic))
@@ -374,15 +374,15 @@ class KafkaEventRouterCompactionStrategyTSE : KafkaEventRouterBaseTSE() {
     fun `relation with nodes without constraint and topic compact`() {
         val relType = "BUYS"
         val topic = listOf(UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString())
-        val sourceTopics = mapOf("streams.source.topic.nodes.${topic[0]}" to "Person{*}",
-                "streams.source.topic.relationships.${topic[1]}" to "$relType{*}",
-                "streams.source.topic.nodes.${topic[2]}" to "Product{*}"
+        val sourceTopics = mapOf("apoc.kafka.source.topic.nodes.${topic[0]}" to "Person{*}",
+                "apoc.kafka.source.topic.relationships.${topic[1]}" to "$relType{*}",
+                "apoc.kafka.source.topic.nodes.${topic[2]}" to "Product{*}"
         )
-        val db = createDbWithKafkaConfigs("streams.source.schema.polling.interval" to "0",
-            "kafka.streams.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_COMPACT,
-            "streams.source.topic.nodes.${topic[0]}" to "Person{*}",
-            "streams.source.topic.relationships.${topic[1]}" to "$relType{*}",
-            "streams.source.topic.nodes.${topic[2]}" to "Product{*}"
+        val db = createDbWithKafkaConfigs("apoc.kafka.source.schema.polling.interval" to "0",
+            "apoc.kafka.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_COMPACT,
+            "apoc.kafka.source.topic.nodes.${topic[0]}" to "Person{*}",
+            "apoc.kafka.source.topic.relationships.${topic[1]}" to "$relType{*}",
+            "apoc.kafka.source.topic.nodes.${topic[2]}" to "Product{*}"
         )
         initDbWithLogStrategy(db, TopicConfig.CLEANUP_POLICY_COMPACT, sourceTopics, )
         kafkaConsumer.subscribe(topic)
@@ -433,17 +433,17 @@ class KafkaEventRouterCompactionStrategyTSE : KafkaEventRouterBaseTSE() {
     fun `relation with nodes with constraint and strategy compact`() {
         val labelRel = "BUYS"
         val topic = listOf(UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString())
-        val sourceTopics = mapOf("streams.source.topic.nodes.${topic[0]}" to "Person{*}",
-                "streams.source.topic.relationships.${topic[1]}" to "$labelRel{*}",
-                "streams.source.topic.nodes.${topic[2]}" to "Product{*}"
+        val sourceTopics = mapOf("apoc.kafka.source.topic.nodes.${topic[0]}" to "Person{*}",
+                "apoc.kafka.source.topic.relationships.${topic[1]}" to "$labelRel{*}",
+                "apoc.kafka.source.topic.nodes.${topic[2]}" to "Product{*}"
         )
         val queries = listOf("CREATE CONSTRAINT FOR (p:Person) REQUIRE p.name IS UNIQUE",
                 "CREATE CONSTRAINT FOR (p:Product) REQUIRE p.code IS UNIQUE")
-        val db = createDbWithKafkaConfigs("streams.source.schema.polling.interval" to "0",
-            "kafka.streams.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_COMPACT,
-            "streams.source.topic.nodes.${topic[0]}" to "Person{*}",
-            "streams.source.topic.relationships.${topic[1]}" to "$labelRel{*}",
-            "streams.source.topic.nodes.${topic[2]}" to "Product{*}"
+        val db = createDbWithKafkaConfigs("apoc.kafka.source.schema.polling.interval" to "0",
+            "apoc.kafka.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_COMPACT,
+            "apoc.kafka.source.topic.nodes.${topic[0]}" to "Person{*}",
+            "apoc.kafka.source.topic.relationships.${topic[1]}" to "$labelRel{*}",
+            "apoc.kafka.source.topic.nodes.${topic[2]}" to "Product{*}"
         )
         initDbWithLogStrategy(db, TopicConfig.CLEANUP_POLICY_COMPACT, sourceTopics, queries)
         kafkaConsumer.subscribe(topic)
@@ -507,28 +507,28 @@ class KafkaEventRouterCompactionStrategyTSE : KafkaEventRouterBaseTSE() {
         val topicWithStrategyFirst = UUID.randomUUID().toString()
         val topicWithoutStrategy = UUID.randomUUID().toString()
 
-        val configs = mapOf("streams.source.topic.nodes.$personTopic" to "$labelStart{*}",
-                "streams.source.topic.nodes.$productTopic" to "$labelEnd{*}",
-                "streams.source.topic.relationships.$topicWithStrategyAll" to "$allProps{*}",
-                "streams.source.topic.relationships.$topicWithStrategyFirst" to "$oneProp{*}",
-                "streams.source.topic.relationships.$topicWithoutStrategy" to "$defaultProp{*}",
-                "streams.source.topic.relationships.$topicWithStrategyAll.key_strategy" to RelKeyStrategy.ALL.toString().toLowerCase(),
-                "streams.source.topic.relationships.$topicWithStrategyFirst.key_strategy" to RelKeyStrategy.DEFAULT.toString().toLowerCase())
+        val configs = mapOf("apoc.kafka.source.topic.nodes.$personTopic" to "$labelStart{*}",
+                "apoc.kafka.source.topic.nodes.$productTopic" to "$labelEnd{*}",
+                "apoc.kafka.source.topic.relationships.$topicWithStrategyAll" to "$allProps{*}",
+                "apoc.kafka.source.topic.relationships.$topicWithStrategyFirst" to "$oneProp{*}",
+                "apoc.kafka.source.topic.relationships.$topicWithoutStrategy" to "$defaultProp{*}",
+                "apoc.kafka.source.topic.relationships.$topicWithStrategyAll.key_strategy" to RelKeyStrategy.ALL.toString().toLowerCase(),
+                "apoc.kafka.source.topic.relationships.$topicWithStrategyFirst.key_strategy" to RelKeyStrategy.DEFAULT.toString().toLowerCase())
 
         val constraints = listOf("CREATE CONSTRAINT FOR (p:$labelStart) REQUIRE p.name IS UNIQUE",
                 "CREATE CONSTRAINT FOR (p:$labelStart) REQUIRE p.surname IS UNIQUE",
                 "CREATE CONSTRAINT FOR (p:$labelEnd) REQUIRE p.name IS UNIQUE")
 
 
-        val db = createDbWithKafkaConfigs("streams.source.schema.polling.interval" to "0",
-            "kafka.streams.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_COMPACT,
-            "streams.source.topic.nodes.$personTopic" to "$labelStart{*}",
-            "streams.source.topic.nodes.$productTopic" to "$labelEnd{*}",
-            "streams.source.topic.relationships.$topicWithStrategyAll" to "$allProps{*}",
-            "streams.source.topic.relationships.$topicWithStrategyFirst" to "$oneProp{*}",
-            "streams.source.topic.relationships.$topicWithoutStrategy" to "$defaultProp{*}",
-            "streams.source.topic.relationships.$topicWithStrategyAll.key_strategy" to RelKeyStrategy.ALL.toString().toLowerCase(),
-            "streams.source.topic.relationships.$topicWithStrategyFirst.key_strategy" to RelKeyStrategy.DEFAULT.toString().toLowerCase()
+        val db = createDbWithKafkaConfigs("apoc.kafka.source.schema.polling.interval" to "0",
+            "apoc.kafka.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_COMPACT,
+            "apoc.kafka.source.topic.nodes.$personTopic" to "$labelStart{*}",
+            "apoc.kafka.source.topic.nodes.$productTopic" to "$labelEnd{*}",
+            "apoc.kafka.source.topic.relationships.$topicWithStrategyAll" to "$allProps{*}",
+            "apoc.kafka.source.topic.relationships.$topicWithStrategyFirst" to "$oneProp{*}",
+            "apoc.kafka.source.topic.relationships.$topicWithoutStrategy" to "$defaultProp{*}",
+            "apoc.kafka.source.topic.relationships.$topicWithStrategyAll.key_strategy" to RelKeyStrategy.ALL.toString().toLowerCase(),
+            "apoc.kafka.source.topic.relationships.$topicWithStrategyFirst.key_strategy" to RelKeyStrategy.DEFAULT.toString().toLowerCase()
         )
         initDbWithLogStrategy(db, TopicConfig.CLEANUP_POLICY_COMPACT, configs, constraints)
 
@@ -712,11 +712,11 @@ class KafkaEventRouterCompactionStrategyTSE : KafkaEventRouterBaseTSE() {
     @Test
     fun `node without constraint and strategy delete`() {
         val topic = UUID.randomUUID().toString()
-        val sourceTopics = mapOf("streams.source.topic.nodes.$topic" to "Person{*}")
+        val sourceTopics = mapOf("apoc.kafka.source.topic.nodes.$topic" to "Person{*}")
 
-        val db = createDbWithKafkaConfigs("streams.source.schema.polling.interval" to "0",
-            "kafka.streams.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_DELETE,
-            "streams.source.topic.nodes.$topic" to "Person{*}"
+        val db = createDbWithKafkaConfigs("apoc.kafka.source.schema.polling.interval" to "0",
+            "apoc.kafka.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_DELETE,
+            "apoc.kafka.source.topic.nodes.$topic" to "Person{*}"
         )
         initDbWithLogStrategy(db, TopicConfig.CLEANUP_POLICY_DELETE, sourceTopics, )
         kafkaConsumer.subscribe(listOf(topic))
@@ -748,11 +748,11 @@ class KafkaEventRouterCompactionStrategyTSE : KafkaEventRouterBaseTSE() {
     fun `node with constraint and strategy delete`() {
         val topic = UUID.randomUUID().toString()
 
-        val sourceTopics = mapOf("streams.source.topic.nodes.$topic" to "Person{*}")
+        val sourceTopics = mapOf("apoc.kafka.source.topic.nodes.$topic" to "Person{*}")
         val queries = listOf("CREATE CONSTRAINT FOR (p:Person) REQUIRE p.name IS UNIQUE")
-        val db = createDbWithKafkaConfigs("streams.source.schema.polling.interval" to "0",
-            "kafka.streams.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_DELETE,
-            "streams.source.topic.nodes.$topic" to "Person{*}"
+        val db = createDbWithKafkaConfigs("apoc.kafka.source.schema.polling.interval" to "0",
+            "apoc.kafka.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_DELETE,
+            "apoc.kafka.source.topic.nodes.$topic" to "Person{*}"
         )
         initDbWithLogStrategy(db, TopicConfig.CLEANUP_POLICY_DELETE, sourceTopics, queries)
         kafkaConsumer.subscribe(listOf(topic))
@@ -783,15 +783,15 @@ class KafkaEventRouterCompactionStrategyTSE : KafkaEventRouterBaseTSE() {
     @Test
     fun `relation with nodes without constraint and strategy delete`() {
         val topic = listOf(UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString())
-        val sourceTopics = mapOf("streams.source.topic.nodes.${topic[0]}" to "Person{*}",
-                "streams.source.topic.relationships.${topic[1]}" to "BUYS{*}",
-                "streams.source.topic.nodes.${topic[2]}" to "Product{*}"
+        val sourceTopics = mapOf("apoc.kafka.source.topic.nodes.${topic[0]}" to "Person{*}",
+                "apoc.kafka.source.topic.relationships.${topic[1]}" to "BUYS{*}",
+                "apoc.kafka.source.topic.nodes.${topic[2]}" to "Product{*}"
         )
-        val db = createDbWithKafkaConfigs("streams.source.schema.polling.interval" to "0",
-            "kafka.streams.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_DELETE,
-            "streams.source.topic.nodes.${topic[0]}" to "Person{*}",
-            "streams.source.topic.relationships.${topic[1]}" to "BUYS{*}",
-            "streams.source.topic.nodes.${topic[2]}" to "Product{*}"
+        val db = createDbWithKafkaConfigs("apoc.kafka.source.schema.polling.interval" to "0",
+            "apoc.kafka.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_DELETE,
+            "apoc.kafka.source.topic.nodes.${topic[0]}" to "Person{*}",
+            "apoc.kafka.source.topic.relationships.${topic[1]}" to "BUYS{*}",
+            "apoc.kafka.source.topic.nodes.${topic[2]}" to "Product{*}"
         )
         initDbWithLogStrategy(db, TopicConfig.CLEANUP_POLICY_DELETE, sourceTopics)
         kafkaConsumer.subscribe(topic)
@@ -836,17 +836,17 @@ class KafkaEventRouterCompactionStrategyTSE : KafkaEventRouterBaseTSE() {
     @Test
     fun `relation with nodes with constraint and strategy delete`() {
         val topic = listOf(UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString())
-        val sourceTopics = mapOf("streams.source.topic.nodes.${topic[0]}" to "Person{*}",
-                "streams.source.topic.relationships.${topic[1]}" to "BUYS{*}",
-                "streams.source.topic.nodes.${topic[2]}" to "Product{*}"
+        val sourceTopics = mapOf("apoc.kafka.source.topic.nodes.${topic[0]}" to "Person{*}",
+                "apoc.kafka.source.topic.relationships.${topic[1]}" to "BUYS{*}",
+                "apoc.kafka.source.topic.nodes.${topic[2]}" to "Product{*}"
         )
         val queries = listOf("CREATE CONSTRAINT FOR (p:Person) REQUIRE p.name IS UNIQUE",
                 "CREATE CONSTRAINT FOR (p:Product) REQUIRE p.code IS UNIQUE")
-        val db = createDbWithKafkaConfigs("streams.source.schema.polling.interval" to "0",
-            "kafka.streams.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_DELETE,
-            "streams.source.topic.nodes.${topic[0]}" to "Person{*}",
-            "streams.source.topic.relationships.${topic[1]}" to "BUYS{*}",
-            "streams.source.topic.nodes.${topic[2]}" to "Product{*}"
+        val db = createDbWithKafkaConfigs("apoc.kafka.source.schema.polling.interval" to "0",
+            "apoc.kafka.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_DELETE,
+            "apoc.kafka.source.topic.nodes.${topic[0]}" to "Person{*}",
+            "apoc.kafka.source.topic.relationships.${topic[1]}" to "BUYS{*}",
+            "apoc.kafka.source.topic.nodes.${topic[2]}" to "Product{*}"
         )
         initDbWithLogStrategy(db, TopicConfig.CLEANUP_POLICY_DELETE, sourceTopics, queries)
         kafkaConsumer.subscribe(topic)
@@ -892,11 +892,11 @@ class KafkaEventRouterCompactionStrategyTSE : KafkaEventRouterBaseTSE() {
     fun `invalid log strategy should switch to default strategy value`() {
         val topic = UUID.randomUUID().toString()
         // we create an invalid log strategy
-        val db = createDbWithKafkaConfigs("streams.source.schema.polling.interval" to "0",
-            "kafka.streams.log.compaction.strategy" to "invalid",
-            "streams.source.topic.nodes.$topic" to "Person{*}"
+        val db = createDbWithKafkaConfigs("apoc.kafka.source.schema.polling.interval" to "0",
+            "apoc.kafka.log.compaction.strategy" to "invalid",
+            "apoc.kafka.source.topic.nodes.$topic" to "Person{*}"
         )
-        initDbWithLogStrategy(db, "invalid", mapOf("streams.source.topic.nodes.$topic" to "Person{*}"))
+        initDbWithLogStrategy(db, "invalid", mapOf("apoc.kafka.source.topic.nodes.$topic" to "Person{*}"))
         kafkaConsumer.subscribe(listOf(topic))
 
         // we verify that log strategy is default
@@ -931,7 +931,7 @@ class KafkaEventRouterCompactionStrategyTSE : KafkaEventRouterBaseTSE() {
         createTopicAndEntitiesAndAssertPartition(true, expectedKeyPippo, expectedKeyPluto, expectedKeyFoo, expectedKeyBar)
     }
 
-    // we create a topic with kafka.streams.log.compaction.strategy=compact
+    // we create a topic with apoc.kafka.log.compaction.strategy=compact
     // after that, we create and update some nodes and relationships
     // finally, we check that each node/relationship has no records spread across multiple partitions but only in a single partition
     private fun createTopicAndEntitiesAndAssertPartition(withConstraints: Boolean,
@@ -943,17 +943,17 @@ class KafkaEventRouterCompactionStrategyTSE : KafkaEventRouterBaseTSE() {
 
         // we create a topic with strategy compact
         val topic = UUID.randomUUID().toString()
-        val sourceTopics = mapOf("streams.source.topic.nodes.$topic" to "Person{*}",
-                "streams.source.topic.relationships.$topic" to "$relType{*}",
-                "kafka.num.partitions" to "10" )
+        val sourceTopics = mapOf("apoc.kafka.source.topic.nodes.$topic" to "Person{*}",
+                "apoc.kafka.source.topic.relationships.$topic" to "$relType{*}",
+                "apoc.kafka.num.partitions" to "10" )
         // we optionally create a constraint for Person.name property
         val queries = if(withConstraints) listOf("CREATE CONSTRAINT FOR (p:Person) REQUIRE p.name IS UNIQUE") else null
 
-        val db = createDbWithKafkaConfigs("streams.source.schema.polling.interval" to "0",
-            "kafka.streams.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_COMPACT,
-            "streams.source.topic.nodes.$topic" to "Person{*}",
-            "streams.source.topic.relationships.$topic" to "$relType{*}",
-            "kafka.num.partitions" to "10"
+        val db = createDbWithKafkaConfigs("apoc.kafka.source.schema.polling.interval" to "0",
+            "apoc.kafka.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_COMPACT,
+            "apoc.kafka.source.topic.nodes.$topic" to "Person{*}",
+            "apoc.kafka.source.topic.relationships.$topic" to "$relType{*}",
+            "apoc.kafka.num.partitions" to "10"
         )
         initDbWithLogStrategy(db, TopicConfig.CLEANUP_POLICY_COMPACT, sourceTopics, queries)
         KafkaEventRouterTestCommon.createTopic(topic, bootstrapServerMap, 10, false)

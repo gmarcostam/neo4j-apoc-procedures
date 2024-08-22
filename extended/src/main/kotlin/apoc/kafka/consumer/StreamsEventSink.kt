@@ -30,7 +30,7 @@ abstract class StreamsEventSink(private val config: Map<String, String>,
 object StreamsEventSinkFactory {
     fun getStreamsEventSink(config: Map<String, String>, streamsQueryExecution: StreamsEventSinkQueryExecution,
                             streamsTopicService: StreamsTopicService, log: Log, db: GraphDatabaseAPI): StreamsEventSink {
-        return Class.forName(config.getOrDefault("streams.sink", "apoc.kafka.consumer.kafka.KafkaEventSink"))
+        return Class.forName(config.getOrDefault("apoc.kafka.sink", "apoc.kafka.consumer.kafka.KafkaEventSink"))
                 .getConstructor(Map::class.java,
                         StreamsEventSinkQueryExecution::class.java,
                         StreamsTopicService::class.java,

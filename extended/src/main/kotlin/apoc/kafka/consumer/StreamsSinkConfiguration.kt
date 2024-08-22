@@ -26,10 +26,10 @@ data class StreamsSinkConfiguration(val enabled: Boolean = StreamsConfig.SINK_EN
                 .mapKeys { it.key.toPointCase() }
                 .mapKeys {
                     when (it.key) {
-                        "error.config" -> "streams.sink.errors"
-                        "procedures.enabled" -> "streams.${it.key}"
-                        "cluster.only" -> "streams.${it.key}"
-                        else -> if (it.key.startsWith("streams.sink")) it.key else "streams.sink.${it.key}"
+                        "error.config" -> "apoc.kafka.sink.errors"
+                        "procedures.enabled" -> "apoc.kafka.${it.key}"
+                        "cluster.only" -> "apoc.kafka.${it.key}"
+                        else -> if (it.key.startsWith("apoc.kafka.sink")) it.key else "apoc.kafka.sink.${it.key}"
                     }
                 }
         val topicMap = this.topics.asMap()
@@ -52,8 +52,8 @@ data class StreamsSinkConfiguration(val enabled: Boolean = StreamsConfig.SINK_EN
             val sourceIdStrategyConfig = createSourceIdIngestionStrategyConfig(configMap, dbName, isDefaultDb)
 
             val errorHandler = configMap
-                    .filterKeys { it.startsWith("streams.sink.error") }
-                    .mapKeys { it.key.substring("streams.sink.".length) }
+                    .filterKeys { it.startsWith("apoc.kafka.sink.error") }
+                    .mapKeys { it.key.substring("apoc.kafka.sink.".length) }
 
 
             return default.copy(enabled = StreamsConfig.isSinkEnabled(configMap, dbName),
@@ -80,7 +80,7 @@ data class StreamsSinkConfiguration(val enabled: Boolean = StreamsConfig.SINK_EN
         }
 
         fun createSourceIdIngestionStrategyConfig(configMap: Map<String, String>, dbName: String, isDefaultDb: Boolean): SourceIdIngestionStrategyConfig {
-            val sourceIdStrategyConfigPrefix = "streams.sink.topic.cdc.sourceId"
+            val sourceIdStrategyConfigPrefix = "apoc.kafka.sink.topic.cdc.sourceId"
             val (sourceIdStrategyLabelNameKey, sourceIdStrategyIdNameKey) = if (isDefaultDb) {
                 "labelName" to "idName"
             } else {

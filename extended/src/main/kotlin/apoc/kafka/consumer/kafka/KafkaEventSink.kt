@@ -46,13 +46,13 @@ class KafkaEventSink(private val config: Map<String, String>,
         dbName = db.databaseName(), isDefaultDb = db.isDefaultDb())
 
     override val mappingKeys = mapOf(
-            "broker" to "kafka.${ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG}",
-            "from" to "kafka.${ConsumerConfig.AUTO_OFFSET_RESET_CONFIG}",
-            "autoCommit" to "kafka.${ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG}",
-            "keyDeserializer" to "kafka.${ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG}",
-            "valueDeserializer" to "kafka.${ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG}",
-            "schemaRegistryUrl" to "kafka.schema.registry.url",
-            "groupId" to "kafka.${ConsumerConfig.GROUP_ID_CONFIG}")
+            "broker" to "apoc.kafka.${ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG}",
+            "from" to "apoc.kafka.${ConsumerConfig.AUTO_OFFSET_RESET_CONFIG}",
+            "autoCommit" to "apoc.kafka.${ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG}",
+            "keyDeserializer" to "apoc.kafka.${ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG}",
+            "valueDeserializer" to "apoc.kafka.${ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG}",
+            "schemaRegistryUrl" to "apoc.kafka.schema.registry.url",
+            "groupId" to "apoc.kafka.${ConsumerConfig.GROUP_ID_CONFIG}")
 
     override fun getEventConsumerFactory(): StreamsEventConsumerFactory {
         return object: StreamsEventConsumerFactory() {

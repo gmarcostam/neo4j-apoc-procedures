@@ -12,7 +12,7 @@ import apoc.kafka.utils.KafkaUtil.validateConnection
 import java.util.Properties
 
 
-private const val kafkaConfigPrefix = "kafka."
+private const val kafkaConfigPrefix = "apoc.kafka."
 
 private val SUPPORTED_DESERIALIZER = listOf(ByteArrayDeserializer::class.java.name, KafkaAvroDeserializer::class.java.name)
 
@@ -34,9 +34,9 @@ data class KafkaSinkConfiguration(val bootstrapServers: String = "localhost:9092
                                   val valueDeserializer: String = "org.apache.kafka.common.serialization.ByteArrayDeserializer",
                                   val groupId: String = "neo4j",
                                   val autoOffsetReset: String = "earliest",
-                                  val streamsSinkConfiguration: StreamsSinkConfiguration = StreamsSinkConfiguration(),
+                                  val sinkConfiguration: StreamsSinkConfiguration = StreamsSinkConfiguration(),
                                   val enableAutoCommit: Boolean = true,
-                                  val streamsAsyncCommit: Boolean = false,
+                                  val asyncCommit: Boolean = false,
                                   val extraProperties: Map<String, String> = emptyMap()) {
 
     companion object {
@@ -44,9 +44,9 @@ data class KafkaSinkConfiguration(val bootstrapServers: String = "localhost:9092
         fun from(cfg: Map<String, String>, dbName: String, isDefaultDb: Boolean): KafkaSinkConfiguration {
             val kafkaCfg = create(cfg, dbName, isDefaultDb)
             validate(kafkaCfg)
-            val invalidTopics = getInvalidTopics(kafkaCfg.asProperties(), kafkaCfg.streamsSinkConfiguration.topics.allTopics())
+            val invalidTopics = getInvalidTopics(kafkaCfg.asProperties(), kafkaCfg.sinkConfiguration.topics.allTopics())
             return if (invalidTopics.isNotEmpty()) {
-                kafkaCfg.copy(streamsSinkConfiguration = StreamsSinkConfiguration.from(cfg, dbName, invalidTopics, isDefaultDb))
+                kafkaCfg.copy(sinkConfiguration = StreamsSinkConfiguration.from(cfg, dbName, invalidTopics, isDefaultDb))
             } else {
                 kafkaCfg
             }
@@ -55,7 +55,7 @@ data class KafkaSinkConfiguration(val bootstrapServers: String = "localhost:9092
         // Visible for testing
         fun create(cfg: Map<String, String>, dbName: String, isDefaultDb: Boolean): KafkaSinkConfiguration {
             val config = cfg
-                    .filterKeys { it.startsWith(kafkaConfigPrefix) }
+                    .filterKeys { it.startsWith(kafkaConfigPrefix) && !it.startsWith("${kafkaConfigPrefix}sink") }
                     .mapKeys { it.key.substring(kafkaConfigPrefix.length) }
             val default = KafkaSinkConfiguration()
 
@@ -71,8 +71,8 @@ data class KafkaSinkConfiguration(val bootstrapServers: String = "localhost:9092
                     autoOffsetReset = config.getOrDefault(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, default.autoOffsetReset),
                     groupId = config.getOrDefault(ConsumerConfig.GROUP_ID_CONFIG, default.groupId) + (if (isDefaultDb) "" else "-$dbName"),
                     enableAutoCommit = config.getOrDefault(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, default.enableAutoCommit).toString().toBoolean(),
-                    streamsAsyncCommit = config.getOrDefault("streams.async.commit", default.streamsAsyncCommit).toString().toBoolean(),
-                    streamsSinkConfiguration = streamsSinkConfiguration,
+                    asyncCommit = config.getOrDefault("async.commit", default.asyncCommit).toString().toBoolean(),
+                    sinkConfiguration = streamsSinkConfiguration,
                     extraProperties = extraProperties // for what we don't provide a default configuration
             )
         }
@@ -91,7 +91,7 @@ data class KafkaSinkConfiguration(val bootstrapServers: String = "localhost:9092
     fun asProperties(): Properties {
         val props = Properties()
         val map = JSONUtils.asMap(this)
-                .filterKeys { it != "extraProperties" && it != "streamsSinkConfiguration" }
+                .filterKeys { it != "extraProperties" && it != "sinkConfiguration" }
                 .mapKeys { it.key.toPointCase() }
         props.putAll(map)
         props.putAll(extraProperties)

@@ -22,8 +22,8 @@ class KafkaEventSinkSimpleTSE: KafkaEventSinkBaseTSE() {
     @Test
     fun shouldWriteDataFromSink() = runBlocking {
         val db = createDbWithKafkaConfigs(
-            "streams.sink.topic.cypher.shouldWriteCypherQuery" to cypherQueryTemplate,
-            "kafka.${ConsumerConfig.GROUP_ID_CONFIG}" to "ajeje"
+            "apoc.kafka.sink.topic.cypher.shouldWriteCypherQuery" to cypherQueryTemplate,
+            "apoc.kafka.${ConsumerConfig.GROUP_ID_CONFIG}" to "ajeje"
         )
 
         val producerRecord = ProducerRecord(topics[0], "{\"a\":1}", JsonUtil.writeValueAsBytes(data))
@@ -81,10 +81,10 @@ class KafkaEventSinkSimpleTSE: KafkaEventSinkBaseTSE() {
         """.trimIndent()
         
         val db = createDbWithKafkaConfigs(
-            "streams.sink.topic.cypher.${product.first}" to product.second,
-            "streams.sink.topic.cypher.${customer.first}" to customer.second,
-            "streams.sink.topic.cypher.${bought.first}" to bought.second,
-            "kafka.${ConsumerConfig.GROUP_ID_CONFIG}" to "ajeje1"
+            "apoc.kafka.sink.topic.cypher.${product.first}" to product.second,
+            "apoc.kafka.sink.topic.cypher.${customer.first}" to customer.second,
+            "apoc.kafka.sink.topic.cypher.${bought.first}" to bought.second,
+            "apoc.kafka.${ConsumerConfig.GROUP_ID_CONFIG}" to "ajeje1"
         )
 
         val props = mapOf("id" to 1, "name" to "My Awesome Product")
@@ -107,13 +107,13 @@ class KafkaEventSinkSimpleTSE: KafkaEventSinkBaseTSE() {
     @Test
     fun `should stop and start the sink via procedures`() = runBlocking {
         // given
-        val db = createDbWithKafkaConfigs("streams.sink.topic.cypher.shouldWriteCypherQuery" to cypherQueryTemplate)
-//        db.setConfig("streams.sink.topic.cypher.shouldWriteCypherQuery", cypherQueryTemplate)
+        val db = createDbWithKafkaConfigs("apoc.kafka.sink.topic.cypher.shouldWriteCypherQuery" to cypherQueryTemplate)
+//        db.setConfig("apoc.kafka.sink.topic.cypher.shouldWriteCypherQuery", cypherQueryTemplate)
         // db.start()
 //        db.dependencyResolver.resolveDependency(GlobalProcedures::class.java)
 //                .registerProcedure(StreamsSinkProcedures::class.java)
 
-        db.executeTransactionally("CALL streams.sink.stop()", emptyMap()) { stopped ->
+        db.executeTransactionally("CALL apoc.kafka.sink.stop()", emptyMap()) { stopped ->
             assertEquals(mapOf("name" to "status", "value" to StreamsPluginStatus.STOPPED.toString()), stopped.next())
             assertFalse { stopped.hasNext() }
         }
@@ -142,7 +142,7 @@ class KafkaEventSinkSimpleTSE: KafkaEventSinkBaseTSE() {
 
 
         // when
-        db.executeTransactionally("CALL streams.sink.start()", emptyMap()) { started ->
+        db.executeTransactionally("CALL apoc.kafka.sink.start()", emptyMap()) { started ->
             assertEquals(mapOf("name" to "status", "value" to StreamsPluginStatus.RUNNING.toString()), started.next())
             assertFalse(started.hasNext())
         }
@@ -163,11 +163,11 @@ class KafkaEventSinkSimpleTSE: KafkaEventSinkBaseTSE() {
 
     @Test
     fun shouldNotStartInASingleInstance() {
-        val db = createDbWithKafkaConfigs("streams.sink.topic.cypher.shouldWriteCypherQuery" to cypherQueryTemplate,
-            "streams.cluster.only" to "true")
+        val db = createDbWithKafkaConfigs("apoc.kafka.sink.topic.cypher.shouldWriteCypherQuery" to cypherQueryTemplate,
+            "apoc.kafka.cluster.only" to "true")
         
-//        db.setConfig("streams.sink.topic.cypher.shouldWriteCypherQuery", cypherQueryTemplate)
-//                .setConfig("streams.cluster.only", "true")
+//        db.setConfig("apoc.kafka.sink.topic.cypher.shouldWriteCypherQuery", cypherQueryTemplate)
+//                .setConfig("apoc.kafka.cluster.only", "true")
 //                .start()
 //        db.dependencyResolver.resolveDependency(GlobalProcedures::class.java)
 //                .registerProcedure(StreamsSinkProcedures::class.java)
@@ -175,7 +175,7 @@ class KafkaEventSinkSimpleTSE: KafkaEventSinkBaseTSE() {
         val expectedRunning = listOf(mapOf("name" to "status", "value" to StreamsPluginStatus.STOPPED.toString()))
 
         // when
-        val actual = db.executeTransactionally("CALL streams.sink.status()", emptyMap()) {
+        val actual = db.executeTransactionally("CALL apoc.kafka.sink.status()", emptyMap()) {
             it.stream().toList()
         }
 
@@ -185,12 +185,12 @@ class KafkaEventSinkSimpleTSE: KafkaEventSinkBaseTSE() {
 
     @Test
     fun `neo4j should start normally in case kafka is not reachable`() {
-        val db = createDbWithKafkaConfigs("streams.sink.topic.cypher.shouldWriteCypherQuery" to cypherQueryTemplate,
-            "kafka.bootstrap.servers" to "foo",
-            "kafka.default.api.timeout.ms" to "5000")
-//        db.setConfig("streams.sink.topic.cypher.shouldWriteCypherQuery", cypherQueryTemplate)
-//                .setConfig("kafka.bootstrap.servers", "foo")
-//                .setConfig("kafka.default.api.timeout.ms", "5000")
+        val db = createDbWithKafkaConfigs("apoc.kafka.sink.topic.cypher.shouldWriteCypherQuery" to cypherQueryTemplate,
+            "apoc.kafka.bootstrap.servers" to "foo",
+            "apoc.kafka.default.api.timeout.ms" to "5000")
+//        db.setConfig("apoc.kafka.sink.topic.cypher.shouldWriteCypherQuery", cypherQueryTemplate)
+//                .setConfig("apoc.kafka.bootstrap.servers", "foo")
+//                .setConfig("apoc.kafka.default.api.timeout.ms", "5000")
 //                .start()
 //        db.dependencyResolver.resolveDependency(GlobalProcedures::class.java)
 //                .registerProcedure(StreamsSinkProcedures::class.java)
@@ -198,7 +198,7 @@ class KafkaEventSinkSimpleTSE: KafkaEventSinkBaseTSE() {
         val expectedRunning = listOf(mapOf("name" to "status", "value" to StreamsPluginStatus.STOPPED.toString()))
 
         // when
-        val actual = db.executeTransactionally("CALL streams.sink.status()", emptyMap()) {
+        val actual = db.executeTransactionally("CALL apoc.kafka.sink.status()", emptyMap()) {
             it.stream().toList()
         }
 

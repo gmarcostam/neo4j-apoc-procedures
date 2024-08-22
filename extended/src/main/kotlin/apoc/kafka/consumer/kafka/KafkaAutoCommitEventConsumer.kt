@@ -50,10 +50,10 @@ open class KafkaAutoCommitEventConsumer(private val config: KafkaSinkConfigurati
                                         private val dbName: String): KafkaEventConsumer(config, log, topics) {
 
     private val errorService: ErrorService = KafkaErrorService(config.asProperties(),
-        ErrorService.ErrorConfig.from(config.streamsSinkConfiguration.errorConfig),
+        ErrorService.ErrorConfig.from(config.sinkConfiguration.errorConfig),
         { s, e -> log.error(s,e as Throwable) })
 
-    override fun invalidTopics(): List<String> = config.streamsSinkConfiguration.topics.invalid
+    override fun invalidTopics(): List<String> = config.sinkConfiguration.topics.invalid
 
     private val isSeekSet = AtomicBoolean()
 

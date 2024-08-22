@@ -30,12 +30,12 @@ class StreamsEventSinkQueryExecutionTest {
 
     @Before
     fun setUp() {
-        val kafkaConfig = KafkaSinkConfiguration(streamsSinkConfiguration = StreamsSinkConfiguration(topics = Topics(cypherTopics = mapOf("shouldWriteCypherQuery" to "MERGE (n:Label {id: event.id})\n" +
+        val kafkaConfig = KafkaSinkConfiguration(sinkConfiguration = StreamsSinkConfiguration(topics = Topics(cypherTopics = mapOf("shouldWriteCypherQuery" to "MERGE (n:Label {id: event.id})\n" +
                 "    ON CREATE SET n += event.properties"))
         )
         )
         val streamsTopicService = StreamsTopicService()
-        streamsTopicService.set(TopicType.CYPHER, kafkaConfig.streamsSinkConfiguration.topics.cypherTopics)
+        streamsTopicService.set(TopicType.CYPHER, kafkaConfig.sinkConfiguration.topics.cypherTopics)
         streamsEventSinkQueryExecution = StreamsEventSinkQueryExecution(db as GraphDatabaseAPI, NullLog.getInstance(),
                 object : StreamsStrategyStorage() {
             override fun getTopicType(topic: String): TopicType? {

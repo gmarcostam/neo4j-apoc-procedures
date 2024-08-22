@@ -27,8 +27,8 @@ class PublishProcedures {
 
     @JvmField @Context var log: Log? = null
 
-    @Procedure(mode = Mode.READ, name = "streams.publish.sync")
-    @Description("streams.publish.sync(topic, payload, config) - Allows custom synchronous streaming from Neo4j to the configured stream environment")
+    @Procedure(mode = Mode.READ, name = "apoc.kafka.publish.sync")
+    @Description("apoc.kafka.publish.sync(topic, payload, config) - Allows custom synchronous streaming from Neo4j to the configured stream environment")
     fun sync(@Name("topic") topic: String?, @Name("payload") payload: Any?,
              @Name(value = "config", defaultValue = "{}") config: Map<String, Any>?): Stream<StreamPublishResult> {
         checkEnabled()
@@ -44,8 +44,8 @@ class PublishProcedures {
             .stream()
     }
 
-    @Procedure(mode = Mode.READ, name = "streams.publish")
-    @Description("streams.publish(topic, payload, config) - Allows custom streaming from Neo4j to the configured stream environment")
+    @Procedure(mode = Mode.READ, name = "apoc.kafka.publish")
+    @Description("apoc.kafka.publish(topic, payload, config) - Allows custom streaming from Neo4j to the configured stream environment")
     fun publish(@Name("topic") topic: String?, @Name("payload") payload: Any?,
                 @Name(value = "config", defaultValue = "{}") config: Map<String, Any>?) = runBlocking {
         checkEnabled()
@@ -61,7 +61,7 @@ class PublishProcedures {
     private fun checkEnabled() {
 //        StreamsSinkProcedures.initListeners(db!!, log!!)
         if (!getStreamsEventSinkStoreEntry().eventRouter.eventRouterConfiguration.proceduresEnabled) {
-            throw RuntimeException("In order to use the procedure you must set streams.procedures.enabled=true")
+            throw RuntimeException("In order to use the procedure you must set apoc.kafka.procedures.enabled=true")
         }
     }
 

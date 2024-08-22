@@ -88,7 +88,7 @@ open class KafkaEventRouterBaseTSE { // TSE (Test Suit Element)
 
     fun createDbWithKafkaConfigs(vararg pairs: Pair<String, Any>) : GraphDatabaseService {
         val mutableMapOf = mutableMapOf<String, Any>(
-            "kafka.bootstrap.servers" to KafkaEventRouterSuiteIT.kafka.bootstrapServers,
+            "apoc.kafka.bootstrap.servers" to KafkaEventRouterSuiteIT.kafka.bootstrapServers,
             "bootstrap.servers" to  KafkaEventRouterSuiteIT.kafka.bootstrapServers
         )
         

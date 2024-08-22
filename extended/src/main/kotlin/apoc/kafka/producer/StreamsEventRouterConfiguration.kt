@@ -40,9 +40,9 @@ private inline fun <reified T> filterMap(config: Map<String, String>, routingPre
 }
 
 private object StreamsRoutingConfigurationConstants {
-    const val NODE_ROUTING_KEY_PREFIX: String = "streams.source.topic.nodes."
-    const val REL_ROUTING_KEY_PREFIX: String = "streams.source.topic.relationships."
-    const val SCHEMA_POLLING_INTERVAL = "streams.source.schema.polling.interval"
+    const val NODE_ROUTING_KEY_PREFIX: String = "apoc.kafka.source.topic.nodes."
+    const val REL_ROUTING_KEY_PREFIX: String = "apoc.kafka.source.topic.relationships."
+    const val SCHEMA_POLLING_INTERVAL = "apoc.kafka.source.schema.polling.interval"
     const val FROM = ".from."
     const val KEY_STRATEGY_SUFFIX = ".key_strategy"
 }

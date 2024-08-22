@@ -28,7 +28,7 @@ class KafkaStreamsSinkProceduresTSE : KafkaEventSinkBaseTSE() {
     private fun testProcedure(db: GraphDatabaseService, topic: String) {
         val producerRecord = ProducerRecord(topic, "{\"id\": \"{${UUID.randomUUID()}}\"}", JsonUtil.writeValueAsBytes(data))
         kafkaProducer.send(producerRecord).get()
-        db.executeTransactionally("CALL streams.consume('$topic', {timeout: 5000}) YIELD event RETURN event", emptyMap()) { result ->
+        db.executeTransactionally("CALL apoc.kafka.consume('$topic', {timeout: 5000}) YIELD event RETURN event", emptyMap()) { result ->
             assertTrue { result.hasNext() }
             val resultMap = result.next()
             assertTrue { resultMap.containsKey("event") }
@@ -42,8 +42,8 @@ class KafkaStreamsSinkProceduresTSE : KafkaEventSinkBaseTSE() {
     @Test
     fun shouldConsumeDataFromProcedureWithSinkDisabled() {
         val db = createDbWithKafkaConfigs(
-            "streams.sink.enabled" to "false",
-            "kafka.${ConsumerConfig.GROUP_ID_CONFIG}" to "1"
+            "apoc.kafka.sink.enabled" to "false",
+            "apoc.kafka.${ConsumerConfig.GROUP_ID_CONFIG}" to "1"
         )
 
         val topic = "bar"
@@ -52,7 +52,7 @@ class KafkaStreamsSinkProceduresTSE : KafkaEventSinkBaseTSE() {
 
     @Test
     fun shouldConsumeDataFromProcedure() {
-        val db = createDbWithKafkaConfigs("kafka.${ConsumerConfig.GROUP_ID_CONFIG}" to "2")
+        val db = createDbWithKafkaConfigs("apoc.kafka.${ConsumerConfig.GROUP_ID_CONFIG}" to "2")
         val topic = "foo"
         testProcedure(db, topic)
     }
@@ -60,7 +60,7 @@ class KafkaStreamsSinkProceduresTSE : KafkaEventSinkBaseTSE() {
     @Test
     fun shouldTimeout() {
         val db = createDbWithKafkaConfigs()
-        db.executeTransactionally("CALL streams.consume('foo1', {timeout: 2000}) YIELD event RETURN event", emptyMap()) {
+        db.executeTransactionally("CALL apoc.kafka.consume('foo1', {timeout: 2000}) YIELD event RETURN event", emptyMap()) {
             assertFalse { it.hasNext() }
         }
     }
@@ -75,7 +75,7 @@ class KafkaStreamsSinkProceduresTSE : KafkaEventSinkBaseTSE() {
         val producerRecord = ProducerRecord(topic, UUID.randomUUID().toString(), JsonUtil.writeValueAsBytes(list))
         kafkaProducer.send(producerRecord).get()
         db.executeTransactionally("""
-            CALL streams.consume('$topic', {timeout: 5000}) YIELD event
+            CALL apoc.kafka.consume('$topic', {timeout: 5000}) YIELD event
             UNWIND event.data AS data
             CREATE (t:TEST) SET t += data.properties
         """.trimIndent())
@@ -89,7 +89,7 @@ class KafkaStreamsSinkProceduresTSE : KafkaEventSinkBaseTSE() {
 
     @Test
     fun shouldReadSimpleDataType() {
-        val db = createDbWithKafkaConfigs("kafka.${ConsumerConfig.GROUP_ID_CONFIG}" to "3")
+        val db = createDbWithKafkaConfigs("apoc.kafka.${ConsumerConfig.GROUP_ID_CONFIG}" to "3")
         
         val topic = "simple-data"
         val simpleInt = 1
@@ -102,7 +102,7 @@ class KafkaStreamsSinkProceduresTSE : KafkaEventSinkBaseTSE() {
         producerRecord = ProducerRecord(topic, "{\"a\":3}", JsonUtil.writeValueAsBytes(simpleString))
         kafkaProducer.send(producerRecord).get()
         db.executeTransactionally("""
-            CALL streams.consume('$topic', {timeout: 5000}) YIELD event
+            CALL apoc.kafka.consume('$topic', {timeout: 5000}) YIELD event
             MERGE (t:LOG{simpleData: event.data})
             RETURN count(t) AS insert
         """.trimIndent())
@@ -135,7 +135,7 @@ class KafkaStreamsSinkProceduresTSE : KafkaEventSinkBaseTSE() {
         }
         delay(3000)
         db.executeTransactionally("""
-            CALL streams.consume('$topic', {timeout: 5000, partitions: [{partition: $partition, offset: $start}]}) YIELD event
+            CALL apoc.kafka.consume('$topic', {timeout: 5000, partitions: [{partition: $partition, offset: $start}]}) YIELD event
             CREATE (t:LOG{simpleData: event.data})
             RETURN count(t) AS insert
         """.trimIndent())
@@ -169,7 +169,7 @@ class KafkaStreamsSinkProceduresTSE : KafkaEventSinkBaseTSE() {
             kafkaProducer.send(producerRecord).get()
         }
         db.executeTransactionally("""
-            CALL streams.consume('$topic', {timeout: 5000, from: 'latest', groupId: 'foo'}) YIELD event
+            CALL apoc.kafka.consume('$topic', {timeout: 5000, from: 'latest', groupId: 'foo'}) YIELD event
             CREATE (t:LOG{simpleData: event.data})
             RETURN count(t) AS insert
         """.trimIndent())
@@ -190,7 +190,7 @@ class KafkaStreamsSinkProceduresTSE : KafkaEventSinkBaseTSE() {
     fun shouldNotCommit() {
         val db = createDbWithKafkaConfigs(
             "enable.auto.commit" to false,
-            "kafka.${ConsumerConfig.GROUP_ID_CONFIG}" to "ajeje"
+            "apoc.kafka.${ConsumerConfig.GROUP_ID_CONFIG}" to "ajeje"
         )
         
         val topic = "simple-data"
@@ -199,7 +199,7 @@ class KafkaStreamsSinkProceduresTSE : KafkaEventSinkBaseTSE() {
         var producerRecord = ProducerRecord(topic, partition, "{\"a\":1}", JsonUtil.writeValueAsBytes("{\"b\":${simpleInt}}"))
         kafkaProducer.send(producerRecord).get()
         db.executeTransactionally("""
-            CALL streams.consume('$topic', {timeout: 5000, autoCommit: false, commit:false}) YIELD event
+            CALL apoc.kafka.consume('$topic', {timeout: 5000, autoCommit: false, commit:false}) YIELD event
             MERGE (t:LOG{simpleData: event.data})
             RETURN count(t) AS insert
         """.trimIndent())
@@ -222,7 +222,7 @@ class KafkaStreamsSinkProceduresTSE : KafkaEventSinkBaseTSE() {
 
     @Test
     fun `should consume AVRO messages`() {
-        val db = createDbWithKafkaConfigs("kafka.${ConsumerConfig.GROUP_ID_CONFIG}" to "avroajeje")
+        val db = createDbWithKafkaConfigs("apoc.kafka.${ConsumerConfig.GROUP_ID_CONFIG}" to "avroajeje")
         val PLACE_SCHEMA = SchemaBuilder.builder("com.namespace")
                 .record("Place").fields()
                 .name("name").type().stringType().noDefault()
@@ -242,7 +242,7 @@ class KafkaStreamsSinkProceduresTSE : KafkaEventSinkBaseTSE() {
         kafkaAvroProducer.send(ProducerRecord(topic, null, struct)).get()
         val schemaRegistryUrl = KafkaEventSinkSuiteIT.schemaRegistry.getSchemaRegistryUrl()
         db.executeTransactionally("""
-            CALL streams.consume('$topic', {timeout: 5000, keyDeserializer: '$keyDeserializer', valueDeserializer: '$valueDeserializer', schemaRegistryUrl: '$schemaRegistryUrl'}) YIELD event
+            CALL apoc.kafka.consume('$topic', {timeout: 5000, keyDeserializer: '$keyDeserializer', valueDeserializer: '$valueDeserializer', schemaRegistryUrl: '$schemaRegistryUrl'}) YIELD event
             RETURN event
         """.trimIndent(), emptyMap()
         ) { result ->
@@ -260,19 +260,19 @@ class KafkaStreamsSinkProceduresTSE : KafkaEventSinkBaseTSE() {
     fun `should report the streams sink config`() {
         val db = createDbWithKafkaConfigs()
         val expected = mapOf("invalid_topics" to emptyList<String>(),
-                "streams.sink.topic.pattern.relationship" to emptyMap<String, Any>(),
-                "streams.sink.topic.cud" to emptyList<String>(),
-                "streams.sink.topic.cdc.sourceId" to emptyList<String>(),
-                "streams.sink.topic.cypher" to emptyMap<String, Any>(),
-                "streams.sink.topic.cdc.schema" to emptyList<String>(),
-                "streams.sink.topic.pattern.node" to emptyMap<String, Any>(),
-                "streams.sink.errors" to emptyMap<String, Any>(),
-                "streams.cluster.only" to false,
-                "streams.sink.poll.interval" to 0L,
-                "streams.sink.source.id.strategy.config" to mapOf("labelName" to "SourceEvent", "idName" to "sourceId"))
+                "apoc.kafka.sink.topic.pattern.relationship" to emptyMap<String, Any>(),
+                "apoc.kafka.sink.topic.cud" to emptyList<String>(),
+                "apoc.kafka.sink.topic.cdc.sourceId" to emptyList<String>(),
+                "apoc.kafka.sink.topic.cypher" to emptyMap<String, Any>(),
+                "apoc.kafka.sink.topic.cdc.schema" to emptyList<String>(),
+                "apoc.kafka.sink.topic.pattern.node" to emptyMap<String, Any>(),
+                "apoc.kafka.sink.errors" to emptyMap<String, Any>(),
+                "apoc.kafka.cluster.only" to false,
+                "apoc.kafka.sink.poll.interval" to 0L,
+                "apoc.kafka.sink.source.id.strategy.config" to mapOf("labelName" to "SourceEvent", "idName" to "sourceId"))
 
         // when
-        db.executeTransactionally("CALL streams.sink.config()", emptyMap()) { result ->
+        db.executeTransactionally("CALL apoc.kafka.sink.config()", emptyMap()) { result ->
             // then
             val actual = result.stream()
                     .collect(Collectors.toList())
@@ -286,13 +286,13 @@ class KafkaStreamsSinkProceduresTSE : KafkaEventSinkBaseTSE() {
     fun `should report the streams sink status RUNNING`() = runBlocking {
         // given
 
-        val db = createDbWithKafkaConfigs("streams.sink.topic.cypher.shouldWriteCypherQuery" to cypherQueryTemplate)
+        val db = createDbWithKafkaConfigs("apoc.kafka.sink.topic.cypher.shouldWriteCypherQuery" to cypherQueryTemplate)
 
         val expectedRunning = listOf(mapOf("name" to "status", "value" to StreamsPluginStatus.RUNNING.toString()))
 
         Assert.assertEventually(ThrowingSupplier {
             // when
-            val actual=  db.executeTransactionally("CALL streams.sink.status()", emptyMap()) { result ->
+            val actual=  db.executeTransactionally("CALL apoc.kafka.sink.status()", emptyMap()) { result ->
                 result.stream().collect(Collectors.toList())
             }
             println("actual = $actual")
@@ -304,14 +304,14 @@ class KafkaStreamsSinkProceduresTSE : KafkaEventSinkBaseTSE() {
     @Test
     fun `should report the streams sink status STOPPED`() {
         // given
-        val db = createDbWithKafkaConfigs("streams.sink.topic.cypher.shouldWriteCypherQuery" to cypherQueryTemplate)
+        val db = createDbWithKafkaConfigs("apoc.kafka.sink.topic.cypher.shouldWriteCypherQuery" to cypherQueryTemplate)
         val expectedRunning = listOf(mapOf("name" to "status", "value" to StreamsPluginStatus.STOPPED.toString()))
-        db.executeTransactionally("CALL streams.sink.stop()", emptyMap()) {
+        db.executeTransactionally("CALL apoc.kafka.sink.stop()", emptyMap()) {
             println(it.resultAsString())
         }
 
         // when
-        db.executeTransactionally("CALL streams.sink.status()", emptyMap()) { result ->
+        db.executeTransactionally("CALL apoc.kafka.sink.status()", emptyMap()) { result ->
             // then
             val actual = result.stream()
                     .collect(Collectors.toList())

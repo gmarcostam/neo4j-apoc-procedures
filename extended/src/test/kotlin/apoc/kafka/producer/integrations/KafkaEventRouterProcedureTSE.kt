@@ -27,7 +27,7 @@ class KafkaEventRouterProcedureTSE : KafkaEventRouterBaseTSE() {
         KafkaEventRouterSuiteIT.registerPublishProcedure(db)
         kafkaConsumer.subscribe(listOf(topic))
         val message = "Hello World"
-        db.execute("CALL streams.publish('$topic', '$message')")
+        db.execute("CALL apoc.kafka.publish('$topic', '$message')")
         val records = kafkaConsumer.poll(5000)
         assertEquals(1, records.count())
         assertTrue { records.all {
@@ -45,7 +45,7 @@ class KafkaEventRouterProcedureTSE : KafkaEventRouterBaseTSE() {
         kafkaConsumer.subscribe(listOf(topic))
         val message = "Hello World"
         val keyRecord = "test"
-        db.execute("CALL streams.publish('$topic', '$message', {key: '$keyRecord'} )")
+        db.execute("CALL apoc.kafka.publish('$topic', '$message', {key: '$keyRecord'} )")
         val records = kafkaConsumer.poll(5000)
         assertEquals(1, records.count())
         assertTrue { records.all {
@@ -62,7 +62,7 @@ class KafkaEventRouterProcedureTSE : KafkaEventRouterBaseTSE() {
         kafkaConsumer.subscribe(listOf(topic))
         val message = "Hello World"
         val keyRecord = mapOf("one" to "Foo", "two" to "Baz", "three" to "Bar")
-        db.execute("CALL streams.publish('$topic', '$message', {key: \$key } )", mapOf("key" to keyRecord))
+        db.execute("CALL apoc.kafka.publish('$topic', '$message', {key: \$key } )", mapOf("key" to keyRecord))
         val records = kafkaConsumer.poll(5000)
         assertEquals(1, records.count())
         assertTrue { records.all {
@@ -81,7 +81,7 @@ class KafkaEventRouterProcedureTSE : KafkaEventRouterBaseTSE() {
         val keyRecord = "test"
         val partitionRecord = "notNumber"
         assertFailsWith(QueryExecutionException::class) {
-            db.execute("CALL streams.publish('$topic', '$message', {key: '$keyRecord', partition: '$partitionRecord' })")
+            db.execute("CALL apoc.kafka.publish('$topic', '$message', {key: '$keyRecord', partition: '$partitionRecord' })")
         }
     }
 
@@ -95,7 +95,7 @@ class KafkaEventRouterProcedureTSE : KafkaEventRouterBaseTSE() {
         val message = "Hello World"
         val keyRecord = "test"
         val partitionRecord = 0
-        db.execute("CALL streams.publish('$topic', '$message', {key: '$keyRecord', partition: $partitionRecord })")
+        db.execute("CALL apoc.kafka.publish('$topic', '$message', {key: '$keyRecord', partition: $partitionRecord })")
         val records = kafkaConsumer.poll(5000)
         assertEquals(1, records.count())
         assertTrue{ records.all {
@@ -110,7 +110,7 @@ class KafkaEventRouterProcedureTSE : KafkaEventRouterBaseTSE() {
         val db = createDbWithKafkaConfigs()
         setUpProcedureTests()
         assertFailsWith(RuntimeException::class) {
-            db.execute("CALL streams.publish('neo4j', null)")
+            db.execute("CALL apoc.kafka.publish('neo4j', null)")
         }
     }
 
@@ -124,7 +124,7 @@ class KafkaEventRouterProcedureTSE : KafkaEventRouterBaseTSE() {
         assertEquals(1, recordsCreation.count())
 
         db.execute("MATCH (n:Baz) \n" +
-                "CALL streams.publish.sync('neo4j', n) \n" +
+                "CALL apoc.kafka.publish.sync('neo4j', n) \n" +
                 "YIELD value \n" +
                 "RETURN value") {
             assertSyncResult(it)
@@ -142,7 +142,7 @@ class KafkaEventRouterProcedureTSE : KafkaEventRouterBaseTSE() {
         val db = createDbWithKafkaConfigs()
         setUpProcedureTests()
         val message = "Hello World"
-        db.execute("CALL streams.publish.sync('neo4j', '$message')") {
+        db.execute("CALL apoc.kafka.publish.sync('neo4j', '$message')") {
             assertSyncResult(it)
         }
 
@@ -164,7 +164,7 @@ class KafkaEventRouterProcedureTSE : KafkaEventRouterBaseTSE() {
 
         db.execute("""
             MATCH (:Foo)-[r:KNOWS]->(:Bar)
-            |CALL streams.publish.sync('neo4j', r)
+            |CALL apoc.kafka.publish.sync('neo4j', r)
             |YIELD value RETURN value""".trimMargin()) {
             assertSyncResult(it)
         }
@@ -196,7 +196,7 @@ class KafkaEventRouterProcedureTSE : KafkaEventRouterBaseTSE() {
         assertEquals(1, recordsCreation.count())
 
         val message = "Hello World"
-        db.execute("MATCH (n:Foo {id: 1}) CALL streams.publish.sync('neo4j', '$message', {key: n.foo}) YIELD value RETURN value") { 
+        db.execute("MATCH (n:Foo {id: 1}) CALL apoc.kafka.publish.sync('neo4j', '$message', {key: n.foo}) YIELD value RETURN value") { 
             assertSyncResult(it)
         }
 
@@ -223,7 +223,7 @@ class KafkaEventRouterProcedureTSE : KafkaEventRouterBaseTSE() {
             val message = "Hello World"
             val keyRecord = "test"
             val partitionRecord = 1
-            db.execute("CALL streams.publish.sync('$topic', '$message', {key: '$keyRecord', partition: $partitionRecord })") {
+            db.execute("CALL apoc.kafka.publish.sync('$topic', '$message', {key: '$keyRecord', partition: $partitionRecord })") {
                 assertSyncResult(it)
             }
 
@@ -253,7 +253,7 @@ class KafkaEventRouterProcedureTSE : KafkaEventRouterBaseTSE() {
             val message = "Hello World"
             val keyRecord = "test"
             val partitionRecord = 2
-            db.execute("CALL streams.publish('$topic', '$message', {key: '$keyRecord', partition: $partitionRecord })")
+            db.execute("CALL apoc.kafka.publish('$topic', '$message', {key: '$keyRecord', partition: $partitionRecord })")
 
             val records = kafkaConsumer.poll(5000)
             assertEquals(1, records.count())
@@ -281,7 +281,7 @@ class KafkaEventRouterProcedureTSE : KafkaEventRouterBaseTSE() {
             val message = "Hello World"
             val keyRecord = "test"
             val partitionRecord = 9
-            db.execute("CALL streams.publish('$topic', '$message', {key: '$keyRecord', partition: $partitionRecord })")
+            db.execute("CALL apoc.kafka.publish('$topic', '$message', {key: '$keyRecord', partition: $partitionRecord })")
 
             val records = kafkaConsumer.poll(5000)
             assertEquals(0, records.count())

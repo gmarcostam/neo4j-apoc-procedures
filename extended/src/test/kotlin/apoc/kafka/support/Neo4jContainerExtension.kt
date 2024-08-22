@@ -104,7 +104,7 @@ class Neo4jContainerExtension(dockerImage: String): Neo4jContainer<Neo4jContaine
 
     fun withKafka(network: Network, bootstrapServers: String): Neo4jContainerExtension {
         withNetwork(network)
-        withNeo4jConfig("kafka.bootstrap.servers", bootstrapServers)
+        withNeo4jConfig("apoc.kafka.bootstrap.servers", bootstrapServers)
         return this
     }
 

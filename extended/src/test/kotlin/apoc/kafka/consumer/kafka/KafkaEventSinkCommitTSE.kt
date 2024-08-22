@@ -23,8 +23,8 @@ class KafkaEventSinkCommitTSE : KafkaEventSinkBaseTSE() {
         val topic = UUID.randomUUID().toString()
 
         val db = createDbWithKafkaConfigs(
-            "streams.sink.topic.cypher.$topic" to cypherQueryTemplate,
-            "kafka.${ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG}" to "false"
+            "apoc.kafka.sink.topic.cypher.$topic" to cypherQueryTemplate,
+            "apoc.kafka.${ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG}" to "false"
         )
 
         val partition = 0
@@ -58,9 +58,9 @@ class KafkaEventSinkCommitTSE : KafkaEventSinkBaseTSE() {
         val topic = UUID.randomUUID().toString()
 
         val db = createDbWithKafkaConfigs(
-            "streams.sink.topic.cypher.$topic" to cypherQueryTemplate,
-            "kafka.${ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG}" to "false",
-            "kafka.streams.commit.async" to "true"
+            "apoc.kafka.sink.topic.cypher.$topic" to cypherQueryTemplate,
+            "apoc.kafka.${ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG}" to "false",
+            "apoc.kafka.commit.async" to "true"
         )
 
         val partition = 0
@@ -100,10 +100,10 @@ class KafkaEventSinkCommitTSE : KafkaEventSinkBaseTSE() {
         """.trimIndent()
 
         val db = createDbWithKafkaConfigs(
-            "streams.sink.topic.cypher.${product.first}" to product.second,
-            "streams.sink.topic.cypher.${customer.first}" to customer.second,
-            "streams.sink.topic.cypher.${bought.first}" to bought.second,
-            "kafka.${ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG}" to "false"
+            "apoc.kafka.sink.topic.cypher.${product.first}" to product.second,
+            "apoc.kafka.sink.topic.cypher.${customer.first}" to customer.second,
+            "apoc.kafka.sink.topic.cypher.${bought.first}" to bought.second,
+            "apoc.kafka.${ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG}" to "false"
         )
 
         val props = mapOf("id" to 1, "name" to "My Awesome Product")

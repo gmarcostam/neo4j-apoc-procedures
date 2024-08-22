@@ -74,10 +74,10 @@ class KafkaEventSinkNoTopicAutoCreationIT {
         assertTrue { topicList.containsAll(expectedTopics.toSet()) && !topicList.contains(notRegisteredTopic) }
         // TODO - CAMBIARE CON apoc.conf
 //        val db = ImpermanentDbmsRule()
-//                .setConfig("kafka.bootstrap.servers", kafka.bootstrapServers)
-//                .setConfig("streams.sink.enabled", "true")
-//                .setConfig("streams.sink.topic.cypher.$notRegisteredTopic", "MERGE (p:NotRegisteredTopic{name: event.name})")
-//                .setConfig("streams.sink.topic.cypher.$topic", "MERGE (p:Person{name: event.name})")
+//                .setConfig("apoc.kafka.bootstrap.servers", kafka.bootstrapServers)
+//                .setConfig("apoc.kafka.sink.enabled", "true")
+//                .setConfig("apoc.kafka.sink.topic.cypher.$notRegisteredTopic", "MERGE (p:NotRegisteredTopic{name: event.name})")
+//                .setConfig("apoc.kafka.sink.topic.cypher.$topic", "MERGE (p:Person{name: event.name})")
 //                .start()
         val kafkaProducer: KafkaProducer<String, ByteArray> = KafkaTestUtils.createProducer(bootstrapServers = kafka.bootstrapServers)
 

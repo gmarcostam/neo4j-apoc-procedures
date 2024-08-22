@@ -5,14 +5,11 @@ import apoc.kafka.consumer.StreamsTopicService
 import apoc.kafka.consumer.kafka.KafkaSinkConfiguration
 import apoc.kafka.service.TopicType
 import apoc.kafka.service.Topics
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import org.neo4j.test.rule.DbmsRule
-import org.neo4j.test.rule.ImpermanentDbmsRule
-//import streams.kafka.KafkaSinkConfiguration
-//import streams.service.TopicType
-//import streams.service.Topics
+//import apoc.kafka.kafka.KafkaSinkConfiguration
+//import apoc.kafka.service.TopicType
+//import apoc.kafka.service.Topics
 import kotlin.test.assertEquals
 
 class StreamsTopicServiceTest {
@@ -22,12 +19,12 @@ class StreamsTopicServiceTest {
 
     @Before
     fun setUp() {
-        kafkaConfig = KafkaSinkConfiguration(streamsSinkConfiguration = StreamsSinkConfiguration(topics = Topics(cypherTopics = mapOf("shouldWriteCypherQuery" to "MERGE (n:Label {id: event.id})\n" +
+        kafkaConfig = KafkaSinkConfiguration(sinkConfiguration = StreamsSinkConfiguration(topics = Topics(cypherTopics = mapOf("shouldWriteCypherQuery" to "MERGE (n:Label {id: event.id})\n" +
                 "    ON CREATE SET n += event.properties"))
         )
         )
         streamsTopicService = StreamsTopicService()
-        streamsTopicService.set(TopicType.CYPHER, kafkaConfig.streamsSinkConfiguration.topics.cypherTopics)
+        streamsTopicService.set(TopicType.CYPHER, kafkaConfig.sinkConfiguration.topics.cypherTopics)
     }
 
     private fun assertProperty(entry: Map.Entry<String, String>) {
@@ -36,7 +33,7 @@ class StreamsTopicServiceTest {
 
     @Test
     fun shouldStoreTopicAndCypherTemplate() {
-        kafkaConfig.streamsSinkConfiguration.topics.cypherTopics.forEach { assertProperty(it) }
+        kafkaConfig.sinkConfiguration.topics.cypherTopics.forEach { assertProperty(it) }
     }
 
     @Test
@@ -49,7 +46,7 @@ class StreamsTopicServiceTest {
         streamsTopicService.set(TopicType.CYPHER, map)
 
         // then
-        val allTopics = map.plus(kafkaConfig.streamsSinkConfiguration.topics.cypherTopics)
+        val allTopics = map.plus(kafkaConfig.sinkConfiguration.topics.cypherTopics)
         allTopics.forEach { assertProperty(it) }
 
         assertEquals(allTopics, streamsTopicService.getAll().getValue(TopicType.CYPHER))
@@ -66,7 +63,7 @@ class StreamsTopicServiceTest {
                 topicToRemove to "MERGE (n:Label2 {id: event.id})")
 
         streamsTopicService.set(TopicType.CYPHER, map)
-        val allTopics = map.plus(kafkaConfig.streamsSinkConfiguration.topics.cypherTopics)
+        val allTopics = map.plus(kafkaConfig.sinkConfiguration.topics.cypherTopics)
         allTopics.forEach { assertProperty(it) }
 
         // when

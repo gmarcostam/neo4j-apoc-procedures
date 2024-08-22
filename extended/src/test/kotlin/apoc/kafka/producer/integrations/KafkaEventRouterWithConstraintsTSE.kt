@@ -26,19 +26,19 @@ class KafkaEventRouterWithConstraintsTSE: KafkaEventRouterBaseTSE() {
 
     @Before
     fun setUpInner() {
-        val sourceTopics = mapOf("streams.source.topic.nodes.$personTopic" to "$labelStart{*}",
-            "streams.source.topic.nodes.$productTopic" to "$labelEnd{*}",
-            "streams.source.topic.relationships.$topicWithStrategyAll" to "$keyStrategyAll{*}",
-            "streams.source.topic.relationships.$topicWithStrategyDefault" to "$keyStrategyDefault{*}",
-            "streams.source.topic.relationships.$topicWithoutStrategy" to "$noKeyStrategy{*}",
-            "streams.source.topic.relationships.$topicWithStrategyAll.key_strategy" to RelKeyStrategy.ALL.toString().toLowerCase(),
-            "streams.source.topic.relationships.$topicWithStrategyDefault.key_strategy" to RelKeyStrategy.DEFAULT.toString().toLowerCase())
+        val sourceTopics = mapOf("apoc.kafka.source.topic.nodes.$personTopic" to "$labelStart{*}",
+            "apoc.kafka.source.topic.nodes.$productTopic" to "$labelEnd{*}",
+            "apoc.kafka.source.topic.relationships.$topicWithStrategyAll" to "$keyStrategyAll{*}",
+            "apoc.kafka.source.topic.relationships.$topicWithStrategyDefault" to "$keyStrategyDefault{*}",
+            "apoc.kafka.source.topic.relationships.$topicWithoutStrategy" to "$noKeyStrategy{*}",
+            "apoc.kafka.source.topic.relationships.$topicWithStrategyAll.key_strategy" to RelKeyStrategy.ALL.toString().toLowerCase(),
+            "apoc.kafka.source.topic.relationships.$topicWithStrategyDefault.key_strategy" to RelKeyStrategy.DEFAULT.toString().toLowerCase())
 
-        db = createDbWithKafkaConfigs("streams.source.schema.polling.interval" to "0",
-            "kafka.streams.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_DELETE,
-            "streams.source.topic.nodes.personConstraints" to "PersonConstr{*}",
-            "streams.source.topic.nodes.productConstraints" to "ProductConstr{*}",
-            "streams.source.topic.relationships.boughtConstraints" to "BOUGHT{*}"
+        db = createDbWithKafkaConfigs("apoc.kafka.source.schema.polling.interval" to "0",
+            "apoc.kafka.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_DELETE,
+            "apoc.kafka.source.topic.nodes.personConstraints" to "PersonConstr{*}",
+            "apoc.kafka.source.topic.nodes.productConstraints" to "ProductConstr{*}",
+            "apoc.kafka.source.topic.relationships.boughtConstraints" to "BOUGHT{*}"
             )
 
         val queries = listOf("CREATE CONSTRAINT FOR (p:$labelStart) REQUIRE p.name IS UNIQUE",

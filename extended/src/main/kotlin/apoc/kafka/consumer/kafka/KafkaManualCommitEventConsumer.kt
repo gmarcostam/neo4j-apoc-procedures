@@ -16,7 +16,7 @@ class KafkaManualCommitEventConsumer(config: KafkaSinkConfiguration,
                                      topics: Set<String>,
                                      dbName: String): KafkaAutoCommitEventConsumer(config, log, topics, dbName) {
 
-    private val asyncCommit = config.streamsAsyncCommit
+    private val asyncCommit = config.asyncCommit
 
     override fun stop() {
         if (asyncCommit) {

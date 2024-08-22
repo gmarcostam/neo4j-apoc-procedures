@@ -31,11 +31,11 @@ class StreamsSinkConfigurationListener(private val db: GraphDatabaseAPI,
     private val producerConfig = getProducerProperties()
 
     private fun KafkaSinkConfiguration.excludeSourceProps() = this.asProperties()
-        ?.filterNot { producerConfig.contains(it.key) || it.key.toString().startsWith("streams.source") }
+        ?.filterNot { producerConfig.contains(it.key) || it.key.toString().startsWith("apoc.kafka.source") }
 
     // visible for testing
     fun isConfigurationChanged(configMap: Map<String, String>) = when (configMap
-        .getOrDefault("streams.sink", "apoc.kafka.consumer.kafka.KafkaEventSink")) {
+        .getOrDefault("apoc.kafka.sink", "apoc.kafka.consumer.kafka.KafkaEventSink")) {
         "apoc.kafka.consumer.kafka.KafkaEventSink" ->  {
             // we validate all properties except for the ones related to the Producer
             // we use this strategy because there are some properties related to the Confluent Platform
@@ -44,8 +44,8 @@ class StreamsSinkConfigurationListener(private val db: GraphDatabaseAPI,
             val kafkaConfig = KafkaSinkConfiguration.create(configMap, dbName = db.databaseName(), isDefaultDb = db.isDefaultDb())
             val config = kafkaConfig.excludeSourceProps()
             val lastConfig = this.lastConfig?.excludeSourceProps()
-            val streamsConfig = kafkaConfig.streamsSinkConfiguration
-            config != lastConfig || streamsConfig != this.lastConfig?.streamsSinkConfiguration
+            val streamsConfig = kafkaConfig.sinkConfiguration
+            config != lastConfig || streamsConfig != this.lastConfig?.sinkConfiguration
         }
         else -> true
     }
@@ -98,7 +98,7 @@ class StreamsSinkConfigurationListener(private val db: GraphDatabaseAPI,
 
     fun start(configMap: Map<String, String>) {
         lastConfig = KafkaSinkConfiguration.create(StreamsConfig.getConfiguration(), db.databaseName(), db.isDefaultDb())
-        val streamsSinkConfiguration = lastConfig!!.streamsSinkConfiguration
+        val streamsSinkConfiguration = lastConfig!!.sinkConfiguration
         streamsTopicService.clearAll()
         streamsTopicService.setAll(streamsSinkConfiguration.topics)
 

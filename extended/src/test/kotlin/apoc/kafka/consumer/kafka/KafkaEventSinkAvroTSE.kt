@@ -25,10 +25,10 @@ class KafkaEventSinkAvroTSE : KafkaEventSinkBaseTSE() {
         val topic = "avro"
 
         val db = createDbWithKafkaConfigs(
-            "streams.sink.topic.cypher.$topic" to "CREATE (p:Place{name: event.name, coordinates: event.coordinates, citizens: event.citizens})",
-            "kafka.key.deserializer" to KafkaAvroDeserializer::class.java.name,
-            "kafka.value.deserializer" to KafkaAvroDeserializer::class.java.name,
-            "kafka.schema.registry.url" to KafkaEventSinkSuiteIT.schemaRegistry.getSchemaRegistryUrl()
+            "apoc.kafka.sink.topic.cypher.$topic" to "CREATE (p:Place{name: event.name, coordinates: event.coordinates, citizens: event.citizens})",
+            "apoc.kafka.key.deserializer" to KafkaAvroDeserializer::class.java.name,
+            "apoc.kafka.value.deserializer" to KafkaAvroDeserializer::class.java.name,
+            "apoc.kafka.schema.registry.url" to KafkaEventSinkSuiteIT.schemaRegistry.getSchemaRegistryUrl()
         )
 
         val PLACE_SCHEMA = SchemaBuilder.builder("com.namespace")
@@ -75,10 +75,10 @@ class KafkaEventSinkAvroTSE : KafkaEventSinkBaseTSE() {
         val topic = UUID.randomUUID().toString()
 
         val db = createDbWithKafkaConfigs(
-            "streams.sink.topic.pattern.node.$topic" to "(:Place{!name})",
-            "kafka.key.deserializer" to KafkaAvroDeserializer::class.java.name,
-            "kafka.value.deserializer" to KafkaAvroDeserializer::class.java.name,
-            "kafka.schema.registry.url" to KafkaEventSinkSuiteIT.schemaRegistry.getSchemaRegistryUrl()
+            "apoc.kafka.sink.topic.pattern.node.$topic" to "(:Place{!name})",
+            "apoc.kafka.key.deserializer" to KafkaAvroDeserializer::class.java.name,
+            "apoc.kafka.value.deserializer" to KafkaAvroDeserializer::class.java.name,
+            "apoc.kafka.schema.registry.url" to KafkaEventSinkSuiteIT.schemaRegistry.getSchemaRegistryUrl()
         )
 
         val PLACE_SCHEMA = SchemaBuilder.builder("com.namespace")

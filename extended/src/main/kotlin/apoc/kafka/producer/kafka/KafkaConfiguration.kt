@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit
 
 enum class LogStrategy { delete, compact }
 
-private val configPrefix = "kafka."
+private val configPrefix = "apoc.kafka."
 
 data class KafkaConfiguration(val bootstrapServers: String = "localhost:9092",
                               val acks: String = "1",
@@ -55,7 +55,7 @@ data class KafkaConfiguration(val bootstrapServers: String = "localhost:9092",
                     lingerMs = config.getInt("linger.ms", default.lingerMs),
                     topicDiscoveryPollingInterval = config.getOrDefault("topic.discovery.polling.interval",
                             default.topicDiscoveryPollingInterval).toString().toLong(),
-                    streamsLogCompactionStrategy = config.getOrDefault("streams.log.compaction.strategy", default.streamsLogCompactionStrategy),
+                    streamsLogCompactionStrategy = config.getOrDefault("apoc.kafka.log.compaction.strategy", default.streamsLogCompactionStrategy),
                     extraProperties = extraProperties // for what we don't provide a default configuration
             )
         }

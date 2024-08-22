@@ -19,7 +19,7 @@ class KafkaSinkConfigurationTest {
     @Test
     fun `should return default configuration`() {
         val default = KafkaSinkConfiguration()
-        StreamsSinkConfigurationTest.testDefaultConf(default.streamsSinkConfiguration)
+        StreamsSinkConfigurationTest.testDefaultConf(default.sinkConfiguration)
 
         assertEquals("localhost:9092", default.bootstrapServers)
         assertEquals("neo4j", default.groupId)
@@ -27,37 +27,37 @@ class KafkaSinkConfigurationTest {
         assertEquals(ByteArrayDeserializer::class.java.name, default.keyDeserializer)
         assertEquals(ByteArrayDeserializer::class.java.name, default.valueDeserializer)
         assertEquals(true, default.enableAutoCommit)
-        assertEquals(false, default.streamsAsyncCommit)
+        assertEquals(false, default.asyncCommit)
         assertEquals(emptyMap(), default.extraProperties)
     }
 
     @Test
     fun `should return configuration from map`() {
         val topic = "topic-neo"
-        val topicKey = "streams.sink.topic.cypher.$topic"
+        val topicKey = "apoc.kafka.sink.topic.cypher.$topic"
         val topicValue = "MERGE (n:Label{ id: event.id }) "
         val bootstrap = "bootstrap:9092"
         val group = "foo"
         val autoOffsetReset = "latest"
         val autoCommit = "false"
         val config = mapOf(topicKey to topicValue,
-                "kafka.bootstrap.servers" to bootstrap,
-                "kafka.auto.offset.reset" to autoOffsetReset,
-                "kafka.enable.auto.commit" to autoCommit,
-                "kafka.group.id" to group,
-                "kafka.streams.async.commit" to "true",
-                "kafka.key.deserializer" to ByteArrayDeserializer::class.java.name,
-                "kafka.value.deserializer" to KafkaAvroDeserializer::class.java.name)
+                "apoc.kafka.bootstrap.servers" to bootstrap,
+                "apoc.kafka.auto.offset.reset" to autoOffsetReset,
+                "apoc.kafka.enable.auto.commit" to autoCommit,
+                "apoc.kafka.group.id" to group,
+                "apoc.kafka.async.commit" to "true",
+                "apoc.kafka.key.deserializer" to ByteArrayDeserializer::class.java.name,
+                "apoc.kafka.value.deserializer" to KafkaAvroDeserializer::class.java.name)
         val expectedMap = mapOf("bootstrap.servers" to bootstrap,
                 "auto.offset.reset" to autoOffsetReset, "enable.auto.commit" to autoCommit, "group.id" to group,
                 ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to ByteArrayDeserializer::class.java.toString(),
                 ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to ByteArrayDeserializer::class.java.toString(),
-                "streams.async.commit" to "true",
+                "async.commit" to "true",
                 "key.deserializer" to ByteArrayDeserializer::class.java.name,
                 "value.deserializer" to KafkaAvroDeserializer::class.java.name)
 
         val kafkaSinkConfiguration = KafkaSinkConfiguration.create(config, defaultDbName, isDefaultDb = true)
-        StreamsSinkConfigurationTest.testFromConf(kafkaSinkConfiguration.streamsSinkConfiguration, topic, topicValue)
+        StreamsSinkConfigurationTest.testFromConf(kafkaSinkConfiguration.sinkConfiguration, topic, topicValue)
         assertEquals(emptyMap(), kafkaSinkConfiguration.extraProperties)
         assertEquals(bootstrap, kafkaSinkConfiguration.bootstrapServers)
         assertEquals(autoOffsetReset, kafkaSinkConfiguration.autoOffsetReset)
@@ -77,9 +77,9 @@ class KafkaSinkConfigurationTest {
     fun `should return configuration from map for non default DB`() {
         val dbName = "foo"
         val topic = "topic-neo"
-        val topicKey = "streams.sink.topic.cypher.$topic"
+        val topicKey = "apoc.kafka.sink.topic.cypher.$topic"
         val topicValue = "MERGE (n:Label{ id: event.id })"
-        val topicKeyFoo = "streams.sink.topic.cypher.$topic.to.foo"
+        val topicKeyFoo = "apoc.kafka.sink.topic.cypher.$topic.to.foo"
         val topicValueFoo = "MERGE (n:Foo{ id: event.id })"
         val bootstrap = "bootstrap:9092"
         val group = "mygroup"
@@ -88,27 +88,27 @@ class KafkaSinkConfigurationTest {
         val asyncCommit = "true"
         val config = mapOf(topicKey to topicValue,
                 topicKeyFoo to topicValueFoo,
-                "kafka.bootstrap.servers" to bootstrap,
-                "kafka.auto.offset.reset" to autoOffsetReset,
-                "kafka.enable.auto.commit" to autoCommit,
-                "kafka.group.id" to group,
-                "kafka.streams.async.commit" to asyncCommit,
-                "kafka.key.deserializer" to ByteArrayDeserializer::class.java.name,
-                "kafka.value.deserializer" to KafkaAvroDeserializer::class.java.name)
+                "apoc.kafka.bootstrap.servers" to bootstrap,
+                "apoc.kafka.auto.offset.reset" to autoOffsetReset,
+                "apoc.kafka.enable.auto.commit" to autoCommit,
+                "apoc.kafka.group.id" to group,
+                "apoc.kafka.async.commit" to asyncCommit,
+                "apoc.kafka.key.deserializer" to ByteArrayDeserializer::class.java.name,
+                "apoc.kafka.value.deserializer" to KafkaAvroDeserializer::class.java.name)
         val expectedMap = mapOf("bootstrap.servers" to bootstrap,
                 "auto.offset.reset" to autoOffsetReset, "enable.auto.commit" to autoCommit, "group.id" to "$group-$dbName",
                 ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to ByteArrayDeserializer::class.java.toString(),
                 ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to ByteArrayDeserializer::class.java.toString(),
                 "key.deserializer" to ByteArrayDeserializer::class.java.name,
-                "streams.async.commit" to asyncCommit,
+                "apoc.kafka.async.commit" to asyncCommit,
                 "value.deserializer" to KafkaAvroDeserializer::class.java.name)
 
         val kafkaSinkConfiguration = KafkaSinkConfiguration.create(config, dbName, isDefaultDb = false)
-        StreamsSinkConfigurationTest.testFromConf(kafkaSinkConfiguration.streamsSinkConfiguration, topic, topicValueFoo)
+        StreamsSinkConfigurationTest.testFromConf(kafkaSinkConfiguration.sinkConfiguration, topic, topicValueFoo)
         assertEquals(emptyMap(), kafkaSinkConfiguration.extraProperties)
         assertEquals(bootstrap, kafkaSinkConfiguration.bootstrapServers)
         assertEquals(autoOffsetReset, kafkaSinkConfiguration.autoOffsetReset)
-        assertTrue { kafkaSinkConfiguration.streamsAsyncCommit }
+        assertTrue { kafkaSinkConfiguration.asyncCommit }
         assertEquals("$group-$dbName", kafkaSinkConfiguration.groupId)
         val resultMap = kafkaSinkConfiguration
                 .asProperties()
@@ -128,19 +128,19 @@ class KafkaSinkConfigurationTest {
         val bootstrap = "bootstrap:9092"
         try {
             val topic = "topic-neo"
-            val topicKey = "streams.sink.topic.cypher.$topic"
+            val topicKey = "apoc.kafka.sink.topic.cypher.$topic"
             val topicValue = "MERGE (n:Label{ id: event.id }) "
             val group = "foo"
             val autoOffsetReset = "latest"
             val autoCommit = "false"
             val config = mapOf(topicKey to topicValue,
                     "$topicKey.to.foo" to "$topicValue SET n += event.properties",
-                    "kafka.bootstrap.servers" to bootstrap,
-                    "kafka.auto.offset.reset" to autoOffsetReset,
-                    "kafka.enable.auto.commit" to autoCommit,
-                    "kafka.group.id" to group,
-                    "kafka.key.deserializer" to ByteArrayDeserializer::class.java.name,
-                    "kafka.value.deserializer" to KafkaAvroDeserializer::class.java.name)
+                    "apoc.kafka.bootstrap.servers" to bootstrap,
+                    "apoc.kafka.auto.offset.reset" to autoOffsetReset,
+                    "apoc.kafka.enable.auto.commit" to autoCommit,
+                    "apoc.kafka.group.id" to group,
+                    "apoc.kafka.key.deserializer" to ByteArrayDeserializer::class.java.name,
+                    "apoc.kafka.value.deserializer" to KafkaAvroDeserializer::class.java.name)
             KafkaSinkConfiguration.from(config, defaultDbName, isDefaultDb = true)
         } catch (e: TopicValidationException) {
             assertEquals("The servers defined into the property `kafka.bootstrap.servers` are not reachable: [$bootstrap]", e.message)
@@ -153,18 +153,18 @@ class KafkaSinkConfigurationTest {
         val bootstrap = ""
         try {
             val topic = "topic-neo"
-            val topicKey = "streams.sink.topic.cypher.$topic"
+            val topicKey = "apoc.kafka.sink.topic.cypher.$topic"
             val topicValue = "MERGE (n:Label{ id: event.id }) "
             val group = "foo"
             val autoOffsetReset = "latest"
             val autoCommit = "false"
             val config = mapOf(topicKey to topicValue,
-                    "kafka.bootstrap.servers" to bootstrap,
-                    "kafka.auto.offset.reset" to autoOffsetReset,
-                    "kafka.enable.auto.commit" to autoCommit,
-                    "kafka.group.id" to group,
-                    "kafka.key.deserializer" to ByteArrayDeserializer::class.java.name,
-                    "kafka.value.deserializer" to KafkaAvroDeserializer::class.java.name)
+                    "apoc.kafka.bootstrap.servers" to bootstrap,
+                    "apoc.kafka.auto.offset.reset" to autoOffsetReset,
+                    "apoc.kafka.enable.auto.commit" to autoCommit,
+                    "apoc.kafka.group.id" to group,
+                    "apoc.kafka.key.deserializer" to ByteArrayDeserializer::class.java.name,
+                    "apoc.kafka.value.deserializer" to KafkaAvroDeserializer::class.java.name)
             KafkaSinkConfiguration.from(config, defaultDbName, isDefaultDb = true)
         } catch (e: RuntimeException) {
             assertEquals("The `kafka.bootstrap.servers` property is empty", e.message)

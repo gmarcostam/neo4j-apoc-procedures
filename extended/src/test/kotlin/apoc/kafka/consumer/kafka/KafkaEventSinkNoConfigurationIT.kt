@@ -34,9 +34,9 @@ class KafkaEventSinkNoConfigurationIT {
 
     @Test
     fun `the db should start even with no bootstrap servers provided`() {
-        ApocConfig.apocConfig().setProperty("kafka.bootstrap.servers", "")
-        ApocConfig.apocConfig().setProperty("streams.sink.enabled", "true")
-        ApocConfig.apocConfig().setProperty("streams.sink.topic.cypher.$topic", "CREATE (p:Place{name: event.name, coordinates: event.coordinates, citizens: event.citizens})")
+        ApocConfig.apocConfig().setProperty("apoc.kafka.bootstrap.servers", "")
+        ApocConfig.apocConfig().setProperty("apoc.kafka.sink.enabled", "true")
+        ApocConfig.apocConfig().setProperty("apoc.kafka.sink.topic.cypher.$topic", "CREATE (p:Place{name: event.name, coordinates: event.coordinates, citizens: event.citizens})")
         // db.start()
         val count = db.executeTransactionally("MATCH (n) RETURN COUNT(n) AS count", emptyMap()) { it.columnAs<Long>("count").next() }
         assertEquals(0L, count)
@@ -47,11 +47,11 @@ class KafkaEventSinkNoConfigurationIT {
         val fakeWebServer = FakeWebServer()
         fakeWebServer.start()
         val url = fakeWebServer.getUrl().replace("http://", "")
-        ApocConfig.apocConfig().setProperty("kafka.bootstrap.servers", url)
-        ApocConfig.apocConfig().setProperty("streams.sink.enabled", "true")
-        ApocConfig.apocConfig().setProperty("streams.sink.topic.cypher.$topic", "CREATE (p:Place{name: event.name, coordinates: event.coordinates, citizens: event.citizens})")
-        ApocConfig.apocConfig().setProperty("kafka.key.deserializer", KafkaAvroDeserializer::class.java.name)
-        ApocConfig.apocConfig().setProperty("kafka.value.deserializer", KafkaAvroDeserializer::class.java.name)
+        ApocConfig.apocConfig().setProperty("apoc.kafka.bootstrap.servers", url)
+        ApocConfig.apocConfig().setProperty("apoc.kafka.sink.enabled", "true")
+        ApocConfig.apocConfig().setProperty("apoc.kafka.sink.topic.cypher.$topic", "CREATE (p:Place{name: event.name, coordinates: event.coordinates, citizens: event.citizens})")
+        ApocConfig.apocConfig().setProperty("apoc.kafka.key.deserializer", KafkaAvroDeserializer::class.java.name)
+        ApocConfig.apocConfig().setProperty("apoc.kafka.value.deserializer", KafkaAvroDeserializer::class.java.name)
         // db.start()
         val count = db.executeTransactionally("MATCH (n) RETURN COUNT(n) AS count", emptyMap()) { it.columnAs<Long>("count").next() }
         assertEquals(0L, count)

@@ -9,20 +9,20 @@ class KafkaConfigurationTest {
 
     @Test
     fun shouldCreateConfiguration() {
-        val map = mapOf("kafka.bootstrap.servers" to "kafka:5678",
-                "kafka.acks" to "10",
-                "kafka.retries" to 1,
-                "kafka.batch.size" to 10,
-                "kafka.buffer.memory" to 1000,
-                "kafka.reindex.batch.size" to 1,
-                "kafka.session.timeout.ms" to 1,
-                "kafka.connection.timeout.ms" to 1,
-                "kafka.replication" to 2,
-                "kafka.transactional.id" to "foo",
-                "kafka.linger.ms" to 10,
-                "kafka.fetch.min.bytes" to 1234,
-                "kafka.topic.discovery.polling.interval" to 0L,
-                "kafka.streams.log.compaction.strategy" to "delete")
+        val map = mapOf("apoc.kafka.bootstrap.servers" to "kafka:5678",
+                "apoc.kafka.acks" to "10",
+                "apoc.kafka.retries" to 1,
+                "apoc.kafka.batch.size" to 10,
+                "apoc.kafka.buffer.memory" to 1000,
+                "apoc.kafka.reindex.batch.size" to 1,
+                "apoc.kafka.session.timeout.ms" to 1,
+                "apoc.kafka.connection.timeout.ms" to 1,
+                "apoc.kafka.replication" to 2,
+                "apoc.kafka.transactional.id" to "foo",
+                "apoc.kafka.linger.ms" to 10,
+                "apoc.kafka.fetch.min.bytes" to 1234,
+                "apoc.kafka.topic.discovery.polling.interval" to 0L,
+                "apoc.kafka.log.compaction.strategy" to "delete")
 
         val kafkaConfig = KafkaConfiguration.create(map.mapValues { it.value.toString() })
 
@@ -32,19 +32,19 @@ class KafkaConfigurationTest {
 
         val properties = kafkaConfig.asProperties()
 
-        assertEquals(map["kafka.bootstrap.servers"], properties["bootstrap.servers"])
-        assertEquals(map["kafka.acks"], properties["acks"])
-        assertEquals(map["kafka.retries"], properties["retries"])
-        assertEquals(map["kafka.batch.size"], properties["batch.size"])
-        assertEquals(map["kafka.buffer.memory"], properties["buffer.memory"])
-        assertEquals(map["kafka.reindex.batch.size"], properties["reindex.batch.size"])
-        assertEquals(map["kafka.session.timeout.ms"], properties["session.timeout.ms"])
-        assertEquals(map["kafka.connection.timeout.ms"], properties["connection.timeout.ms"])
-        assertEquals(map["kafka.replication"], properties["replication"])
-        assertEquals(map["kafka.transactional.id"], properties["transactional.id"])
-        assertEquals(map["kafka.linger.ms"], properties["linger.ms"])
-        assertEquals(map["kafka.fetch.min.bytes"].toString(), properties["fetch.min.bytes"])
-        assertEquals(map["kafka.topic.discovery.polling.interval"], properties["topic.discovery.polling.interval"])
-        assertEquals(map["kafka.streams.log.compaction.strategy"], properties["streams.log.compaction.strategy"])
+        assertEquals(map["apoc.kafka.bootstrap.servers"], properties["bootstrap.servers"])
+        assertEquals(map["apoc.kafka.acks"], properties["acks"])
+        assertEquals(map["apoc.kafka.retries"], properties["retries"])
+        assertEquals(map["apoc.kafka.batch.size"], properties["batch.size"])
+        assertEquals(map["apoc.kafka.buffer.memory"], properties["buffer.memory"])
+        assertEquals(map["apoc.kafka.reindex.batch.size"], properties["reindex.batch.size"])
+        assertEquals(map["apoc.kafka.session.timeout.ms"], properties["session.timeout.ms"])
+        assertEquals(map["apoc.kafka.connection.timeout.ms"], properties["connection.timeout.ms"])
+        assertEquals(map["apoc.kafka.replication"], properties["replication"])
+        assertEquals(map["apoc.kafka.transactional.id"], properties["transactional.id"])
+        assertEquals(map["apoc.kafka.linger.ms"], properties["linger.ms"])
+        assertEquals(map["apoc.kafka.fetch.min.bytes"].toString(), properties["fetch.min.bytes"])
+        assertEquals(map["apoc.kafka.topic.discovery.polling.interval"], properties["topic.discovery.polling.interval"])
+        assertEquals(map["apoc.kafka.log.compaction.strategy"], properties["apoc.kafka.log.compaction.strategy"])
     }
 }

@@ -18,8 +18,8 @@ class KafkaEventRouterNoTopicAutocreationIT: KafkaEventRouterBaseTSE() {
     fun `should start even with no topic created`() {
         // when
         db = createDbWithKafkaConfigs(
-            "kafka.bootstrap.servers" to KafkaEventRouterSuiteIT.kafka.bootstrapServers,
-            "streams.source.topic.nodes.personNotDefined" to "Person{*}"
+            "apoc.kafka.bootstrap.servers" to KafkaEventRouterSuiteIT.kafka.bootstrapServers,
+            "apoc.kafka.source.topic.nodes.personNotDefined" to "Person{*}"
         )
 
         // then
@@ -38,11 +38,11 @@ class KafkaEventRouterNoTopicAutocreationIT: KafkaEventRouterBaseTSE() {
         val expectedTopics = listOf(personTopic, customerTopic, neo4jTopic)
 
         db = createDbWithKafkaConfigs(
-            "kafka.bootstrap.servers" to KafkaEventRouterSuiteIT.kafka.bootstrapServers,
-            "streams.source.topic.nodes.$personTopic" to "Person{*}",
-            "streams.source.topic.nodes.$customerTopic" to "Customer{*}",
-            "streams.source.schema.polling.interval" to "0",
-            "kafka.streams.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_COMPACT
+            "apoc.kafka.bootstrap.servers" to KafkaEventRouterSuiteIT.kafka.bootstrapServers,
+            "apoc.kafka.source.topic.nodes.$personTopic" to "Person{*}",
+            "apoc.kafka.source.topic.nodes.$customerTopic" to "Customer{*}",
+            "apoc.kafka.source.schema.polling.interval" to "0",
+            "apoc.kafka.log.compaction.strategy" to TopicConfig.CLEANUP_POLICY_COMPACT
         )
 
         // we create a new node an check that the source plugin is working

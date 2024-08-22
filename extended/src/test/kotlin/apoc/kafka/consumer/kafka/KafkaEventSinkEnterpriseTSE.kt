@@ -51,16 +51,16 @@ class KafkaEventSinkEnterpriseTSE {
             }
             KafkaUtil.ignoreExceptions({
                 neo4j.withKafka(KafkaEventSinkSuiteIT.kafka)
-                        ?.withNeo4jConfig("streams.source.enabled", "false") // we disable the source plugin globally
-                        ?.withNeo4jConfig("streams.sink.enabled", "false") // we disable the sink plugin globally
-                DB_NAME_NAMES.forEach { neo4j.withNeo4jConfig("streams.sink.enabled.to.$it", "true") } // we enable the sink plugin only for the instances
-                neo4j.withNeo4jConfig("streams.sink.topic.cypher.enterpriseCypherTopic.to.foo", "MERGE (c:Customer_foo {id: event.id, foo: 'foo'})")
-                neo4j.withNeo4jConfig("streams.sink.topic.cypher.enterpriseCypherTopic.to.bar", "MERGE (c:Customer_bar {id: event.id, bar: 'bar'})")
-                neo4j.withNeo4jConfig("streams.sink.topic.cypher.$DLQ_CYPHER_TOPIC.to.dlq", "MERGE (c:Customer_dlq {id: event.id, dlq: 'dlq'})")
-                neo4j.withNeo4jConfig("streams.sink." + ErrorService.ErrorConfig.DLQ_TOPIC, DLQ_ERROR_TOPIC)
-                neo4j.withNeo4jConfig("streams.sink." + ErrorService.ErrorConfig.DLQ_HEADERS, "true")
-                neo4j.withNeo4jConfig("streams.sink." + ErrorService.ErrorConfig.DLQ_HEADER_PREFIX, "__streams.errors.")
-                neo4j.withNeo4jConfig("streams.sink." + ErrorService.ErrorConfig.TOLERANCE, "all")
+                        ?.withNeo4jConfig("apoc.kafka.source.enabled", "false") // we disable the source plugin globally
+                        ?.withNeo4jConfig("apoc.kafka.sink.enabled", "false") // we disable the sink plugin globally
+                DB_NAME_NAMES.forEach { neo4j.withNeo4jConfig("apoc.kafka.sink.enabled.to.$it", "true") } // we enable the sink plugin only for the instances
+                neo4j.withNeo4jConfig("apoc.kafka.sink.topic.cypher.enterpriseCypherTopic.to.foo", "MERGE (c:Customer_foo {id: event.id, foo: 'foo'})")
+                neo4j.withNeo4jConfig("apoc.kafka.sink.topic.cypher.enterpriseCypherTopic.to.bar", "MERGE (c:Customer_bar {id: event.id, bar: 'bar'})")
+                neo4j.withNeo4jConfig("apoc.kafka.sink.topic.cypher.$DLQ_CYPHER_TOPIC.to.dlq", "MERGE (c:Customer_dlq {id: event.id, dlq: 'dlq'})")
+                neo4j.withNeo4jConfig("apoc.kafka.sink." + ErrorService.ErrorConfig.DLQ_TOPIC, DLQ_ERROR_TOPIC)
+                neo4j.withNeo4jConfig("apoc.kafka.sink." + ErrorService.ErrorConfig.DLQ_HEADERS, "true")
+                neo4j.withNeo4jConfig("apoc.kafka.sink." + ErrorService.ErrorConfig.DLQ_HEADER_PREFIX, "__apoc.kafka.errors.")
+                neo4j.withNeo4jConfig("apoc.kafka.sink." + ErrorService.ErrorConfig.TOLERANCE, "all")
                 neo4j.withDatabases(*ALL_DBS)
                 neo4j.start()
                 Assume.assumeTrue("Neo4j must be running", neo4j.isRunning)
@@ -166,8 +166,8 @@ class KafkaEventSinkEnterpriseTSE {
                 val headers = record?.headers()?.map { it.key() to String(it.value()) }?.toMap().orEmpty()
                 val value = if (record != null) JsonUtil.OBJECT_MAPPER.readValue(record.value()!!, Any::class.java) else emptyMap<String, Any>()
                 !records.isEmpty && headers.size == 8 && data == value && count == 0
-                        && headers["__streams.errors.exception.class.name"] == "org.neo4j.graphdb.QueryExecutionException"
-                        && headers["__streams.errors.databaseName"] == dbName
+                        && headers["__apoc.kafka.errors.exception.class.name"] == "org.neo4j.graphdb.QueryExecutionException"
+                        && headers["__apoc.kafka.errors.databaseName"] == dbName
             }, Matchers.equalTo(true), 30, TimeUnit.SECONDS)
             it.close()
         }

@@ -77,9 +77,9 @@ open class KafkaEventSinkBaseTSE {
 
     fun createDbWithKafkaConfigs(vararg pairs: Pair<String, Any>) : GraphDatabaseService {
         val mutableMapOf = mutableMapOf<String, Any>(
-            "kafka.bootstrap.servers" to KafkaEventSinkSuiteIT.kafka.bootstrapServers,
+            "apoc.kafka.bootstrap.servers" to KafkaEventSinkSuiteIT.kafka.bootstrapServers,
             "bootstrap.servers" to KafkaEventSinkSuiteIT.kafka.bootstrapServers,
-            "streams.sink.enabled" to "true"
+            "apoc.kafka.sink.enabled" to "true"
         )
         
         mutableMapOf.putAll(mapOf(*pairs))

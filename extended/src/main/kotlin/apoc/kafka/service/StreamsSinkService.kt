@@ -3,8 +3,8 @@ package apoc.kafka.service
 import apoc.kafka.service.sink.strategy.IngestionStrategy
 
 
-const val STREAMS_TOPIC_KEY: String = "streams.sink.topic"
-const val STREAMS_TOPIC_CDC_KEY: String = "streams.sink.topic.cdc"
+const val STREAMS_TOPIC_KEY: String = "apoc.kafka.sink.topic"
+const val STREAMS_TOPIC_CDC_KEY: String = "apoc.kafka.sink.topic.cdc"
 
 enum class TopicTypeGroup { CYPHER, CDC, PATTERN, CUD }
 enum class TopicType(val group: TopicTypeGroup, val key: String) {
