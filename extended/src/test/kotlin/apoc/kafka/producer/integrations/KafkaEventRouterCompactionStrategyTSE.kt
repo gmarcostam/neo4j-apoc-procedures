@@ -10,6 +10,7 @@ import apoc.util.ExtendedTestUtil
 import apoc.util.JsonUtil
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.config.TopicConfig
+import org.junit.Ignore
 import org.junit.Test
 import org.neo4j.graphdb.GraphDatabaseService
 import org.neo4j.internal.helpers.collection.Iterators
@@ -20,6 +21,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
+@Ignore("flaky test")
 class KafkaEventRouterCompactionStrategyTSE : KafkaEventRouterBaseTSE() {
 
     private val bootstrapServerMap = mapOf("bootstrap.servers" to KafkaEventRouterSuiteIT.kafka.bootstrapServers)

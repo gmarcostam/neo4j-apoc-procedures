@@ -2,13 +2,11 @@ package apoc.kafka.consumer.kafka
 
 import apoc.kafka.events.StreamsPluginStatus
 import apoc.kafka.support.Assert
-// import apoc.kafka.support.setConfig
-// import apoc.kafka.support.start
 import apoc.util.JsonUtil
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
-import org.apache.kafka.common.config.TopicConfig
 import org.hamcrest.Matchers
 import org.junit.Test
 import org.neo4j.function.ThrowingSupplier
@@ -23,7 +21,10 @@ class KafkaEventSinkSimpleTSE: KafkaEventSinkBaseTSE() {
 
     @Test
     fun shouldWriteDataFromSink() = runBlocking {
-        db = createDbWithKafkaConfigs("streams.sink.topic.cypher.shouldWriteCypherQuery" to cypherQueryTemplate)
+        val db = createDbWithKafkaConfigs(
+            "streams.sink.topic.cypher.shouldWriteCypherQuery" to cypherQueryTemplate,
+            "kafka.${ConsumerConfig.GROUP_ID_CONFIG}" to "ajeje"
+        )
 
         val producerRecord = ProducerRecord(topics[0], "{\"a\":1}", JsonUtil.writeValueAsBytes(data))
         kafkaProducer.send(producerRecord).get()
@@ -52,7 +53,7 @@ class KafkaEventSinkSimpleTSE: KafkaEventSinkBaseTSE() {
 
     @Test
     fun shouldNotWriteDataFromSinkWithNoTopicLoaded() = runBlocking {
-        // db.start()
+        val db = createDbWithKafkaConfigs()
 
         val producerRecord = ProducerRecord(topics[0], "{\"a\":1}", JsonUtil.writeValueAsBytes(data))
         kafkaProducer.send(producerRecord).get()
@@ -79,16 +80,12 @@ class KafkaEventSinkSimpleTSE: KafkaEventSinkBaseTSE() {
             MERGE (c)-[:BOUGHT]->(p)
         """.trimIndent()
         
-        createDbWithKafkaConfigs(
+        val db = createDbWithKafkaConfigs(
             "streams.sink.topic.cypher.${product.first}" to product.second,
             "streams.sink.topic.cypher.${customer.first}" to customer.second,
-            "streams.sink.topic.cypher.${bought.first}" to bought.second
+            "streams.sink.topic.cypher.${bought.first}" to bought.second,
+            "kafka.${ConsumerConfig.GROUP_ID_CONFIG}" to "ajeje1"
         )
-        
-//        db.setConfig("streams.sink.topic.cypher.${product.first}", product.second)
-//        db.setConfig("streams.sink.topic.cypher.${customer.first}", customer.second)
-//        db.setConfig("streams.sink.topic.cypher.${bought.first}", bought.second)
-        // db.start()
 
         val props = mapOf("id" to 1, "name" to "My Awesome Product")
         var producerRecord = ProducerRecord(product.first, "{\"a\":1}",
@@ -188,7 +185,7 @@ class KafkaEventSinkSimpleTSE: KafkaEventSinkBaseTSE() {
 
     @Test
     fun `neo4j should start normally in case kafka is not reachable`() {
-        db = createDbWithKafkaConfigs("streams.sink.topic.cypher.shouldWriteCypherQuery" to cypherQueryTemplate,
+        val db = createDbWithKafkaConfigs("streams.sink.topic.cypher.shouldWriteCypherQuery" to cypherQueryTemplate,
             "kafka.bootstrap.servers" to "foo",
             "kafka.default.api.timeout.ms" to "5000")
 //        db.setConfig("streams.sink.topic.cypher.shouldWriteCypherQuery", cypherQueryTemplate)

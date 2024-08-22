@@ -21,9 +21,12 @@ class KafkaEventSinkCommitTSE : KafkaEventSinkBaseTSE() {
     @Test
     fun `should write last offset with auto commit false`() {
         val topic = UUID.randomUUID().toString()
-        ApocConfig.apocConfig().setProperty("streams.sink.topic.cypher.$topic", cypherQueryTemplate)
-        ApocConfig.apocConfig().setProperty("kafka.${ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG}", "false")
-        // db.start()
+
+        val db = createDbWithKafkaConfigs(
+            "streams.sink.topic.cypher.$topic" to cypherQueryTemplate,
+            "kafka.${ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG}" to "false"
+        )
+
         val partition = 0
         var producerRecord = ProducerRecord(topic, partition, "{\"a\":1}", JSONUtils.writeValueAsBytes(data))
         kafkaProducer.send(producerRecord).get()
@@ -53,10 +56,13 @@ class KafkaEventSinkCommitTSE : KafkaEventSinkBaseTSE() {
     @Test
     fun shouldWriteLastOffsetWithAsyncCommit() {
         val topic = UUID.randomUUID().toString()
-        ApocConfig.apocConfig().setProperty("streams.sink.topic.cypher.$topic", cypherQueryTemplate)
-        ApocConfig.apocConfig().setProperty("kafka.${ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG}", "false")
-        ApocConfig.apocConfig().setProperty("kafka.streams.commit.async", "true")
-        // db.start()
+
+        val db = createDbWithKafkaConfigs(
+            "streams.sink.topic.cypher.$topic" to cypherQueryTemplate,
+            "kafka.${ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG}" to "false",
+            "kafka.streams.commit.async" to "true"
+        )
+
         val partition = 0
         var producerRecord = ProducerRecord(topic, partition, "{\"a\":1}", JSONUtils.writeValueAsBytes(data))
         kafkaProducer.send(producerRecord).get()
@@ -92,11 +98,13 @@ class KafkaEventSinkCommitTSE : KafkaEventSinkBaseTSE() {
             MERGE (p:Product {id: event.id})
             MERGE (c)-[:BOUGHT]->(p)
         """.trimIndent()
-        ApocConfig.apocConfig().setProperty("streams.sink.topic.cypher.${product.first}", product.second)
-        ApocConfig.apocConfig().setProperty("streams.sink.topic.cypher.${customer.first}", customer.second)
-        ApocConfig.apocConfig().setProperty("streams.sink.topic.cypher.${bought.first}", bought.second)
-        ApocConfig.apocConfig().setProperty("kafka.${ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG}", "false")
-        // db.start()
+
+        val db = createDbWithKafkaConfigs(
+            "streams.sink.topic.cypher.${product.first}" to product.second,
+            "streams.sink.topic.cypher.${customer.first}" to customer.second,
+            "streams.sink.topic.cypher.${bought.first}" to bought.second,
+            "kafka.${ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG}" to "false"
+        )
 
         val props = mapOf("id" to 1, "name" to "My Awesome Product")
         var producerRecord = ProducerRecord(product.first, "{\"a\":1}",

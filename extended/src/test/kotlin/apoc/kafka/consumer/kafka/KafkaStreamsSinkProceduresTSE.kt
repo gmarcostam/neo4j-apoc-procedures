@@ -5,17 +5,18 @@ import apoc.kafka.extensions.toMap
 import apoc.kafka.producer.integrations.KafkaEventSinkSuiteIT
 import apoc.kafka.support.Assert
 import apoc.kafka.support.KafkaTestUtils
-// import apoc.kafka.support.start
 import apoc.util.JsonUtil
 import io.confluent.kafka.serializers.KafkaAvroDeserializer
 import kotlinx.coroutines.*
 import org.apache.avro.SchemaBuilder
 import org.apache.avro.generic.GenericRecordBuilder
+import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.TopicPartition
 import org.hamcrest.Matchers
 import org.junit.Test
 import org.neo4j.function.ThrowingSupplier
+import org.neo4j.graphdb.GraphDatabaseService
 import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.stream.Collectors
@@ -24,8 +25,7 @@ import kotlin.test.*
 @Suppress("UNCHECKED_CAST", "DEPRECATION")
 class KafkaStreamsSinkProceduresTSE : KafkaEventSinkBaseTSE() {
 
-    private fun testProcedure(topic: String) {
-//        registerProcedure()
+    private fun testProcedure(db: GraphDatabaseService, topic: String) {
         val producerRecord = ProducerRecord(topic, "{\"id\": \"{${UUID.randomUUID()}}\"}", JsonUtil.writeValueAsBytes(data))
         kafkaProducer.send(producerRecord).get()
         db.executeTransactionally("CALL streams.consume('$topic', {timeout: 5000}) YIELD event RETURN event", emptyMap()) { result ->
@@ -41,26 +41,25 @@ class KafkaStreamsSinkProceduresTSE : KafkaEventSinkBaseTSE() {
 
     @Test
     fun shouldConsumeDataFromProcedureWithSinkDisabled() {
-        
-        db = createDbWithKafkaConfigs("streams.sink.enabled" to "false")
-        
-//        ApocConfig.apocConfig().setProperty("streams.sink.enabled", "false")
-        // db.start()
+        val db = createDbWithKafkaConfigs(
+            "streams.sink.enabled" to "false",
+            "kafka.${ConsumerConfig.GROUP_ID_CONFIG}" to "1"
+        )
+
         val topic = "bar"
-        testProcedure(topic)
+        testProcedure(db, topic)
     }
 
     @Test
     fun shouldConsumeDataFromProcedure() {
-        // db.start()
+        val db = createDbWithKafkaConfigs("kafka.${ConsumerConfig.GROUP_ID_CONFIG}" to "2")
         val topic = "foo"
-        testProcedure(topic)
+        testProcedure(db, topic)
     }
 
     @Test
     fun shouldTimeout() {
-        // db.start()
-//        registerProcedure()
+        val db = createDbWithKafkaConfigs()
         db.executeTransactionally("CALL streams.consume('foo1', {timeout: 2000}) YIELD event RETURN event", emptyMap()) {
             assertFalse { it.hasNext() }
         }
@@ -69,9 +68,6 @@ class KafkaStreamsSinkProceduresTSE : KafkaEventSinkBaseTSE() {
     @Test
     @Ignore
     fun shouldReadArrayOfJson() {
-        // db.start()
-//        registerProcedure()
-        
         val db = createDbWithKafkaConfigs()
         
         val topic = "array-topic"
@@ -93,20 +89,17 @@ class KafkaStreamsSinkProceduresTSE : KafkaEventSinkBaseTSE() {
 
     @Test
     fun shouldReadSimpleDataType() {
-        // db.start()
-//        registerProcedure()
-        
-        val db = createDbWithKafkaConfigs()
+        val db = createDbWithKafkaConfigs("kafka.${ConsumerConfig.GROUP_ID_CONFIG}" to "3")
         
         val topic = "simple-data"
         val simpleInt = 1
         val simpleBoolean = true
         val simpleString = "test"
-        var producerRecord = ProducerRecord(topic, "{\"a\":1}", JsonUtil.writeValueAsBytes(simpleString))
+        var producerRecord = ProducerRecord(topic, "{\"a\":1}", JsonUtil.writeValueAsBytes(simpleInt))
         kafkaProducer.send(producerRecord).get()
-        producerRecord = ProducerRecord(topic, "{\"a\":1}", JsonUtil.writeValueAsBytes(simpleBoolean))
+        producerRecord = ProducerRecord(topic, "{\"a\":2}", JsonUtil.writeValueAsBytes(simpleBoolean))
         kafkaProducer.send(producerRecord).get()
-        producerRecord = ProducerRecord(topic, "{\"a\":1}", JsonUtil.writeValueAsBytes(simpleString))
+        producerRecord = ProducerRecord(topic, "{\"a\":3}", JsonUtil.writeValueAsBytes(simpleString))
         kafkaProducer.send(producerRecord).get()
         db.executeTransactionally("""
             CALL streams.consume('$topic', {timeout: 5000}) YIELD event
@@ -128,13 +121,9 @@ class KafkaStreamsSinkProceduresTSE : KafkaEventSinkBaseTSE() {
 
     @Test
     fun shouldReadATopicPartitionStartingFromAnOffset() = runBlocking {
-        // db.start()
-//        TestUtil.registerProcedure(db, StreamsSinkProcedures.javaClass)
-//        registerProcedure()
         val db = createDbWithKafkaConfigs()
         
         val topic = "read-from-range"
-        val simpleInt = 1
         val partition = 0
         var start = -1L
         (1..10).forEach {
@@ -163,13 +152,9 @@ class KafkaStreamsSinkProceduresTSE : KafkaEventSinkBaseTSE() {
 
     @Test
     fun shouldReadFromLatest() = runBlocking {
-        // db.start()
-//        registerProcedure()
-
         val db = createDbWithKafkaConfigs()
         
         val topic = "simple-data-from-latest"
-        val simpleInt = 1
         val simpleString = "test"
         val partition = 0
         (1..10).forEach {
@@ -203,15 +188,15 @@ class KafkaStreamsSinkProceduresTSE : KafkaEventSinkBaseTSE() {
 
     @Test
     fun shouldNotCommit() {
-        // db.start()
-//        registerProcedure()
-
-        val db = createDbWithKafkaConfigs()
+        val db = createDbWithKafkaConfigs(
+            "enable.auto.commit" to false,
+            "kafka.${ConsumerConfig.GROUP_ID_CONFIG}" to "ajeje"
+        )
         
         val topic = "simple-data"
         val simpleInt = 1
         val partition = 0
-        var producerRecord = ProducerRecord(topic, partition, UUID.randomUUID().toString(), JsonUtil.writeValueAsBytes(simpleInt))
+        var producerRecord = ProducerRecord(topic, partition, "{\"a\":1}", JsonUtil.writeValueAsBytes("{\"b\":${simpleInt}}"))
         kafkaProducer.send(producerRecord).get()
         db.executeTransactionally("""
             CALL streams.consume('$topic', {timeout: 5000, autoCommit: false, commit:false}) YIELD event
@@ -237,10 +222,7 @@ class KafkaStreamsSinkProceduresTSE : KafkaEventSinkBaseTSE() {
 
     @Test
     fun `should consume AVRO messages`() {
-        // db.start()
-//        registerProcedure()
-
-        val db = createDbWithKafkaConfigs()
+        val db = createDbWithKafkaConfigs("kafka.${ConsumerConfig.GROUP_ID_CONFIG}" to "avroajeje")
         val PLACE_SCHEMA = SchemaBuilder.builder("com.namespace")
                 .record("Place").fields()
                 .name("name").type().stringType().noDefault()
@@ -276,11 +258,7 @@ class KafkaStreamsSinkProceduresTSE : KafkaEventSinkBaseTSE() {
 
     @Test
     fun `should report the streams sink config`() {
-        // given
-        // db.start()
-
         val db = createDbWithKafkaConfigs()
-//        registerProcedure()
         val expected = mapOf("invalid_topics" to emptyList<String>(),
                 "streams.sink.topic.pattern.relationship" to emptyMap<String, Any>(),
                 "streams.sink.topic.cud" to emptyList<String>(),
@@ -309,10 +287,7 @@ class KafkaStreamsSinkProceduresTSE : KafkaEventSinkBaseTSE() {
         // given
 
         val db = createDbWithKafkaConfigs("streams.sink.topic.cypher.shouldWriteCypherQuery" to cypherQueryTemplate)
-        
-//        ApocConfig.apocConfig().setProperty("streams.sink.topic.cypher.shouldWriteCypherQuery", cypherQueryTemplate)
-        // db.start()
-//        registerProcedure()
+
         val expectedRunning = listOf(mapOf("name" to "status", "value" to StreamsPluginStatus.RUNNING.toString()))
 
         Assert.assertEventually(ThrowingSupplier {
@@ -330,9 +305,6 @@ class KafkaStreamsSinkProceduresTSE : KafkaEventSinkBaseTSE() {
     fun `should report the streams sink status STOPPED`() {
         // given
         val db = createDbWithKafkaConfigs("streams.sink.topic.cypher.shouldWriteCypherQuery" to cypherQueryTemplate)
-//        ApocConfig.apocConfig().setProperty("streams.sink.topic.cypher.shouldWriteCypherQuery", cypherQueryTemplate)
-        // db.start()
-//        registerProcedure()
         val expectedRunning = listOf(mapOf("name" to "status", "value" to StreamsPluginStatus.STOPPED.toString()))
         db.executeTransactionally("CALL streams.sink.stop()", emptyMap()) {
             println(it.resultAsString())
@@ -345,10 +317,5 @@ class KafkaStreamsSinkProceduresTSE : KafkaEventSinkBaseTSE() {
                     .collect(Collectors.toList())
             assertEquals(expectedRunning, actual)
         }
-    }
-
-    private fun registerProcedure() {
-//        db.dependencyResolver.resolveDependency(GlobalProcedures::class.java)
-//                .registerProcedure(StreamsSinkProcedures::class.java)
     }
 }

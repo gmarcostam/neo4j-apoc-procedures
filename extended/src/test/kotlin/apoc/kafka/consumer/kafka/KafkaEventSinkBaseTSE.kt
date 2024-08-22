@@ -26,7 +26,7 @@ open class KafkaEventSinkBaseTSE {
     companion object {
         private var startedFromSuite = true
         
-        lateinit var db: GraphDatabaseService
+//        lateinit var db: GraphDatabaseService
         lateinit var dbms: DatabaseManagementService
         
         @BeforeClass
@@ -88,8 +88,7 @@ open class KafkaEventSinkBaseTSE {
             temporaryFolder,
             mutableMapOf
         )
-        getDbServices()
-        return db
+        return getDbServices()
     }
 
     private fun <K, V> KafkaProducer<K, V>.flushAndClose() {
@@ -102,8 +101,8 @@ open class KafkaEventSinkBaseTSE {
     fun tearDown() {
         dbms.shutdown()
 
-        dbms = TestDatabaseManagementServiceBuilder(temporaryFolder.root.toPath()).build()
-        getDbServices()
+//        dbms = TestDatabaseManagementServiceBuilder(temporaryFolder.root.toPath()).build()
+//        getDbServices()
         
         if (::kafkaProducer.isInitialized) {
             kafkaProducer.flushAndClose()
@@ -113,8 +112,9 @@ open class KafkaEventSinkBaseTSE {
         }
     }
     
-    private fun getDbServices() {
-        db = dbms.database(GraphDatabaseSettings.DEFAULT_DATABASE_NAME)
+    private fun getDbServices(): GraphDatabaseService {
+        val db = dbms.database(GraphDatabaseSettings.DEFAULT_DATABASE_NAME)
         TestUtil.registerProcedure(db, StreamsSinkProcedures::class.java, GlobalProcedures::class.java, PublishProcedures::class.java);
+        return db
     }
 }

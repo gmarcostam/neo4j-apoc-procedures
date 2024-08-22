@@ -42,11 +42,19 @@ class KafkaHandler(): LifecycleAdapter(), AvailabilityListener {
 
         StreamsEventSinkAvailabilityListener.setAvailable(db!! , true);
 
-        StreamsRouterConfigurationListener(db!!, log!!
-        ).start(StreamsConfig.getConfiguration())
+        try {
+            StreamsRouterConfigurationListener(db!!, log!!
+            ).start(StreamsConfig.getConfiguration())
+        } catch (e: Exception) {
+            log?.error("Exception in StreamsRouterConfigurationListener {}", e.message)
+        }
 
-        StreamsSinkConfigurationListener(db!!, log!!
-        ).start(StreamsConfig.getConfiguration())
+        try {
+            StreamsSinkConfigurationListener(db!!, log!!
+            ).start(StreamsConfig.getConfiguration())
+        } catch (e: Exception) {
+            log?.error("Exception in StreamsSinkConfigurationListener {}", e.message)
+        }
     }
 
     override fun stop() {

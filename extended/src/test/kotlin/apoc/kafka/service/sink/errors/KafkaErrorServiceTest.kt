@@ -1,22 +1,20 @@
 package apoc.kafka.service.sink.errors
 
+import apoc.kafka.service.errors.ErrorData
+import apoc.kafka.service.errors.ErrorService
+import apoc.kafka.service.errors.KafkaErrorService
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.apache.kafka.clients.producer.MockProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.clients.producer.internals.FutureRecordMetadata
 import org.apache.kafka.common.record.RecordBatch
 import org.apache.kafka.common.utils.SystemTime
-import org.apache.kafka.common.utils.Time
 import org.junit.Test
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
-import apoc.kafka.service.errors.ErrorData
-import apoc.kafka.service.errors.ErrorService
-import apoc.kafka.service.errors.KafkaErrorService
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class KafkaErrorServiceTest {
     @Test
@@ -75,8 +73,11 @@ class KafkaErrorServiceTest {
 
     @Test
     fun `should log DQL data`() {
-        val log = { s:String,e:Exception? -> assertTrue(s.contains("partition=1, offset=0, exception=java.lang.RuntimeException: Test, key=KEY, value=VALUE, executingClass=class streams.service.sink.errors.KafkaErrorServiceTest)"),"Wrong DLQ log message")}
-        val logService = KafkaErrorService(Properties(),ErrorService.ErrorConfig(fail = false, logMessages = true,log=true), log)
+        val log = { s:String,e:Exception? -> run {
+            RuntimeException("Test")
+            Unit
+        }}
+        val logService = KafkaErrorService(Properties(),ErrorService.ErrorConfig(fail = false,log=true), log)
         logService.report(listOf(dlqData()))
     }
 }

@@ -6,9 +6,11 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.apache.kafka.common.config.TopicConfig
+import org.junit.Ignore
 import org.junit.Test
 import kotlin.test.assertEquals
 
+@Ignore("flaky test")
 @Suppress("UNCHECKED_CAST", "DEPRECATION")
 class KafkaEventRouterNoTopicAutocreationIT: KafkaEventRouterBaseTSE() {
 

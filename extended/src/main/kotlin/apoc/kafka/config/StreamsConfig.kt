@@ -9,6 +9,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.apache.commons.configuration2.ConfigurationMap
+import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.neo4j.dbms.api.DatabaseManagementService
 import org.neo4j.kernel.internal.GraphDatabaseAPI
 import org.neo4j.logging.Log
@@ -24,10 +25,16 @@ class StreamsConfig(private val log: Log, private val dbms: DatabaseManagementSe
 
     companion object {
 
-        fun getConfiguration(): Map<String, String> {
-            return ConfigurationMap( ApocConfig.apocConfig().config )
+        fun getConfiguration(additionalConfigs: Map<String, String> = emptyMap()): Map<String, String> {
+            val config = ApocConfig.apocConfig().config
+
+            val map = ConfigurationMap(config)
                 .filter { it.value is String }
                 .toMutableMap() as Map<String, String>
+            return convert(map, additionalConfigs)
+//            return ConfigurationMap( ApocConfig.apocConfig().config )
+//                .filter { it.value is String }
+//                .toMutableMap() as Map<String, String>
             //        return ConfigurationLifecycleUtils.toMap(configLifecycle.configuration)
         }
         
@@ -90,6 +97,20 @@ class StreamsConfig(private val log: Log, private val dbms: DatabaseManagementSe
         fun getSystemDbWaitTimeout(config: Map<String, Any?>) = config.getOrDefault(SYSTEM_DB_WAIT_TIMEOUT, SYSTEM_DB_WAIT_TIMEOUT_VALUE).toString().toLong()
 
         fun getInstanceWaitTimeout(config: Map<String, Any?>) = config.getOrDefault(INSTANCE_WAIT_TIMEOUT, INSTANCE_WAIT_TIMEOUT_VALUE).toString().toLong()
+
+        fun convert(props: Map<String,String>, config: Map<String, String>): Map<String, String> {
+            val mutProps = props.toMutableMap()
+            val mappingKeys = mapOf(
+                "broker" to "kafka.${ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG}",
+                "from" to "kafka.${ConsumerConfig.AUTO_OFFSET_RESET_CONFIG}",
+                "autoCommit" to "kafka.${ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG}",
+                "keyDeserializer" to "kafka.${ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG}",
+                "valueDeserializer" to "kafka.${ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG}",
+                "schemaRegistryUrl" to "kafka.schema.registry.url",
+                "groupId" to "kafka.${ConsumerConfig.GROUP_ID_CONFIG}")
+            mutProps += config.mapKeys { mappingKeys.getOrDefault(it.key, it.key) }
+            return mutProps
+        }
     }
 
     private val configLifecycle: ConfigurationLifecycle

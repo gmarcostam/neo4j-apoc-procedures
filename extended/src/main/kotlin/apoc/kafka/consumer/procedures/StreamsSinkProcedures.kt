@@ -52,8 +52,12 @@ class StreamsSinkProcedures {
             log?.info("Topic empty, no message sent")
             Stream.empty<StreamResult>()
         } else {
-//            val properties = config?.mapValues { it.value.toString() } ?: emptyMap()
-            val configuration = StreamsConfig.getConfiguration()
+            val properties = config?.mapValues { it.value.toString() } ?: emptyMap()
+//            val configuration = getStreamsEventSink(db!!)!!
+//                .getEventSinkConfigMapper()
+//                .convert(config = properties)
+
+            val configuration = StreamsConfig.getConfiguration(properties)
             readData(topic, config ?: emptyMap(), configuration)
         }
     }
