@@ -32,10 +32,6 @@ class StreamsConfig(private val log: Log, private val dbms: DatabaseManagementSe
                 .filter { it.value is String }
                 .toMutableMap() as Map<String, String>
             return convert(map, additionalConfigs)
-//            return ConfigurationMap( ApocConfig.apocConfig().config )
-//                .filter { it.value is String }
-//                .toMutableMap() as Map<String, String>
-            //        return ConfigurationLifecycleUtils.toMap(configLifecycle.configuration)
         }
         
         private const val SUN_JAVA_COMMAND = "sun.java.command"

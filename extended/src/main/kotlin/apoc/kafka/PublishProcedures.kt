@@ -4,6 +4,7 @@ import apoc.kafka.producer.StreamsEventRouter
 import apoc.kafka.producer.StreamsTransactionEventHandler
 import apoc.kafka.producer.events.StreamsEventBuilder
 import apoc.kafka.utils.KafkaUtil
+import apoc.kafka.utils.KafkaUtil.checkEnabled
 import kotlinx.coroutines.runBlocking
 import org.neo4j.kernel.internal.GraphDatabaseAPI
 import org.neo4j.logging.Log
@@ -56,13 +57,6 @@ class PublishProcedures {
 
         val streamsEvent = buildStreamEvent(topic!!, payload!!)
         getStreamsEventSinkStoreEntry().eventRouter.sendEvents(topic, listOf(streamsEvent), config ?: emptyMap())
-    }
-
-    private fun checkEnabled() {
-//        StreamsSinkProcedures.initListeners(db!!, log!!)
-        if (!getStreamsEventSinkStoreEntry().eventRouter.eventRouterConfiguration.proceduresEnabled) {
-            throw RuntimeException("In order to use the procedure you must set apoc.kafka.procedures.enabled=true")
-        }
     }
 
     private fun isTopicNullOrEmpty(topic: String?): Boolean {

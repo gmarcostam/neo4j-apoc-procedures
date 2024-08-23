@@ -1,5 +1,6 @@
 package apoc.kafka
 
+import apoc.ApocConfig
 import apoc.TTLConfig
 import apoc.kafka.config.StreamsConfig
 import apoc.kafka.consumer.StreamsEventSinkAvailabilityListener
@@ -38,31 +39,33 @@ class KafkaHandler(): LifecycleAdapter(), AvailabilityListener {
     }
 
     override fun start() {
-        println("start db......")
+        if(ApocConfig.apocConfig().getBoolean("apoc.kafka.enabled")) {
+            println("start db......")
 
-        StreamsEventSinkAvailabilityListener.setAvailable(db!! , true);
+            StreamsEventSinkAvailabilityListener.setAvailable(db!! , true);
 
-        try {
-            StreamsRouterConfigurationListener(db!!, log!!
-            ).start(StreamsConfig.getConfiguration())
-        } catch (e: Exception) {
-            log?.error("Exception in StreamsRouterConfigurationListener {}", e.message)
-        }
+            try {
+                StreamsRouterConfigurationListener(db!!, log!!
+                ).start(StreamsConfig.getConfiguration())
+            } catch (e: Exception) {
+                log?.error("Exception in StreamsRouterConfigurationListener {}", e.message)
+            }
 
-        try {
-            StreamsSinkConfigurationListener(db!!, log!!
-            ).start(StreamsConfig.getConfiguration())
-        } catch (e: Exception) {
-            log?.error("Exception in StreamsSinkConfigurationListener {}", e.message)
+            try {
+                StreamsSinkConfigurationListener(db!!, log!!
+                ).start(StreamsConfig.getConfiguration())
+            } catch (e: Exception) {
+                log?.error("Exception in StreamsSinkConfigurationListener {}", e.message)
+            }
         }
     }
 
     override fun stop() {
-        println("stop db..........")
-        //         todo - mettere StreamsEventSinkAvailabilityListener.setAvailable(db, false);
-        db?.let { StreamsEventSinkAvailabilityListener.setAvailable(it, false) }
-        // TODO - mettere i shutdown di StreamsRouterConfigurationListener e StreamsSinkConfigurationListener
-        StreamsRouterConfigurationListener(db!!, log!!).shutdown()
-        StreamsSinkConfigurationListener(db!!, log!!).shutdown()
+        if(ApocConfig.apocConfig().getBoolean("apoc.kafka.enabled")) {
+            println("stop db..........")
+            db?.let { StreamsEventSinkAvailabilityListener.setAvailable(it, false) }
+            StreamsRouterConfigurationListener(db!!, log!!).shutdown()
+            StreamsSinkConfigurationListener(db!!, log!!).shutdown()
+        }
     }
 }

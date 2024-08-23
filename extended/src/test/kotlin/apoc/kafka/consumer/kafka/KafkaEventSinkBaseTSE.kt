@@ -21,6 +21,8 @@ import org.neo4j.graphdb.GraphDatabaseService
 import org.neo4j.kernel.api.procedure.GlobalProcedures
 import org.neo4j.test.TestDatabaseManagementServiceBuilder
 
+import apoc.ExtendedApocConfig.APOC_KAFKA_ENABLED
+
 open class KafkaEventSinkBaseTSE {
     
     companion object {
@@ -78,6 +80,7 @@ open class KafkaEventSinkBaseTSE {
     fun createDbWithKafkaConfigs(vararg pairs: Pair<String, Any>) : GraphDatabaseService {
         val mutableMapOf = mutableMapOf<String, Any>(
             "apoc.kafka.bootstrap.servers" to KafkaEventSinkSuiteIT.kafka.bootstrapServers,
+            APOC_KAFKA_ENABLED to "true",
             "bootstrap.servers" to KafkaEventSinkSuiteIT.kafka.bootstrapServers,
             "apoc.kafka.sink.enabled" to "true"
         )

@@ -1,12 +1,18 @@
 package apoc.kafka.utils
 
+import apoc.ApocConfig
+import apoc.ExtendedApocConfig.APOC_KAFKA_ENABLED
 import apoc.kafka.events.Constraint
 import apoc.kafka.events.RelKeyStrategy
 import apoc.kafka.events.StreamsConstraintType
 import apoc.kafka.events.StreamsTransactionEvent
+import apoc.kafka.extensions.execute
 import apoc.kafka.extensions.quote
 import apoc.kafka.service.StreamsSinkEntity
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.admin.AdminClient
@@ -17,26 +23,21 @@ import org.apache.kafka.common.config.ConfigResource
 import org.apache.kafka.common.config.SaslConfigs
 import org.apache.kafka.common.config.SslConfigs
 import org.apache.kafka.common.config.TopicConfig
-import org.neo4j.graphdb.GraphDatabaseService
-import java.io.IOException
-import java.lang.reflect.Modifier
-import java.net.Socket
-import java.net.URI
-import java.util.*
-import apoc.kafka.extensions.execute
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import org.neo4j.dbms.api.DatabaseManagementService
 import org.neo4j.dbms.systemgraph.TopologyGraphDbmsModel.HostedOnMode
 import org.neo4j.exceptions.UnsatisfiedDependencyException
+import org.neo4j.graphdb.GraphDatabaseService
 import org.neo4j.graphdb.QueryExecutionException
 import org.neo4j.kernel.internal.GraphDatabaseAPI
 import org.neo4j.logging.Log
 import org.neo4j.logging.internal.LogService
+import java.io.IOException
 import java.lang.invoke.MethodHandles
 import java.lang.invoke.MethodType
-import java.lang.reflect.InvocationTargetException
+import java.lang.reflect.Modifier
+import java.net.Socket
+import java.net.URI
+import java.util.*
 
 object KafkaUtil {
     const val labelSeparator = ":"
@@ -194,6 +195,12 @@ object KafkaUtil {
         }
     } catch (e: Exception) {
         emptyList()
+    }
+
+    fun checkEnabled() {
+        if (!ApocConfig.apocConfig().getBoolean(APOC_KAFKA_ENABLED))  {
+            throw RuntimeException("In order to use the Kafka procedures you must set ${APOC_KAFKA_ENABLED}=true")
+        }
     }
 
     fun isAutoCreateTopicsEnabled(kafkaProps: Properties):Boolean = try {

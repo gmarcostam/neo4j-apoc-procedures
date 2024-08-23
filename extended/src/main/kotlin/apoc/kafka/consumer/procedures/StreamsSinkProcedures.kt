@@ -7,6 +7,7 @@ import apoc.kafka.consumer.StreamsSinkConfiguration
 import apoc.kafka.events.StreamsPluginStatus
 import apoc.kafka.extensions.isDefaultDb
 import apoc.kafka.utils.KafkaUtil
+import apoc.kafka.utils.KafkaUtil.checkEnabled
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -181,16 +182,6 @@ class StreamsSinkProcedures {
         copy.putAll(consumerConfig)
         getStreamsEventSink(db!!)!!.getEventConsumerFactory()
                 .createStreamsEventConsumer(copy, log!!, setOf(topic))
-    }
-
-    private fun checkEnabled() {
-//        initListeners(db!!, log!!)
-        
-        if (!StreamsConfig.getInstance(db!! as GraphDatabaseAPI).hasProceduresEnabled(db?.databaseName() ?: ""))  {
-            throw RuntimeException("In order to use the procedure you must set apoc.kafka.procedures.enabled=true")
-        }
-        
-        
     }
 
     companion object {

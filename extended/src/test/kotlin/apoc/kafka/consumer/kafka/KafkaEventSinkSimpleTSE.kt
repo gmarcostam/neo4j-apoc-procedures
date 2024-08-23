@@ -14,6 +14,8 @@ import org.neo4j.graphdb.Node
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import apoc.ExtendedApocConfig.APOC_KAFKA_ENABLED
+import kotlin.test.assertTrue
 
 class KafkaEventSinkSimpleTSE: KafkaEventSinkBaseTSE() {
 
@@ -165,12 +167,6 @@ class KafkaEventSinkSimpleTSE: KafkaEventSinkBaseTSE() {
     fun shouldNotStartInASingleInstance() {
         val db = createDbWithKafkaConfigs("apoc.kafka.sink.topic.cypher.shouldWriteCypherQuery" to cypherQueryTemplate,
             "apoc.kafka.cluster.only" to "true")
-        
-//        db.setConfig("apoc.kafka.sink.topic.cypher.shouldWriteCypherQuery", cypherQueryTemplate)
-//                .setConfig("apoc.kafka.cluster.only", "true")
-//                .start()
-//        db.dependencyResolver.resolveDependency(GlobalProcedures::class.java)
-//                .registerProcedure(StreamsSinkProcedures::class.java)
 
         val expectedRunning = listOf(mapOf("name" to "status", "value" to StreamsPluginStatus.STOPPED.toString()))
 
@@ -181,6 +177,22 @@ class KafkaEventSinkSimpleTSE: KafkaEventSinkBaseTSE() {
 
         // then
         assertEquals(expectedRunning, actual)
+    }
+
+    @Test
+    fun shouldNotFailWithKafkaEnabledFalse() {
+        val db = createDbWithKafkaConfigs(
+            "apoc.kafka.sink.topic.cypher.shouldWriteCypherQuery" to cypherQueryTemplate,
+            "apoc.kafka.cluster.only" to "true",
+            APOC_KAFKA_ENABLED to "false")
+
+        try {
+            db.executeTransactionally("CALL apoc.kafka.sink.status()", emptyMap()) {
+                it.stream().toList()
+            }
+        } catch (e: Exception) {
+            e.message?.let { assertTrue(it.contains("In order to use the Kafka procedures you must set ${APOC_KAFKA_ENABLED}=true")) }
+        }
     }
 
     @Test
