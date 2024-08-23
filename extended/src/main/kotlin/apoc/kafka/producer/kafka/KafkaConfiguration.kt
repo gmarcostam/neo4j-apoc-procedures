@@ -55,7 +55,7 @@ data class KafkaConfiguration(val bootstrapServers: String = "localhost:9092",
                     lingerMs = config.getInt("linger.ms", default.lingerMs),
                     topicDiscoveryPollingInterval = config.getOrDefault("topic.discovery.polling.interval",
                             default.topicDiscoveryPollingInterval).toString().toLong(),
-                    logCompactionStrategy = config.getOrDefault("apoc.kafka.log.compaction.strategy", default.logCompactionStrategy),
+                    logCompactionStrategy = config.getOrDefault("log.compaction.strategy", default.logCompactionStrategy),
                     extraProperties = extraProperties // for what we don't provide a default configuration
             )
         }
