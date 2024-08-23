@@ -29,7 +29,7 @@ data class KafkaConfiguration(val bootstrapServers: String = "localhost:9092",
                               val transactionalId: String = StringUtils.EMPTY,
                               val lingerMs: Int = 1,
                               val topicDiscoveryPollingInterval: Long = TimeUnit.MINUTES.toMillis(5),
-                              val streamsLogCompactionStrategy: String = LogStrategy.delete.toString(),
+                              val logCompactionStrategy: String = LogStrategy.delete.toString(),
                               val extraProperties: Map<String, String> = emptyMap()) {
 
     companion object {
@@ -55,7 +55,7 @@ data class KafkaConfiguration(val bootstrapServers: String = "localhost:9092",
                     lingerMs = config.getInt("linger.ms", default.lingerMs),
                     topicDiscoveryPollingInterval = config.getOrDefault("topic.discovery.polling.interval",
                             default.topicDiscoveryPollingInterval).toString().toLong(),
-                    streamsLogCompactionStrategy = config.getOrDefault("apoc.kafka.log.compaction.strategy", default.streamsLogCompactionStrategy),
+                    logCompactionStrategy = config.getOrDefault("apoc.kafka.log.compaction.strategy", default.logCompactionStrategy),
                     extraProperties = extraProperties // for what we don't provide a default configuration
             )
         }
@@ -69,10 +69,10 @@ data class KafkaConfiguration(val bootstrapServers: String = "localhost:9092",
         private fun validate(config: KafkaConfiguration, rawConfig: Map<String, String>, log: Log? = null) {
             validateConnection(config.bootstrapServers, CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, false)
             try {
-                LogStrategy.valueOf(config.streamsLogCompactionStrategy)
+                LogStrategy.valueOf(config.logCompactionStrategy)
             } catch (e: IllegalArgumentException) {
                 log?.warn("Invalid log compaction strategy setting, switching to default value ${TopicConfig.CLEANUP_POLICY_DELETE}")
-                config.streamsLogCompactionStrategy.apply { LogStrategy.delete.toString() }
+                config.logCompactionStrategy.apply { LogStrategy.delete.toString() }
             }
         }
 

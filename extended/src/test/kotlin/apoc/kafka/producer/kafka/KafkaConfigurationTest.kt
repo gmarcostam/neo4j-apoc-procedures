@@ -45,6 +45,6 @@ class KafkaConfigurationTest {
         assertEquals(map["apoc.kafka.linger.ms"], properties["linger.ms"])
         assertEquals(map["apoc.kafka.fetch.min.bytes"].toString(), properties["fetch.min.bytes"])
         assertEquals(map["apoc.kafka.topic.discovery.polling.interval"], properties["topic.discovery.polling.interval"])
-        assertEquals(map["apoc.kafka.log.compaction.strategy"], properties["apoc.kafka.log.compaction.strategy"])
+        assertEquals(map["apoc.kafka.log.compaction.strategy"], properties["log.compaction.strategy"])
     }
 }

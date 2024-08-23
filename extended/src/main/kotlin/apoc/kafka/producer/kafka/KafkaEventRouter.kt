@@ -124,8 +124,8 @@ class KafkaEventRouter(private val config: Map<String, String>,
         if (log.isDebugEnabled) {
             log.debug("Trying to send a transaction event with txId ${event.meta.txId} and txEventId ${event.meta.txEventId} to kafka")
         }
-        val key = JSONUtils.writeValueAsBytes(event.asSourceRecordKey(kafkaConfig.streamsLogCompactionStrategy))
-        val value = event.asSourceRecordValue(kafkaConfig.streamsLogCompactionStrategy)?.let { JSONUtils.writeValueAsBytes(it) }
+        val key = JSONUtils.writeValueAsBytes(event.asSourceRecordKey(kafkaConfig.logCompactionStrategy))
+        val value = event.asSourceRecordValue(kafkaConfig.logCompactionStrategy)?.let { JSONUtils.writeValueAsBytes(it) }
 
         val producerRecord = ProducerRecord(topic, null, System.currentTimeMillis(), key, value)
         send(producerRecord)
