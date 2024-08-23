@@ -1,5 +1,6 @@
-package apoc.kafka.utils
+package apoc.kafka.common.utils
 
+import apoc.kafka.utils.KafkaUtil
 import org.junit.Test
 import java.io.IOException
 import kotlin.test.assertNull

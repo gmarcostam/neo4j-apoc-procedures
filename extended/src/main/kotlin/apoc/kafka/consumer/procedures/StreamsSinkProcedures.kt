@@ -2,8 +2,8 @@ package apoc.kafka.consumer.procedures
 
 import apoc.kafka.config.StreamsConfig
 import apoc.kafka.consumer.StreamsEventConsumer
-import apoc.kafka.consumer.StreamsEventSink
 import apoc.kafka.consumer.StreamsSinkConfiguration
+import apoc.kafka.consumer.kafka.KafkaEventSink
 import apoc.kafka.events.StreamsPluginStatus
 import apoc.kafka.extensions.isDefaultDb
 import apoc.kafka.utils.KafkaUtil
@@ -196,11 +196,11 @@ class StreamsSinkProcedures {
 //            ).start(StreamsConfig.getConfiguration())
 //        }
 //        
-        private val streamsEventSinkStore = ConcurrentHashMap<String, StreamsEventSink>()
+        private val streamsEventSinkStore = ConcurrentHashMap<String, KafkaEventSink>()
 
         private fun getStreamsEventSink(db: GraphDatabaseService) = streamsEventSinkStore[KafkaUtil.getName(db)]
 
-        fun registerStreamsEventSink(db: GraphDatabaseAPI, streamsEventSink: StreamsEventSink) {
+        fun registerStreamsEventSink(db: GraphDatabaseAPI, streamsEventSink: KafkaEventSink) {
             streamsEventSinkStore[KafkaUtil.getName(db)] = streamsEventSink
         }
 

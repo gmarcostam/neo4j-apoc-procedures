@@ -46,8 +46,6 @@ class StreamsConfig(private val log: Log, private val dbms: DatabaseManagementSe
         const val CHECK_APOC_INTERVAL = "apoc.kafka.check.apoc.interval"
         const val CLUSTER_ONLY = "apoc.kafka.cluster.only"
         const val CHECK_WRITEABLE_INSTANCE_INTERVAL = "apoc.kafka.check.writeable.instance.interval"
-        const val SYSTEM_DB_WAIT_TIMEOUT = "apoc.kafka.systemdb.wait.timeout"
-        const val SYSTEM_DB_WAIT_TIMEOUT_VALUE = 10000L
         const val POLL_INTERVAL = "apoc.kafka.sink.poll.interval"
         const val INSTANCE_WAIT_TIMEOUT = "apoc.kafka.wait.timeout"
         const val INSTANCE_WAIT_TIMEOUT_VALUE = 120000L
@@ -89,8 +87,6 @@ class StreamsConfig(private val log: Log, private val dbms: DatabaseManagementSe
         fun isSinkGloballyEnabled(config: Map<String, Any?>) = config.getOrDefault(SINK_ENABLED, SINK_ENABLED_VALUE).toString().toBoolean()
 
         fun isSinkEnabled(config: Map<String, Any?>, dbName: String) = config.getOrDefault("${SINK_ENABLED}.to.$dbName", isSinkGloballyEnabled(config)).toString().toBoolean()
-
-        fun getSystemDbWaitTimeout(config: Map<String, Any?>) = config.getOrDefault(SYSTEM_DB_WAIT_TIMEOUT, SYSTEM_DB_WAIT_TIMEOUT_VALUE).toString().toLong()
 
         fun getInstanceWaitTimeout(config: Map<String, Any?>) = config.getOrDefault(INSTANCE_WAIT_TIMEOUT, INSTANCE_WAIT_TIMEOUT_VALUE).toString().toLong()
 
@@ -191,22 +187,6 @@ class StreamsConfig(private val log: Log, private val dbms: DatabaseManagementSe
         configLifecycle.setProperty(key, value, save)
     }
 
-    fun setProperties(map: Map<String, Any>, save: Boolean = true) {
-        configLifecycle.setProperties(map, save)
-    }
-
-    fun removeProperty(key: String, save: Boolean = true) {
-        configLifecycle.removeProperty(key, save)
-    }
-
-    fun removeProperties(keys: Collection<String>, save: Boolean = true) {
-        configLifecycle.removeProperties(keys, save)
-    }
-
-    fun reload() {
-        configLifecycle.reload()
-    }
-
     fun addConfigurationLifecycleListener(evt: EventType,
                                           listener: ConfigurationLifecycleListener) {
         if (log.isDebugEnabled) {
@@ -215,35 +195,9 @@ class StreamsConfig(private val log: Log, private val dbms: DatabaseManagementSe
         configLifecycle.addConfigurationLifecycleListener(evt, listener)
     }
 
-    fun removeConfigurationLifecycleListener(evt: EventType,
-                                             listener: ConfigurationLifecycleListener) {
-        if (log.isDebugEnabled) {
-            log.debug("Removing listener for event: $evt")
-        }
-        configLifecycle.removeConfigurationLifecycleListener(evt, listener)
-    }
-
-//    companion object {
-//        
-//    }
-
     fun defaultDbName() = this.dbms.getDefaultDbName()
 
     fun isDefaultDb(dbName: String) = this.defaultDbName() == dbName
-
-    fun isSourceGloballyEnabled() = Companion.isSourceGloballyEnabled(getConfiguration())
-
-    fun isSourceEnabled(dbName: String) = Companion.isSourceEnabled(getConfiguration(), dbName)
-
-    fun hasProceduresGloballyEnabled() = Companion.hasProceduresGloballyEnabled(getConfiguration())
-
-    fun hasProceduresEnabled(dbName: String) = Companion.hasProceduresEnabled(getConfiguration(), dbName)
-
-    fun isSinkGloballyEnabled() = Companion.isSinkGloballyEnabled(getConfiguration())
-
-    fun isSinkEnabled(dbName: String) = Companion.isSinkEnabled(getConfiguration(), dbName)
-
-    fun getSystemDbWaitTimeout() = Companion.getSystemDbWaitTimeout(getConfiguration())
 
     fun getInstanceWaitTimeout() = Companion.getInstanceWaitTimeout(getConfiguration())
 

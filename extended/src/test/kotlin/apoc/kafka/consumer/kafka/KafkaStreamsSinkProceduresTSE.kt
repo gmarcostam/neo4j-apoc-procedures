@@ -3,8 +3,8 @@ package apoc.kafka.consumer.kafka
 import apoc.kafka.events.StreamsPluginStatus
 import apoc.kafka.extensions.toMap
 import apoc.kafka.producer.integrations.KafkaEventSinkSuiteIT
-import apoc.kafka.support.Assert
-import apoc.kafka.support.KafkaTestUtils
+import apoc.kafka.common.support.Assert
+import apoc.kafka.common.support.KafkaTestUtils
 import apoc.util.JsonUtil
 import io.confluent.kafka.serializers.KafkaAvroDeserializer
 import kotlinx.coroutines.*

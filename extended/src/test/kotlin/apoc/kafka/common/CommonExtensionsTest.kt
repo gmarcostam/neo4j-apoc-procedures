@@ -1,5 +1,6 @@
-package apoc.kafka.extensions
+package apoc.kafka.common
 
+import apoc.kafka.extensions.toMap
 import org.apache.avro.SchemaBuilder
 import org.apache.avro.generic.GenericRecordBuilder
 import org.junit.Test

@@ -2,9 +2,9 @@ package apoc.kafka.consumer.kafka
 
 import apoc.kafka.producer.integrations.KafkaEventSinkSuiteIT
 import apoc.kafka.service.errors.ErrorService
-import apoc.kafka.support.Assert
-import apoc.kafka.support.KafkaTestUtils
-import apoc.kafka.support.Neo4jContainerExtension
+import apoc.kafka.common.support.Assert
+import apoc.kafka.common.support.KafkaTestUtils
+import apoc.kafka.common.support.Neo4jContainerExtension
 import apoc.kafka.utils.KafkaUtil
 import apoc.util.JsonUtil
 import io.confluent.kafka.serializers.KafkaAvroSerializer

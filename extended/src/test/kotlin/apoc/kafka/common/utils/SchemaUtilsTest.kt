@@ -1,4 +1,4 @@
-package apoc.kafka.utils
+package apoc.kafka.common.utils
 
 import org.junit.Test
 import apoc.kafka.events.Constraint

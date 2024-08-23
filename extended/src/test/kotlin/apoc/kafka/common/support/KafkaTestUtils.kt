@@ -1,5 +1,8 @@
-package apoc.kafka.support
+package apoc.kafka.common.support
 
+import apoc.kafka.PublishProcedures
+import apoc.kafka.consumer.procedures.StreamsSinkProcedures
+import apoc.util.TestUtil
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -8,7 +11,11 @@ import org.apache.kafka.common.serialization.ByteArrayDeserializer
 import org.apache.kafka.common.serialization.ByteArraySerializer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
-import java.util.Properties
+import org.neo4j.configuration.GraphDatabaseSettings
+import org.neo4j.dbms.api.DatabaseManagementService
+import org.neo4j.graphdb.GraphDatabaseService
+import org.neo4j.kernel.api.procedure.GlobalProcedures
+import java.util.*
 
 object KafkaTestUtils {
     fun <K, V> createConsumer(bootstrapServers: String,
@@ -47,4 +54,9 @@ object KafkaTestUtils {
         return KafkaProducer(props)
     }
 
+    fun getDbServices(dbms: DatabaseManagementService): GraphDatabaseService {
+        val db = dbms.database(GraphDatabaseSettings.DEFAULT_DATABASE_NAME)
+        TestUtil.registerProcedure(db, StreamsSinkProcedures::class.java, GlobalProcedures::class.java, PublishProcedures::class.java);
+        return db
+    }
 }

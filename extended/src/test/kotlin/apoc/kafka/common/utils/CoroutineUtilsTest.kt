@@ -1,4 +1,4 @@
-package apoc.kafka.utils
+package apoc.kafka.common.utils
 
 import apoc.kafka.utils.KafkaUtil.retryForException
 import kotlinx.coroutines.runBlocking

@@ -4,7 +4,7 @@ import apoc.kafka.events.*
 import apoc.kafka.extensions.execute
 import apoc.kafka.producer.integrations.KafkaEventRouterTestCommon.assertTopicFilled
 import apoc.kafka.producer.integrations.KafkaEventRouterTestCommon.initDbWithLogStrategy
-import apoc.kafka.support.KafkaTestUtils
+import apoc.kafka.common.support.KafkaTestUtils
 import apoc.kafka.utils.JSONUtils
 import apoc.util.ExtendedTestUtil
 import apoc.util.JsonUtil

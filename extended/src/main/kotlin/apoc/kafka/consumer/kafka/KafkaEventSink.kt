@@ -1,5 +1,16 @@
 package apoc.kafka.consumer.kafka
 
+import apoc.kafka.config.StreamsConfig
+import apoc.kafka.consumer.StreamsEventConsumer
+import apoc.kafka.consumer.StreamsEventConsumerFactory
+import apoc.kafka.consumer.StreamsEventSinkQueryExecution
+import apoc.kafka.consumer.StreamsSinkConfiguration
+import apoc.kafka.consumer.StreamsTopicService
+import apoc.kafka.consumer.utils.ConsumerUtils
+import apoc.kafka.events.StreamsPluginStatus
+import apoc.kafka.extensions.isDefaultDb
+import apoc.kafka.utils.KafkaUtil
+import apoc.kafka.utils.KafkaUtil.getInvalidTopicsError
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -11,50 +22,28 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.errors.WakeupException
 import org.neo4j.kernel.internal.GraphDatabaseAPI
 import org.neo4j.logging.Log
-import apoc.kafka.consumer.StreamsEventConsumer
-import apoc.kafka.consumer.StreamsEventConsumerFactory
-import apoc.kafka.consumer.StreamsEventSink
-import apoc.kafka.consumer.StreamsEventSinkQueryExecution
-import apoc.kafka.consumer.StreamsSinkConfiguration
-import apoc.kafka.consumer.StreamsTopicService
-import apoc.kafka.config.StreamsConfig
-import apoc.kafka.events.StreamsPluginStatus
-import apoc.kafka.extensions.isDefaultDb
-import apoc.kafka.consumer.utils.ConsumerUtils
-import apoc.kafka.utils.KafkaUtil
-import apoc.kafka.utils.KafkaUtil.getInvalidTopicsError
 
 class KafkaEventSink(private val config: Map<String, String>,
                      private val queryExecution: StreamsEventSinkQueryExecution,
                      private val streamsTopicService: StreamsTopicService,
                      private val log: Log,
-                     private val db: GraphDatabaseAPI): StreamsEventSink(config, queryExecution, streamsTopicService, log, db) {
+                     private val db: GraphDatabaseAPI) {
 
     private val mutex = Mutex()
 
     private lateinit var eventConsumer: KafkaEventConsumer
     private var job: Job? = null
 
-    override val streamsSinkConfiguration: StreamsSinkConfiguration = StreamsSinkConfiguration.from(configMap = config,
+    val streamsSinkConfiguration: StreamsSinkConfiguration = StreamsSinkConfiguration.from(configMap = config,
         dbName = db.databaseName(), isDefaultDb = db.isDefaultDb())
 
     private val streamsConfig: StreamsSinkConfiguration = StreamsSinkConfiguration.from(configMap = config,
         dbName = db.databaseName(), isDefaultDb = db.isDefaultDb())
 
-    override val mappingKeys = mapOf(
-            "broker" to "apoc.kafka.${ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG}",
-            "from" to "apoc.kafka.${ConsumerConfig.AUTO_OFFSET_RESET_CONFIG}",
-            "autoCommit" to "apoc.kafka.${ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG}",
-            "keyDeserializer" to "apoc.kafka.${ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG}",
-            "valueDeserializer" to "apoc.kafka.${ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG}",
-            "schemaRegistryUrl" to "apoc.kafka.schema.registry.url",
-            "groupId" to "apoc.kafka.${ConsumerConfig.GROUP_ID_CONFIG}")
-
-    override fun getEventConsumerFactory(): StreamsEventConsumerFactory {
+    fun getEventConsumerFactory(): StreamsEventConsumerFactory {
         return object: StreamsEventConsumerFactory() {
             override fun createStreamsEventConsumer(config: Map<String, String>, log: Log, topics: Set<Any>): StreamsEventConsumer {
                 val dbName = db.databaseName()
@@ -69,7 +58,7 @@ class KafkaEventSink(private val config: Map<String, String>,
         }
     }
 
-    override fun start() = runBlocking { // TODO move to the abstract class
+    fun start() = runBlocking { // TODO move to the abstract class
         if (streamsConfig.clusterOnly && !KafkaUtil.isCluster(db)) {
             if (log.isDebugEnabled) {
                 log.info("""
@@ -125,7 +114,7 @@ class KafkaEventSink(private val config: Map<String, String>,
         log.info("Kafka Sink started")
     }
 
-    override fun stop() = runBlocking { // TODO move to the abstract class
+    fun stop() = runBlocking { // TODO move to the abstract class
         log.info("Stopping Kafka Sink daemon Job")
         mutex.withLock(job) {
             if (status(job) == StreamsPluginStatus.STOPPED) {
@@ -183,7 +172,7 @@ class KafkaEventSink(private val config: Map<String, String>,
         }
     }
 
-    override fun printInvalidTopics() {
+    fun printInvalidTopics() {
         KafkaUtil.ignoreExceptions({
             if (eventConsumer.invalidTopics().isNotEmpty()) {
                 log.warn(getInvalidTopicsError(eventConsumer.invalidTopics()))
@@ -191,7 +180,7 @@ class KafkaEventSink(private val config: Map<String, String>,
         }, UninitializedPropertyAccessException::class.java)
     }
 
-    override fun status(): StreamsPluginStatus = runBlocking {
+    fun status(): StreamsPluginStatus = runBlocking {
         mutex.withLock(job) {
             status(job)
         }

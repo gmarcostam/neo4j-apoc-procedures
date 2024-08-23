@@ -1,7 +1,7 @@
 package apoc.kafka.consumer.kafka
 
 import apoc.kafka.events.StreamsPluginStatus
-import apoc.kafka.support.Assert
+import apoc.kafka.common.support.Assert
 import apoc.util.JsonUtil
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking

@@ -1,5 +1,8 @@
-package apoc.kafka.service.sink.strategy
+package apoc.kafka.common.strategy
 
+import apoc.kafka.service.sink.strategy.NodePatternConfiguration
+import apoc.kafka.service.sink.strategy.PatternConfigurationType
+import apoc.kafka.service.sink.strategy.RelationshipPatternConfiguration
 import org.junit.Test
 import kotlin.test.assertEquals
 
@@ -239,7 +242,8 @@ class RelationshipPatternConfigurationTest {
         val properties = emptyList<String>()
         val relType = "REL_TYPE"
         val expected = RelationshipPatternConfiguration(start = start, end = end, relType = relType,
-                properties = properties, type = PatternConfigurationType.ALL)
+                properties = properties, type = PatternConfigurationType.ALL
+        )
         assertEquals(expected, result)
     }
 
@@ -259,7 +263,8 @@ class RelationshipPatternConfigurationTest {
         val properties = emptyList<String>()
         val relType = "REL_TYPE"
         val expected = RelationshipPatternConfiguration(start = end, end = start, relType = relType,
-                properties = properties, type = PatternConfigurationType.ALL)
+                properties = properties, type = PatternConfigurationType.ALL
+        )
         assertEquals(expected, result)
     }
 
@@ -279,7 +284,8 @@ class RelationshipPatternConfigurationTest {
         val properties = listOf("foo", "BAR")
         val relType = "REL_TYPE"
         val expected = RelationshipPatternConfiguration(start = start, end = end, relType = relType,
-                properties = properties, type = PatternConfigurationType.INCLUDE)
+                properties = properties, type = PatternConfigurationType.INCLUDE
+        )
         assertEquals(expected, result)
     }
 
@@ -299,7 +305,8 @@ class RelationshipPatternConfigurationTest {
         val properties = listOf("foo.BAR", "BAR.foo")
         val relType = "REL_TYPE"
         val expected = RelationshipPatternConfiguration(start = start, end = end, relType = relType,
-                properties = properties, type = PatternConfigurationType.INCLUDE)
+                properties = properties, type = PatternConfigurationType.INCLUDE
+        )
         assertEquals(expected, result)
     }
 
@@ -319,7 +326,8 @@ class RelationshipPatternConfigurationTest {
         val properties = listOf("foo", "BAR")
         val relType = "REL_TYPE"
         val expected = RelationshipPatternConfiguration(start = start, end = end, relType = relType,
-                properties = properties, type = PatternConfigurationType.EXCLUDE)
+                properties = properties, type = PatternConfigurationType.EXCLUDE
+        )
         assertEquals(expected, result)
     }
 
@@ -384,7 +392,8 @@ class RelationshipPatternConfigurationTest {
         val properties = emptyList<String>()
         val relType = "REL_TYPE"
         val expected = RelationshipPatternConfiguration(start = start, end = end, relType = relType,
-                properties = properties, type = PatternConfigurationType.ALL)
+                properties = properties, type = PatternConfigurationType.ALL
+        )
         assertEquals(expected, result)
     }
 
@@ -404,7 +413,8 @@ class RelationshipPatternConfigurationTest {
         val properties = listOf("foo", "BAR")
         val relType = "REL_TYPE"
         val expected = RelationshipPatternConfiguration(start = start, end = end, relType = relType,
-                properties = properties, type = PatternConfigurationType.INCLUDE)
+                properties = properties, type = PatternConfigurationType.INCLUDE
+        )
         assertEquals(expected, result)
     }
 
@@ -424,7 +434,8 @@ class RelationshipPatternConfigurationTest {
         val properties = listOf("foo.BAR", "BAR.foo")
         val relType = "REL_TYPE"
         val expected = RelationshipPatternConfiguration(start = start, end = end, relType = relType,
-                properties = properties, type = PatternConfigurationType.INCLUDE)
+                properties = properties, type = PatternConfigurationType.INCLUDE
+        )
         assertEquals(expected, result)
     }
 
@@ -444,7 +455,8 @@ class RelationshipPatternConfigurationTest {
         val properties = listOf("foo", "BAR")
         val relType = "REL_TYPE"
         val expected = RelationshipPatternConfiguration(start = start, end = end, relType = relType,
-                properties = properties, type = PatternConfigurationType.EXCLUDE)
+                properties = properties, type = PatternConfigurationType.EXCLUDE
+        )
         assertEquals(expected, result)
     }
 

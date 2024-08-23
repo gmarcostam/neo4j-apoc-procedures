@@ -1,6 +1,7 @@
 package apoc.kafka.consumer
 
 import apoc.kafka.config.StreamsConfig
+import apoc.kafka.consumer.kafka.KafkaEventSink
 import apoc.kafka.consumer.kafka.KafkaSinkConfiguration
 import apoc.kafka.consumer.procedures.StreamsSinkProcedures
 import apoc.kafka.consumer.utils.ConsumerUtils
@@ -22,7 +23,7 @@ class StreamsSinkConfigurationListener(private val db: GraphDatabaseAPI,
 
     private val mutex = Mutex()
 
-    var eventSink: StreamsEventSink? = null
+    var eventSink: KafkaEventSink? = null
 
     private val streamsTopicService = StreamsTopicService()
 

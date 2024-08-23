@@ -1,4 +1,4 @@
-package apoc.kafka.support
+package apoc.kafka.common.support
 
 import org.hamcrest.Matcher
 import org.hamcrest.StringDescription

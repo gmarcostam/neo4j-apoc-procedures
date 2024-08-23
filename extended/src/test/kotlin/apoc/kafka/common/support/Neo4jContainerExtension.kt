@@ -1,4 +1,4 @@
-package apoc.kafka.support
+package apoc.kafka.common.support
 
 import apoc.kafka.utils.KafkaUtil
 import org.neo4j.driver.AuthToken

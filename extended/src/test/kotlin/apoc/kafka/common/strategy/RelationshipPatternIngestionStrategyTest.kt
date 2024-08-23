@@ -1,7 +1,9 @@
-package apoc.kafka.service.sink.strategy
+package apoc.kafka.common.strategy
 
 import org.junit.Test
 import apoc.kafka.service.StreamsSinkEntity
+import apoc.kafka.service.sink.strategy.RelationshipPatternConfiguration
+import apoc.kafka.service.sink.strategy.RelationshipPatternIngestionStrategy
 import apoc.kafka.utils.KafkaUtil
 import kotlin.test.assertEquals
 

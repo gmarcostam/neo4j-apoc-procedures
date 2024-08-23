@@ -1,7 +1,7 @@
 package apoc.kafka.producer.integrations
 
 import apoc.kafka.extensions.execute
-import apoc.kafka.support.KafkaTestUtils
+import apoc.kafka.common.support.KafkaTestUtils
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout

@@ -1,7 +1,13 @@
-package apoc.kafka.service.sink.strategy
+package apoc.kafka.common.strategy
 
 import apoc.kafka.extensions.quote
 import apoc.kafka.service.StreamsSinkEntity
+import apoc.kafka.service.sink.strategy.CUDIngestionStrategy
+import apoc.kafka.service.sink.strategy.CUDNode
+import apoc.kafka.service.sink.strategy.CUDNodeRel
+import apoc.kafka.service.sink.strategy.CUDOperations
+import apoc.kafka.service.sink.strategy.CUDRelationship
+import apoc.kafka.service.sink.strategy.QueryEvents
 import apoc.kafka.utils.KafkaUtil
 import org.junit.Test
 import kotlin.test.assertEquals

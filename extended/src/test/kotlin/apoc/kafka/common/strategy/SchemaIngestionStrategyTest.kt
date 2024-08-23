@@ -1,8 +1,9 @@
-package apoc.kafka.service.sink.strategy
+package apoc.kafka.common.strategy
 
 import org.junit.Test
 import apoc.kafka.events.*
 import apoc.kafka.service.StreamsSinkEntity
+import apoc.kafka.service.sink.strategy.SchemaIngestionStrategy
 import apoc.kafka.utils.KafkaUtil
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue

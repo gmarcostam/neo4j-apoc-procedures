@@ -1,4 +1,4 @@
-package apoc.kafka.service.sink.errors
+package apoc.kafka.common.errors
 
 import apoc.kafka.service.errors.ErrorData
 import apoc.kafka.service.errors.ErrorService

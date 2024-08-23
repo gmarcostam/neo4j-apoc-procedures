@@ -10,7 +10,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
-import apoc.kafka.support.KafkaTestUtils
+import apoc.kafka.common.support.KafkaTestUtils
 import apoc.util.DbmsTestUtil
 import apoc.util.TestUtil
 import org.junit.*

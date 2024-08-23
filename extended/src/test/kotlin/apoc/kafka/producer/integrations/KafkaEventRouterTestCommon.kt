@@ -1,7 +1,7 @@
 package apoc.kafka.producer.integrations
 
 import apoc.kafka.extensions.execute
-import apoc.kafka.support.Assert
+import apoc.kafka.common.support.Assert
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.admin.NewTopic
 import org.apache.kafka.clients.consumer.ConsumerRecords

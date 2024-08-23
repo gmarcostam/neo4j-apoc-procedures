@@ -1,6 +1,6 @@
 package apoc.kafka.consumer.kafka
 
-import apoc.kafka.support.KafkaTestUtils
+import apoc.kafka.common.support.KafkaTestUtils
 import apoc.kafka.utils.KafkaUtil
 import apoc.util.JsonUtil
 import org.apache.kafka.clients.admin.AdminClient

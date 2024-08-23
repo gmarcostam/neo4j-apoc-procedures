@@ -2,8 +2,8 @@ package apoc.kafka.consumer.kafka
 
 import apoc.ApocConfig
 import apoc.kafka.producer.integrations.KafkaEventSinkSuiteIT
-import apoc.kafka.support.Assert
-import apoc.kafka.support.KafkaTestUtils
+import apoc.kafka.common.support.Assert
+import apoc.kafka.common.support.KafkaTestUtils
 // import apoc.kafka.support.start
 import apoc.kafka.utils.JSONUtils
 import org.apache.kafka.clients.consumer.ConsumerConfig
