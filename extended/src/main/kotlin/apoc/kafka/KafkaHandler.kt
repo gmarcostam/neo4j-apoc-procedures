@@ -2,7 +2,6 @@ package apoc.kafka
 
 import apoc.ApocConfig
 import apoc.kafka.config.StreamsConfig
-import apoc.kafka.consumer.StreamsEventSinkAvailabilityListener
 import apoc.kafka.consumer.StreamsSinkConfigurationListener
 import apoc.kafka.producer.StreamsRouterConfigurationListener
 import org.neo4j.kernel.internal.GraphDatabaseAPI
@@ -22,8 +21,6 @@ class KafkaHandler(): LifecycleAdapter() {
     override fun start() {
         if(ApocConfig.apocConfig().getBoolean("apoc.kafka.enabled")) {
             println("start db......")
-
-            StreamsEventSinkAvailabilityListener.setAvailable(db , true);
 
             try {
                 StreamsRouterConfigurationListener(db, log)
@@ -45,7 +42,6 @@ class KafkaHandler(): LifecycleAdapter() {
         if(ApocConfig.apocConfig().getBoolean("apoc.kafka.enabled")) {
             println("stop db..........")
 
-            StreamsEventSinkAvailabilityListener.setAvailable(db, false)
             StreamsRouterConfigurationListener(db, log).shutdown()
             StreamsSinkConfigurationListener(db, log).shutdown()
         }

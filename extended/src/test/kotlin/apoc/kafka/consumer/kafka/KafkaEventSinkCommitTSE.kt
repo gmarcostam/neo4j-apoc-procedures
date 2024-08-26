@@ -16,7 +16,6 @@ import org.neo4j.function.ThrowingSupplier
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-@Ignore
 class KafkaEventSinkCommitTSE : KafkaEventSinkBaseTSE() {
     @Test
     fun `should write last offset with auto commit false`() {

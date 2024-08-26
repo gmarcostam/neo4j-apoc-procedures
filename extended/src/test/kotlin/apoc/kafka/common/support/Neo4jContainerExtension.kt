@@ -56,7 +56,7 @@ private class DatabasesWaitStrategy(private val auth: AuthToken): AbstractWaitSt
 }
 
 class Neo4jContainerExtension(dockerImage: String): Neo4jContainer<Neo4jContainerExtension>(dockerImage) {
-    constructor(): this("neo4j:4.1.1-enterprise")
+    constructor(): this("neo4j:5.20.0-enterprise")
     private val logger = LoggerFactory.getLogger(Neo4jContainerExtension::class.java)
     var driver: Driver? = null
     var session: Session? = null
@@ -133,9 +133,7 @@ class Neo4jContainerExtension(dockerImage: String): Neo4jContainer<Neo4jContaine
             withLogConsumer(Slf4jLogConsumer(logger))
         }
         addEnv("NEO4J_ACCEPT_LICENSE_AGREEMENT", "yes")
-//        if (withStreamsPlugin) {
-//            mountStreamsPlugin()
-//        }
+
         super.start()
         if (withDriver) {
             createDriver()
@@ -148,15 +146,6 @@ class Neo4jContainerExtension(dockerImage: String): Neo4jContainer<Neo4jContaine
         cypher?.split(";")
                 ?.forEach { query -> session!!.beginTransaction().use { it.run(query) } }
     }
-
-//    private fun mountStreamsPlugin() {
-//        var distrFile = findDistrFile()
-//        if (forcePluginRebuild || distrFile == null) {
-//            MavenUtils.mvnw("../", if (withLogger) logger else null)
-//        }
-//        distrFile = findDistrFile()!!
-//        this.withPlugins(MountableFile.forHostPath(distrFile.path))
-//    }
 
     private fun findDistrFile(): File? {
         try {

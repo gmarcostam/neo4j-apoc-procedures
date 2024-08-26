@@ -295,33 +295,8 @@ object KafkaUtil {
     }
 
     fun getName(db: GraphDatabaseService) = db.databaseName()
-
-//    fun isWriteableInstance(db: GraphDatabaseAPI, availableAction: () -> Boolean = { true }): Boolean {
-//        try {
-//            val isSlave = ignoreExceptions(
-//                {
-//                    val hadb = Class.forName("org.neo4j.kernel.ha.HighlyAvailableGraphDatabase")
-//                    hadb.isInstance(db) && !(hadb.getMethod("isMaster").invoke(db) as Boolean)
-//                }, ClassNotFoundException::class.java, IllegalAccessException::class.java,
-//                InvocationTargetException::class.java, NoSuchMethodException::class.java)
-//            if (isSlave != null && isSlave) {
-//                return false
-//            }
-//
-//            return availableAction() && KafkaUtil.clusterMemberRole(db).equals(KafkaUtil.LEADER, ignoreCase = true)
-//        } catch (e: QueryExecutionException) {
-//            if (e.statusCode.equals("Neo.ClientError.Procedure.ProcedureNotFound", ignoreCase = true)) {
-//                return availableAction()
-//            }
-//            throw e
-//        }
-//    }
-fun isWriteableInstance(db: GraphDatabaseAPI, availableAction: () -> Boolean = { true }): Boolean {
-    if (apoc.util.Util.isWriteableInstance(db)) {
-        return availableAction();
-    }
-    return false;
-}
+    
+    fun isWriteableInstance(db: GraphDatabaseAPI) = apoc.util.Util.isWriteableInstance(db)
 
     private fun clusterHasLeader(db: GraphDatabaseAPI): Boolean = try {
         db.execute("""
@@ -341,8 +316,7 @@ fun isWriteableInstance(db: GraphDatabaseAPI, availableAction: () -> Boolean = {
     }
 
     fun <T> executeInWriteableInstance(db: GraphDatabaseAPI,
-                                       availableAction: () -> Boolean,
-                                       action: () -> T?): T? = if (isWriteableInstance(db, availableAction)) {
+                                       action: () -> T?): T? = if (isWriteableInstance(db)) {
         action()
     } else {
         null

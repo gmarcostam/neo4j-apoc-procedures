@@ -27,7 +27,8 @@ import org.neo4j.function.ThrowingSupplier
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-@Ignore
+@Ignore("check if testcontainers or configuration error, " +
+        "and change apoc.kafka.common.support.Neo4jContainerExtension to apoc.util.Neo4jContainerExtension if feasible")
 class KafkaEventSinkEnterpriseTSE {
 
     companion object {
@@ -39,28 +40,32 @@ class KafkaEventSinkEnterpriseTSE {
         const val DLQ_CYPHER_TOPIC = "dlqCypherTopic"
 
         @JvmStatic
-        val neo4j = Neo4jContainerExtension()//.withLogging()
+        val neo4j = Neo4jContainerExtension()
 
         @BeforeClass
         @JvmStatic
         fun setUpContainer() {
-            // Assume.assumeFalse(MavenUtils.isTravis())
             if (!KafkaEventSinkSuiteIT.isRunning) {
                 startedFromSuite = false
                 KafkaEventSinkSuiteIT.setUpContainer()
             }
             KafkaUtil.ignoreExceptions({
                 neo4j.withKafka(KafkaEventSinkSuiteIT.kafka)
-                        ?.withNeo4jConfig("apoc.kafka.source.enabled", "false") // we disable the source plugin globally
-                        ?.withNeo4jConfig("apoc.kafka.sink.enabled", "false") // we disable the sink plugin globally
-                DB_NAME_NAMES.forEach { neo4j.withNeo4jConfig("apoc.kafka.sink.enabled.to.$it", "true") } // we enable the sink plugin only for the instances
-                neo4j.withNeo4jConfig("apoc.kafka.sink.topic.cypher.enterpriseCypherTopic.to.foo", "MERGE (c:Customer_foo {id: event.id, foo: 'foo'})")
-                neo4j.withNeo4jConfig("apoc.kafka.sink.topic.cypher.enterpriseCypherTopic.to.bar", "MERGE (c:Customer_bar {id: event.id, bar: 'bar'})")
-                neo4j.withNeo4jConfig("apoc.kafka.sink.topic.cypher.$DLQ_CYPHER_TOPIC.to.dlq", "MERGE (c:Customer_dlq {id: event.id, dlq: 'dlq'})")
-                neo4j.withNeo4jConfig("apoc.kafka.sink." + ErrorService.ErrorConfig.DLQ_TOPIC, DLQ_ERROR_TOPIC)
-                neo4j.withNeo4jConfig("apoc.kafka.sink." + ErrorService.ErrorConfig.DLQ_HEADERS, "true")
-                neo4j.withNeo4jConfig("apoc.kafka.sink." + ErrorService.ErrorConfig.DLQ_HEADER_PREFIX, "__apoc.kafka.errors.")
-                neo4j.withNeo4jConfig("apoc.kafka.sink." + ErrorService.ErrorConfig.TOLERANCE, "all")
+                        ?.withEnv("apoc.kafka.source.enabled", "false") // we disable the source plugin globally
+                        ?.withEnv("apoc.kafka.sink.enabled", "false") // we disable the sink plugin globally
+                DB_NAME_NAMES.forEach { neo4j.withEnv("apoc.kafka.sink.enabled.to.$it", "true") } // we enable the sink plugin only for the instances
+                neo4j.withEnv("apoc.kafka.sink.topic.cypher.enterpriseCypherTopic.to.foo", "MERGE (c:Customer_foo {id: event.id, foo: 'foo'})")
+                neo4j.withEnv("apoc.kafka.sink.topic.cypher.enterpriseCypherTopic.to.bar", "MERGE (c:Customer_bar {id: event.id, bar: 'bar'})")
+
+
+                neo4j.withEnv("apoc.kafka.sink.topic.cypher.enterpriseCypherTopic", "MERGE (c:Customer_foo {id: event.id, foo: 'foo'})")
+                // neo4j.withEnv("apoc.kafka.sink.topic.cypher.enterpriseCypherTopic.to.bar", "MERGE (c:Customer_bar {id: event.id, bar: 'bar'})")
+                
+                neo4j.withEnv("apoc.kafka.sink.topic.cypher.$DLQ_CYPHER_TOPIC.to.dlq", "MERGE (c:Customer_dlq {id: event.id, dlq: 'dlq'})")
+                neo4j.withEnv("apoc.kafka.sink." + ErrorService.ErrorConfig.DLQ_TOPIC, DLQ_ERROR_TOPIC)
+                neo4j.withEnv("apoc.kafka.sink." + ErrorService.ErrorConfig.DLQ_HEADERS, "true")
+                neo4j.withEnv("apoc.kafka.sink." + ErrorService.ErrorConfig.DLQ_HEADER_PREFIX, "__apoc.kafka.errors.")
+                neo4j.withEnv("apoc.kafka.sink." + ErrorService.ErrorConfig.TOLERANCE, "all")
                 neo4j.withDatabases(*ALL_DBS)
                 neo4j.start()
                 Assume.assumeTrue("Neo4j must be running", neo4j.isRunning)
@@ -112,7 +117,7 @@ class KafkaEventSinkEnterpriseTSE {
     fun `every instance should consume the same topic and create the its own graph`() = runBlocking {
         // given
         val producerRecord = ProducerRecord("enterpriseCypherTopic",
-                UUID.randomUUID().toString(), JsonUtil.writeValueAsBytes(mapOf("id" to 1)))
+            "{\"a\":1}", JsonUtil.writeValueAsBytes(mapOf("id" to 1)))
 
         // when
         kafkaProducer.send(producerRecord).get()
