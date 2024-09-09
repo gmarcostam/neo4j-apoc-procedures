@@ -78,11 +78,16 @@ public class OpenAILocalAIIT {
 
     @Test
     public void chatCompletionTomasonjo() {
-        // Terminal commands
-        // ./local-ai run https://huggingface.co/tomasonjo/text2cypher-demo-4bit-gguf/resolve/main/text2cypher-demo-4bit-gguf-unsloth.Q4_K_M.gguf
-        // ./local-ai run https://huggingface.co/tomasonjo/text2cypher-codestral-q4_k_m-gguf/resolve/main/text2cypher-codestral-q4_k_m-gguf-unsloth.Q4_K_M.gguf
-        // curl http://localhost:8080/v1/models // List models
-        // curl http://localhost:8080/v1/chat/completions -H "Content-Type: application/json" -d '{"model":"text2cypher-demo-4bit-gguf-unsloth.Q4_K_M.gguf", "messages": [{"role": "user", "content": "What is the color of the sky? Answer in one word"}] }'
+        /*
+        Useful terminal commands:
+        # Run models
+        ./local-ai run https://huggingface.co/tomasonjo/text2cypher-demo-4bit-gguf/resolve/main/text2cypher-demo-4bit-gguf-unsloth.Q4_K_M.gguf // List models
+        ./local-ai run https://huggingface.co/tomasonjo/text2cypher-codestral-q4_k_m-gguf/resolve/main/text2cypher-codestral-q4_k_m-gguf-unsloth.Q4_K_M.gguf
+        # List Models
+        curl http://localhost:8080/v1/models
+        # Call model
+        curl http://localhost:8080/v1/chat/completions -H "Content-Type: application/json" -d '{"model":"text2cypher-demo-4bit-gguf-unsloth.Q4_K_M.gguf", "messages": [{"role": "user", "content": "What is the color of the sky? Answer in one word"}] }'
+        */
         String[] models = {
                 "text2cypher-demo-4bit-gguf-unsloth.Q4_K_M.gguf",
                 "text2cypher-demo-8bit-gguf-unsloth.Q8_0.gguf",
@@ -109,8 +114,16 @@ public class OpenAILocalAIIT {
 
         String question = "Which actors played in the most movies?";
         String model = "text2cypher-demo-4bit-gguf-unsloth.Q4_K_M.gguf";
+
+        Map<String, Object> params = Util.map(
+                "schema", schema,
+                "question", question
+        );
+
+        params.putAll(getParams(model));
+
         testCall(db, TEXT_TO_CYPHER_QUERY,
-                getParams(model, schema, question),
+                params,
                 row -> {
                     String cypherResult = assertChatCompletion(row, model);
                     // Check that is valid query
@@ -137,18 +150,6 @@ public class OpenAILocalAIIT {
         return Util.map("apiKey", "x",
                 "conf", Map.of(ENDPOINT_CONF_KEY, localAIUrl,
                         MODEL_CONF_KEY, model)
-        );
-    }
-
-    private Map<String, Object> getParams(String model, String schema, String question) {
-        return Util.map(
-                "apiKey", "x",
-                "conf", Map.of(
-                        ENDPOINT_CONF_KEY, localAIUrl,
-                        MODEL_CONF_KEY, model
-                ),
-                "schema", schema,
-                "question", question
         );
     }
 }
