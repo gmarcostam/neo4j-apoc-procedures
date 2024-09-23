@@ -40,6 +40,7 @@ dependencies {
     compileOnly project(':extended').sourceSets.main.allJava
     testImplementation project(':extended').sourceSets.test.output
     testImplementation files(project(':extended').sourceSets.test.output)
+    testImplementation project(':extended').sourceSets.main.allJava
     
     testImplementation group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.12.425'
     testImplementation group: 'org.xmlunit', name: 'xmlunit-core', version: '2.9.1'
