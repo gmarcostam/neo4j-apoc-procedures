@@ -60,6 +60,7 @@ public class JdbcUtil {
     }
 
     private static AutoCloseable createConnectionByClass(String jdbcUrl, String userName, String password, Class<?> classType) throws SQLException {
+        // Bacause SchemaCrawlerUtility.getCatalog accepts only DatabaseConnectionSource.class
         if (classType == DatabaseConnectionSource.class) {
             return DatabaseConnectionSources.newDatabaseConnectionSource(jdbcUrl, new MultiUseUserCredentials(userName, password));
         }
