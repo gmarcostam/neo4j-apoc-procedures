@@ -5,18 +5,18 @@ You can set the following configuration values in your `neo4j.conf`, here are th
 .neo4j.conf (with default values)
 [source]
 ----
-kafka.bootstrap.servers=localhost:9092
-kafka.acks=1
-kafka.retries=2
-kafka.batch.size=16384
-kafka.buffer.memory=33554432
-kafka.reindex.batch.size=1000
-kafka.session.timeout.ms=15000
-kafka.connection.timeout.ms=10000
-kafka.replication=1
-kafka.linger.ms=1
-kafka.transactional.id=
-kafka.topic.discovery.polling.interval=300000
+apoc.kafka.bootstrap.servers=localhost:9092
+apoc.kafka.acks=1
+apoc.kafka.retries=2
+apoc.kafka.batch.size=16384
+apoc.kafka.buffer.memory=33554432
+apoc.kafka.reindex.batch.size=1000
+apoc.kafka.session.timeout.ms=15000
+apoc.kafka.connection.timeout.ms=10000
+apoc.kafka.replication=1
+apoc.kafka.linger.ms=1
+apoc.kafka.transactional.id=
+apoc.kafka.topic.discovery.polling.interval=300000
 apoc.kafka.log.compaction.strategy=delete
 
 apoc.kafka.source.topic.nodes.<TOPIC_NAME>=<PATTERN>
@@ -47,13 +47,13 @@ periodically check for new topics into the Kafka cluster so the plugin will be a
 to send events to the defined topics.
 
 
-With `kafka.apoc.kafka.log.compaction.strategy=delete` will be generated a sequence of unique keys with Neo4j Streams Source.
-instead with `kafka.apoc.kafka.log.compaction.strategy=compact` the keys will be adapted to enable
+With `apoc.kafka.log.compaction.strategy=delete` will be generated a sequence of unique keys with Neo4j Streams Source.
+instead with `apoc.kafka.log.compaction.strategy=compact` the keys will be adapted to enable
 https://kafka.apache.org/documentation.html#compaction[Log Compaction] on the Kafka side.
 Please note that delete strategy does not actually delete records, it has this name  to match the topic config `cleanup.policy=delete/compact`.
 Namely, the operations which will involve the same nodes or relationships, will have the same key.
 
-When `kafka.apoc.kafka.log.compaction.strategy=compact`, for partitioning we leverage internal Kafka mechanism.
+When `apoc.kafka.log.compaction.strategy=compact`, for partitioning we leverage internal Kafka mechanism.
 
 xref:database-integration/kafka/message-structure.adoc[See 'message structure' section to see key examples]
 
@@ -171,7 +171,7 @@ So you add the following configuration:
 
 [source]
 ----
-kafka.bootstrap.servers=localhost:9092
+apoc.kafka.bootstrap.servers=localhost:9092
 apoc.kafka.source.enabled=true
 apoc.kafka.sink.enabled=false
 apoc.kafka.procedures.enabled=true
@@ -191,7 +191,7 @@ database you are interested of:
 
 [source]
 ----
-kafka.bootstrap.servers=localhost:9092
+apoc.kafka.bootstrap.servers=localhost:9092
 apoc.kafka.source.enabled=false
 apoc.kafka.sink.enabled=false
 apoc.kafka.procedures.enabled=true

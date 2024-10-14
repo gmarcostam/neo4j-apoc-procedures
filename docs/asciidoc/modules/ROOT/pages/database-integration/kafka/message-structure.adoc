@@ -71,7 +71,7 @@ For example, with this configuration:
 ----
 apoc.kafka.source.topic.nodes.<TOPIC_NAME>=Person{*}
 apoc.kafka.source.topic.relationships.<TOPIC_NAME>=Person{*}
-kafka.apoc.kafka.log.compaction.strategy=compact
+apoc.kafka.apoc.kafka.log.compaction.strategy=compact
 ----
 these constraints:
 [source, cypher]

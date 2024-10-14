@@ -5,12 +5,12 @@ You can set the following Kafka configuration values in your `neo4j.conf`, here 
 .neo4j.conf
 [source,subs="verbatim,attributes"]
 ----
-kafka.bootstrap.servers=localhost:9092
-kafka.auto.offset.reset=earliest
-kafka.group.id=neo4j
-kafka.enable.auto.commit=true
-kafka.key.deserializer=org.apache.kafka.common.serialization.ByteArrayDeserializer
-kafka.value.deserializer=org.apache.kafka.common.serialization.ByteArrayDeserializer
+apoc.kafka.bootstrap.servers=localhost:9092
+apoc.kafka.auto.offset.reset=earliest
+apoc.kafka.group.id=neo4j
+apoc.kafka.enable.auto.commit=true
+apoc.kafka.key.deserializer=org.apache.kafka.common.serialization.ByteArrayDeserializer
+apoc.kafka.value.deserializer=org.apache.kafka.common.serialization.ByteArrayDeserializer
 
 {environment}.topic.cypher.<TOPIC_NAME>=<CYPHER_QUERY>
 {environment}.topic.cdc.sourceId=<LIST_OF_TOPICS_SEPARATED_BY_SEMICOLON>
@@ -38,9 +38,9 @@ See the https://kafka.apache.org/documentation/#brokerconfigs[Apache Kafka docum
 
 In this section we describe the meaning of specific APOC Kafka configurations
 
-===== `kafka.apoc.kafka.async.commit`
+===== `apoc.kafka.async.commit`
 
-If `kafka.enable.auto.commit=false` this property allows you to manage how to commit the messages to the topic.
+If `apoc.kafka.enable.auto.commit=false` this property allows you to manage how to commit the messages to the topic.
 
 Possible values:
 
