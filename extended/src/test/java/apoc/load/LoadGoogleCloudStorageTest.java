@@ -2,24 +2,39 @@ package apoc.load;
 
 import apoc.util.GoogleCloudStorageContainerExtension;
 import apoc.util.TestUtil;
+import apoc.util.Util;
+import apoc.load.xls.LoadXls;
+import apoc.xml.XmlTestUtils;
 import org.junit.*;
 
+import org.neo4j.driver.internal.util.Iterables;
+import org.neo4j.graphdb.Result;
 import org.neo4j.test.rule.DbmsRule;
 import org.neo4j.test.rule.ImpermanentDbmsRule;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import static apoc.load.LoadCsvTest.assertRow;
+import static apoc.util.GoogleCloudStorageContainerExtension.gcsUrl;
 import static apoc.util.MapUtil.map;
 import static apoc.util.TestUtil.testCall;
 import static apoc.util.TestUtil.testResult;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class LoadGoogleCloudStorageTest {
 
     public static GoogleCloudStorageContainerExtension gcs = new GoogleCloudStorageContainerExtension()
             .withMountedResourceFile("test.csv", "/folder/test.csv")
-            .withMountedResourceFile("map.json", "/folder/map.json");
+            .withMountedResourceFile("map.json", "/folder/map.json")
+            .withMountedResourceFile("xml/books.xml", "/folder/books.xml")
+            .withMountedResourceFile("load_test.xlsx", "/folder/load_test.xlsx")
+            .withMountedResourceFile("wikipedia.html", "/folder/wikipedia.html");
 
     @ClassRule
     public static DbmsRule db = new ImpermanentDbmsRule();
@@ -27,7 +42,7 @@ public class LoadGoogleCloudStorageTest {
     @BeforeClass
     public static void setUp() throws Exception {
         gcs.start();
-        TestUtil.registerProcedure(db, LoadCsv.class, LoadJson.class);
+        TestUtil.registerProcedure(db, LoadCsv.class, LoadJson.class, LoadHtml.class, LoadXls.class,  Xml.class);
     }
 
     @AfterClass
@@ -38,7 +53,7 @@ public class LoadGoogleCloudStorageTest {
 
     @Test
     public void testLoadCsv() {
-        String url = gcsUrl("b/folder/o/test.csv?alt=media");
+        String url = gcsUrl(gcs, "b/folder/o/test.csv?alt=media");
 
         testResult(db, "CALL apoc.load.csv($url)", map("url", url), (r) -> {
             assertRow(r, "Selma", "8", 0L);
@@ -50,13 +65,53 @@ public class LoadGoogleCloudStorageTest {
 
     @Test
     public void testLoadJSON() {
-        String url = gcsUrl("b/folder/o/map.json?alt=media");
+        String url = gcsUrl(gcs, "b/folder/o/map.json?alt=media");
         testCall(db, "CALL apoc.load.jsonArray($url, '$.foo')", map("url", url), (r) -> {
             assertEquals(asList(1L,2L,3L), r.get("value"));
         });
     }
 
-    private String gcsUrl(String path) {
-        return String.format("http://%s:%d/storage/v1/%s", gcs.getContainerIpAddress(), gcs.getMappedPort(4443), path);
+    @Test
+    public void testLoadXml() {
+        String url = gcsUrl(gcs, "b/folder/o/books.xml?alt=media");
+        testCall(db, "CALL apoc.load.xml($url,'/catalog/book[title=\"Maeve Ascendant\"]/.',{failOnError:false}) yield value as result", Util.map("url", url), (r) -> {
+            Object value = Iterables.single(r.values());
+            Assert.assertEquals(XmlTestUtils.XML_XPATH_AS_NESTED_MAP, value);
+        });
+    }
+
+    @Test
+    public void testLoadXls() {
+        String url = gcsUrl(gcs, "b/folder/o/load_test.xlsx?alt=media");
+        testResult(db, "CALL apoc.load.xls($url,'Full',{mapping:{Integer:{type:'int'}, Array:{type:'int',array:true,arraySep:';'}}})", map("url",url), // 'file:load_test.xlsx'
+                (r) -> {
+                    assertXlsRow(r,0L,"String","Test","Boolean",true,"Integer",2L,"Float",1.5d,"Array",asList(1L,2L,3L));
+                    assertFalse("Should not have another row",r.hasNext());
+                });
+    }
+
+    @Test
+    public void testLoadHtml() {
+        String url = gcsUrl(gcs, "b/folder/o/wikipedia.html?alt=media");
+
+        Map<String, Object> query = map("links", "a[href]");
+
+        testCall(db, "CALL apoc.load.html($url,$query)",
+                map("url", url, "query", query),
+                row -> {
+                    final List<Map<String, Object>> actual = (List) ((Map) row.get("value")).get("links");
+                    assertEquals(106, actual.size());
+                    assertTrue(actual.stream().allMatch(i -> i.get("tagName").equals("a")));
+                });
+    }
+
+    static void assertXlsRow(Result r, long lineNo, Object...data) {
+        Map<String, Object> row = r.next();
+        Map<String, Object> map = map(data);
+        assertEquals(map, row.get("map"));
+        Map<Object, Object> stringMap = new LinkedHashMap<>(map.size());
+        map.forEach((k,v) -> stringMap.put(k,v == null ? null : v.toString()));
+        assertEquals(new ArrayList<>(map.values()), row.get("list"));
+        assertEquals(lineNo, row.get("lineNo"));
     }
 }
