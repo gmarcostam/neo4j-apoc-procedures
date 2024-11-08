@@ -1,12 +1,15 @@
 package apoc.load;
 
+import apoc.load.xls.LoadXls;
 import apoc.util.GoogleCloudStorageContainerExtension;
 import apoc.util.TestUtil;
 import apoc.util.Util;
-import apoc.load.xls.LoadXls;
 import apoc.xml.XmlTestUtils;
-import org.junit.*;
-
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
 import org.neo4j.driver.internal.util.Iterables;
 import org.neo4j.graphdb.Result;
 import org.neo4j.test.rule.DbmsRule;

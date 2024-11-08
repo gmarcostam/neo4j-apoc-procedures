@@ -31,7 +31,7 @@ import static apoc.ApocConfig.apocConfig;
 import static apoc.load.LoadCsvTest.assertRow;
 import static apoc.util.ExtendedITUtil.EXTENDED_PATH;
 import static apoc.util.MapUtil.map;
-import static apoc.util.S3Util.putToS3AndGetUrl;
+import static apoc.util.S3ExtendedUtil.putToS3AndGetUrl;
 import static apoc.util.TestUtil.testCall;
 import static apoc.util.TestUtil.testResult;
 import static java.util.Arrays.asList;
@@ -39,7 +39,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class LoadS3Test extends S3BaseTest {
+public class LoadS3Test extends S3BaseExtendedTest {
 
     @Rule
     public DbmsRule db = new ImpermanentDbmsRule();
@@ -59,7 +59,7 @@ public class LoadS3Test extends S3BaseTest {
 
     @Test
     public void testLoadCsv() {
-        String url = putToS3AndGetUrl(s3Container, EXTENDED_PATH + "src/test/resources/test.csv");
+        String url = putToS3AndGetUrl(s3ExtendedContainer, EXTENDED_PATH + "src/test/resources/test.csv");
         testResult(db, "CALL apoc.load.csv($url,{failOnError:false})", map("url", url), (r) -> {
             assertRow(r, "Selma", "8", 0L);
             assertRow(r, "Rana", "11", 1L);
@@ -69,7 +69,7 @@ public class LoadS3Test extends S3BaseTest {
     }
 
     @Test public void testLoadJson() {
-        String url = putToS3AndGetUrl(s3Container, EXTENDED_PATH + "src/test/resources/map.json");
+        String url = putToS3AndGetUrl(s3ExtendedContainer, EXTENDED_PATH + "src/test/resources/map.json");
         testCall(db, "CALL apoc.load.json($url,'')",map("url", url),
                 (row) -> {
                     assertEquals(map("foo",asList(1L,2L,3L)), row.get("value"));
@@ -77,7 +77,7 @@ public class LoadS3Test extends S3BaseTest {
     }
 
     @Test public void testLoadXml() {
-        String url = putToS3AndGetUrl(s3Container, EXTENDED_PATH + "src/test/resources/xml/books.xml");
+        String url = putToS3AndGetUrl(s3ExtendedContainer, EXTENDED_PATH + "src/test/resources/xml/books.xml");
         testCall(db, "CALL apoc.load.xml($url,'/catalog/book[title=\"Maeve Ascendant\"]/.',{failOnError:false}) yield value as result", Util.map("url", url), (r) -> {
             Object value = Iterables.single(r.values());
             Assert.assertEquals(XmlTestUtils.XML_XPATH_AS_NESTED_MAP, value);
@@ -85,7 +85,7 @@ public class LoadS3Test extends S3BaseTest {
     }
 
     @Test public void testLoadXls() {
-        String url = putToS3AndGetUrl(s3Container, EXTENDED_PATH + "src/test/resources/load_test.xlsx");
+        String url = putToS3AndGetUrl(s3ExtendedContainer, EXTENDED_PATH + "src/test/resources/load_test.xlsx");
         testResult(db, "CALL apoc.load.xls($url,'Full',{mapping:{Integer:{type:'int'}, Array:{type:'int',array:true,arraySep:';'}}})", map("url",url), // 'file:load_test.xlsx'
                 (r) -> {
                     assertXlsRow(r,0L,"String","Test","Boolean",true,"Integer",2L,"Float",1.5d,"Array",asList(1L,2L,3L));
@@ -95,7 +95,7 @@ public class LoadS3Test extends S3BaseTest {
 
     @Test
     public void testLoadHtml() {
-        String url = putToS3AndGetUrl(s3Container, EXTENDED_PATH + "src/test/resources/wikipedia.html");
+        String url = putToS3AndGetUrl(s3ExtendedContainer, EXTENDED_PATH + "src/test/resources/wikipedia.html");
 
         Map<String, Object> query = map("links", "a[href]");
 
@@ -115,7 +115,7 @@ public class LoadS3Test extends S3BaseTest {
         csv.append("Oronzo,45\r\n");
         byte[] data = csv.toString().getBytes(StandardCharsets.UTF_8);
 
-        s3Container.putObjectToS3("test_folder/test.csv", data);
+        s3ExtendedContainer.putObjectToS3("test_folder/test.csv", data);
 
         csv = new StringBuilder();
         csv.append("name,age\r\n");
@@ -123,7 +123,7 @@ public class LoadS3Test extends S3BaseTest {
         csv.append("Maruccio,90\r\n");
         data = csv.toString().getBytes(StandardCharsets.UTF_8);
 
-        s3Container.putObjectToS3("test_folder/test_1.csv", data);
+        s3ExtendedContainer.putObjectToS3("test_folder/test_1.csv", data);
     }
 
     static void assertXlsRow(Result r, long lineNo, Object...data) {
