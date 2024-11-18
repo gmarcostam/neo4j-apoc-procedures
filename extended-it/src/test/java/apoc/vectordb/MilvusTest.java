@@ -175,7 +175,7 @@ public class MilvusTest {
         
         Util.sleep(2000);
     }
-
+    
     @Test
     public void queryVectors() {
         testResult(db, "CALL apoc.vectordb.milvus.query($host, 'test_collection', [0.2, 0.1, 0.9, 0.7], null, 5, $conf)",
@@ -250,6 +250,10 @@ public class MilvusTest {
                 });
     }
 
+
+    // TODO - DUPLICARE questo TEST, RIMUOVERE FIELDS_KEY, FIELDS tra le config, e vedere che non spacchi comunque
+    // TODO - DUPLICARE queryVectorsWithCreateNode TEST, RIMUOVERE "FIELDS_KEY, FIELDS" e "METADATA_KEY"  tra le config, e vedere che spacchi CON ERRORE "You have to define `field` list of parameter to be returned"
+    //          mettere "You have to define `field` list of parameter to be returned" come variabile statica in VectorMappingConfig per riutilizzarla nel test
     @Test
     public void queryVectorsWithCreateNode() {
 
@@ -402,6 +406,8 @@ public class MilvusTest {
         assertRelsCreated(db);
     }
 
+    // todo - stesse modifiche anche qui, come in queryVectorsWithCreateNode
+    // todo - stesse cose per WeaviateTest
     @Test
     public void queryReadOnlyVectorsWithMapping() {
         db.executeTransactionally("CREATE (:Start)-[:TEST {readID: 'one'}]->(:End), (:Start)-[:TEST {readID: 'two'}]->(:End)");

@@ -8,6 +8,8 @@ import java.util.Map;
 
 import static apoc.util.MapUtil.map;
 import static apoc.vectordb.VectorEmbeddingConfig.FIELDS_KEY;
+import static apoc.vectordb.VectorEmbeddingConfig.MAPPING_KEY;
+import static apoc.vectordb.VectorEmbeddingConfig.METADATA_KEY;
 import static apoc.vectordb.VectorEmbeddingConfig.META_AS_SUBKEY_KEY;
 import static apoc.vectordb.VectorEmbeddingConfig.SCORE_KEY;
 
@@ -59,7 +61,17 @@ public class MilvusHandler implements VectorDbHandler {
 
             List listFields = (List) config.get(FIELDS_KEY);
             if (listFields == null) {
-                throw new RuntimeException("You have to define `field` list of parameter to be returned");
+                
+                // todo - fare la stessa cosa per weaviate
+                Map orDefault = (Map) config.getOrDefault(MAPPING_KEY, Map.of());
+                String o = (String) orDefault.get(METADATA_KEY);
+                
+                if (o != null) {
+                    listFields = List.of(o); 
+                } else {
+                    throw new RuntimeException("You have to define `field` list of parameter to be returned");
+                }
+
             }
             if (procFields.contains("vector") && !listFields.contains("vector")) {
                 listFields.add("vector");
