@@ -4,7 +4,6 @@ import apoc.ml.Prompt;
 import apoc.util.MapUtil;
 import apoc.util.TestUtil;
 import org.junit.AfterClass;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -561,5 +560,117 @@ public class WeaviateTest {
                         "attributes", List.of("city", "foo")
                 ),
                 VectorDbTestUtil::assertRagWithVectors);
+    }
+
+    @Test
+    public void queryVectorsWithMetadataKeyNoFields() {
+        testResult(db, "CALL apoc.vectordb.weaviate.query($host, 'TestCollection', [0.2, 0.1, 0.9, 0.7], null, 5, $conf) " +
+                        " YIELD score, vector, id, metadata RETURN * ORDER BY id",
+                map("host", HOST, "conf", map(
+                        ALL_RESULTS_KEY, true,
+                        MAPPING_KEY, map(EMBEDDING_KEY, "vect",
+                                NODE_LABEL, "Test",
+                                ENTITY_KEY, "myId",
+                                METADATA_KEY, "foo"
+                        ),
+                        HEADERS_KEY, ADMIN_AUTHORIZATION)),
+                VectorDbTestUtil::assertMetadataOneResult);
+    }
+
+    @Test
+    public void queryVectorsWithMetadataKeyAndOneField() {
+        testResult(db, "CALL apoc.vectordb.weaviate.query($host, 'TestCollection', [0.2, 0.1, 0.9, 0.7], null, 5, $conf) " +
+                        " YIELD score, vector, id, metadata RETURN * ORDER BY id",
+                map("host", HOST, "conf", map(
+                        FIELDS_KEY, List.of("city"),
+                        ALL_RESULTS_KEY, true,
+                        MAPPING_KEY, map(EMBEDDING_KEY, "vect",
+                                NODE_LABEL, "Test",
+                                ENTITY_KEY, "myId",
+                                METADATA_KEY, "foo"
+                        ),
+                        HEADERS_KEY, ADMIN_AUTHORIZATION)),
+                VectorDbTestUtil::assertMetadataOneResult);
+    }
+
+    @Test
+    public void queryVectorsWithNoMetadataKeyNoFields() {
+        try {
+            testCall(db, "CALL apoc.vectordb.weaviate.query($host, 'TestCollection', [0.2, 0.1, 0.9, 0.7], null, 5, $conf) " +
+                            " YIELD score, vector, id, metadata RETURN * ORDER BY id",
+                    map("host", HOST, "conf", map(
+                            ALL_RESULTS_KEY, true,
+                            MAPPING_KEY, map(EMBEDDING_KEY, "vect",
+                                    NODE_LABEL, "Test",
+                                    ENTITY_KEY, "myId"
+                            ),
+                            HEADERS_KEY, ADMIN_AUTHORIZATION)),
+                    r -> fail());
+        } catch (Exception e) {
+            assertThat(e.getMessage() ).contains("You have to define `field` list of parameter to be returned");
+        }
+
+    }
+
+    @Test
+    public void queryVectorsWithCreateNodeUsingExistingNodeWithMetadataKeyAndOneField () {
+        db.executeTransactionally("CREATE (:Test {myId: 'one'}), (:Test {myId: 'two'})");
+        Map<String, Object> conf = map(ALL_RESULTS_KEY, true,
+                FIELDS_KEY, List.of("city"),
+                HEADERS_KEY, ADMIN_AUTHORIZATION,
+                MAPPING_KEY, map(EMBEDDING_KEY, "vect",
+                        NODE_LABEL, "Test",
+                        ENTITY_KEY, "myId",
+                        METADATA_KEY, "foo"));
+        testResult(db, "CALL apoc.vectordb.weaviate.queryAndUpdate($host, 'TestCollection', [0.2, 0.1, 0.9, 0.7], null, 5, $conf) " +
+                        " YIELD score, vector, id, metadata, node RETURN * ORDER BY id",
+                map("host", HOST, "conf", conf),
+                r -> {
+                    Map<String, Object> row = r.next();
+                    assertBerlinResult(row, ID_1, NODE);
+                    assertNotNull(row.get("score"));
+                    assertNotNull(row.get("vector"));
+
+                    row = r.next();
+                    assertLondonResult(row, ID_2, NODE);
+                    assertNotNull(row.get("score"));
+                    assertNotNull(row.get("vector"));
+                });
+
+        assertNodesCreated(db);
+    }
+
+    @Test
+    public void queryVectorsWithCreateNodeUsingExistingNodeWithMetadataKeyAndNoFields () {
+        db.executeTransactionally("CREATE (:Test {myId: 'one'}), (:Test {myId: 'two'})");
+        Map<String, Object> conf = map(ALL_RESULTS_KEY, true,
+                HEADERS_KEY, ADMIN_AUTHORIZATION,
+                MAPPING_KEY, map(EMBEDDING_KEY, "vect",
+                        NODE_LABEL, "Test",
+                        ENTITY_KEY, "myId",
+                        METADATA_KEY, "foo"));
+        testResult(db, "CALL apoc.vectordb.weaviate.queryAndUpdate($host, 'TestCollection', [0.2, 0.1, 0.9, 0.7], null, 5, $conf) " +
+                        " YIELD score, vector, id, metadata, node RETURN * ORDER BY id",
+                map("host", HOST, "conf", conf),
+                VectorDbTestUtil::assertMetadataOneResult);
+    }
+
+    @Test
+    public void queryVectorsWithCreateNodeUsingExistingNodeFailWithNoMetadataKeyAndNoFields () {
+        db.executeTransactionally("CREATE (:Test {myId: 'one'}), (:Test {myId: 'two'})");
+        Map<String, Object> conf = map(ALL_RESULTS_KEY, true,
+                HEADERS_KEY, ADMIN_AUTHORIZATION,
+                MAPPING_KEY, map(EMBEDDING_KEY, "vect",
+                        NODE_LABEL, "Test",
+                        ENTITY_KEY, "myId"));
+
+        try {
+            testCall(db, "CALL apoc.vectordb.weaviate.queryAndUpdate($host, 'TestCollection', [0.2, 0.1, 0.9, 0.7], null, 5, $conf) " +
+                            " YIELD score, vector, id, metadata, node RETURN * ORDER BY id",
+                    map("host", HOST, "conf", conf),
+                    r -> fail());
+        } catch (Exception e) {
+            assertThat(e.getMessage() ).contains("You have to define `field` list of parameter to be returned");
+        }
     }
 }

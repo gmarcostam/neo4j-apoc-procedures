@@ -44,9 +44,11 @@ import static apoc.vectordb.VectorMappingConfig.MODE_KEY;
 import static apoc.vectordb.VectorMappingConfig.MappingMode;
 import static apoc.vectordb.VectorMappingConfig.NODE_LABEL;
 import static apoc.vectordb.VectorMappingConfig.REL_TYPE;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 import static org.neo4j.configuration.GraphDatabaseSettings.DEFAULT_DATABASE_NAME;
 import static org.neo4j.configuration.GraphDatabaseSettings.SYSTEM_DATABASE_NAME;
 
@@ -488,4 +490,72 @@ public class MilvusTest {
                 VectorDbTestUtil::assertRagWithVectors);
     }
 
+    @Test
+    public void queryVectorsWithMetadataKeyNoFields() {
+        Map<String, Object> conf = map(
+                ALL_RESULTS_KEY, true,
+                MAPPING_KEY, map(EMBEDDING_KEY, "vect",
+                        REL_TYPE, "TEST",
+                        ENTITY_KEY, "readID",
+                        METADATA_KEY, "foo"
+                )
+        );
+        testResult(db, "CALL apoc.vectordb.milvus.query($host, 'test_collection', [0.2, 0.1, 0.9, 0.7], null, 5, $conf)",
+                map("host", HOST, "conf", conf),
+                VectorDbTestUtil::assertMetadataOneResult);
+    }
+
+    @Test
+    public void queryVectorsWithMetadataKeyAndOneField() {
+        Map<String, Object> conf = map(
+                FIELDS_KEY, List.of("city"),
+                ALL_RESULTS_KEY, true,
+                MAPPING_KEY, map(EMBEDDING_KEY, "vect",
+                        REL_TYPE, "TEST",
+                        ENTITY_KEY, "readID",
+                        METADATA_KEY, "foo"
+                )
+        );
+        testResult(db, "CALL apoc.vectordb.milvus.query($host, 'test_collection', [0.2, 0.1, 0.9, 0.7], null, 5, $conf)",
+                map("host", HOST, "conf", conf),
+                VectorDbTestUtil::assertMetadataOneResult);
+    }
+
+    @Test
+    public void queryVectorsWithNoMetadataKeyNoFields() {
+        Map<String, Object> conf = map(
+                ALL_RESULTS_KEY, true,
+                MAPPING_KEY, map(EMBEDDING_KEY, "vect",
+                        REL_TYPE, "TEST",
+                        ENTITY_KEY, "readID"
+                )
+        );
+
+        try {
+            testCall(db, "CALL apoc.vectordb.milvus.query($host, 'test_collection', [0.2, 0.1, 0.9, 0.7], null, 5, $conf)",
+                    map("host", HOST, "conf", conf),
+                    r -> fail());
+        } catch (Exception e) {
+            assertThat( e.getMessage() ).contains("You have to define `field` list of parameter to be returned");
+        }
+
+    }
+
+    @Test
+    public void queryAndUpdateMetadataKeyWithoutFieldsTest() {
+        Map<String, Object> conf = map(
+                ALL_RESULTS_KEY, true,
+                MAPPING_KEY, map(EMBEDDING_KEY, "vect",
+                        REL_TYPE, "TEST",
+                        ENTITY_KEY, "readID",
+                        METADATA_KEY, "foo"
+                )
+        );
+
+        String query = "CALL apoc.vectordb.milvus.queryAndUpdate($host, 'test_collection', [0.2, 0.1, 0.9, 0.7], null, 5, $conf)";
+
+        testResult(db, query,
+                map("host", HOST, "conf", conf),
+                VectorDbTestUtil::assertMetadataOneResult);
+    }
 }
