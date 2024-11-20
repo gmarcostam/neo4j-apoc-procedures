@@ -11,6 +11,7 @@ import static apoc.util.MapUtil.map;
 import static apoc.vectordb.VectorDbUtil.addMetadataKeyToFields;
 import static apoc.vectordb.VectorEmbeddingConfig.META_AS_SUBKEY_KEY;
 import static apoc.vectordb.VectorEmbeddingConfig.SCORE_KEY;
+import static apoc.vectordb.VectorMappingConfig.NO_FIELDS_ERROR_MSG;
 
 public class MilvusHandler implements VectorDbHandler {
 
@@ -61,7 +62,7 @@ public class MilvusHandler implements VectorDbHandler {
             List listFields = addMetadataKeyToFields(config);
 
             if (CollectionUtils.isEmpty(listFields)) {
-                throw new RuntimeException("You have to define `field` list of parameter to be returned");
+                throw new RuntimeException(NO_FIELDS_ERROR_MSG);
             }
 
             if (procFields.contains("vector") && !listFields.contains("vector")) {

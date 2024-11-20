@@ -607,7 +607,7 @@ public class WeaviateTest {
                             HEADERS_KEY, ADMIN_AUTHORIZATION)),
                     r -> fail());
         } catch (Exception e) {
-            assertThat(e.getMessage() ).contains("You have to define `field` list of parameter to be returned");
+            assertThat(e.getMessage() ).contains(NO_FIELDS_ERROR_MSG);
         }
 
     }
@@ -670,7 +670,7 @@ public class WeaviateTest {
                     map("host", HOST, "conf", conf),
                     r -> fail());
         } catch (Exception e) {
-            assertThat(e.getMessage() ).contains("You have to define `field` list of parameter to be returned");
+            assertThat(e.getMessage() ).contains(NO_FIELDS_ERROR_MSG);
         }
     }
 }

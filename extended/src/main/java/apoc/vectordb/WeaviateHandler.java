@@ -11,9 +11,9 @@ import static apoc.ml.RestAPIConfig.BODY_KEY;
 import static apoc.ml.RestAPIConfig.METHOD_KEY;
 import static apoc.util.MapUtil.map;
 import static apoc.vectordb.VectorDbUtil.addMetadataKeyToFields;
-import static apoc.vectordb.VectorEmbeddingConfig.FIELDS_KEY;
 import static apoc.vectordb.VectorEmbeddingConfig.METADATA_KEY;
 import static apoc.vectordb.VectorEmbeddingConfig.VECTOR_KEY;
+import static apoc.vectordb.VectorMappingConfig.NO_FIELDS_ERROR_MSG;
 
 public class WeaviateHandler implements VectorDbHandler {
 
@@ -52,7 +52,7 @@ public class WeaviateHandler implements VectorDbHandler {
             List list = addMetadataKeyToFields(config);
 
             if (CollectionUtils.isEmpty(list)) {
-                throw new RuntimeException("You have to define `field` list of parameter to be returned");
+                throw new RuntimeException(NO_FIELDS_ERROR_MSG);
             }
 
             Object fieldList = String.join("\n", list);

@@ -42,6 +42,7 @@ import static apoc.vectordb.VectorMappingConfig.ENTITY_KEY;
 import static apoc.vectordb.VectorMappingConfig.METADATA_KEY;
 import static apoc.vectordb.VectorMappingConfig.MODE_KEY;
 import static apoc.vectordb.VectorMappingConfig.MappingMode;
+import static apoc.vectordb.VectorMappingConfig.NO_FIELDS_ERROR_MSG;
 import static apoc.vectordb.VectorMappingConfig.NODE_LABEL;
 import static apoc.vectordb.VectorMappingConfig.REL_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -536,7 +537,7 @@ public class MilvusTest {
                     map("host", HOST, "conf", conf),
                     r -> fail());
         } catch (Exception e) {
-            assertThat( e.getMessage() ).contains("You have to define `field` list of parameter to be returned");
+            assertThat(e.getMessage() ).contains(NO_FIELDS_ERROR_MSG);
         }
 
     }
