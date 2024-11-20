@@ -1,6 +1,7 @@
 package apoc.vectordb;
 
 import apoc.ml.Prompt;
+import apoc.util.ExtendedTestUtil;
 import apoc.util.MapUtil;
 import apoc.util.TestUtil;
 import org.junit.AfterClass;
@@ -595,21 +596,16 @@ public class WeaviateTest {
 
     @Test
     public void queryVectorsWithNoMetadataKeyNoFields() {
-        try {
-            testCall(db, "CALL apoc.vectordb.weaviate.query($host, 'TestCollection', [0.2, 0.1, 0.9, 0.7], null, 5, $conf) " +
-                            " YIELD score, vector, id, metadata RETURN * ORDER BY id",
-                    map("host", HOST, "conf", map(
-                            ALL_RESULTS_KEY, true,
-                            MAPPING_KEY, map(EMBEDDING_KEY, "vect",
-                                    NODE_LABEL, "Test",
-                                    ENTITY_KEY, "myId"
-                            ),
-                            HEADERS_KEY, ADMIN_AUTHORIZATION)),
-                    r -> fail());
-        } catch (Exception e) {
-            assertThat(e.getMessage() ).contains(NO_FIELDS_ERROR_MSG);
-        }
-
+        Map<String, Object> params = map("host", HOST, "conf", map(
+                ALL_RESULTS_KEY, true,
+                MAPPING_KEY, map(EMBEDDING_KEY, "vect",
+                        NODE_LABEL, "Test",
+                        ENTITY_KEY, "myId"
+                ),
+                HEADERS_KEY, ADMIN_AUTHORIZATION));
+        String query = "CALL apoc.vectordb.weaviate.query($host, 'TestCollection', [0.2, 0.1, 0.9, 0.7], null, 5, $conf) " +
+                " YIELD score, vector, id, metadata RETURN * ORDER BY id";
+        ExtendedTestUtil.assertFails(db, query, params, NO_FIELDS_ERROR_MSG);
     }
 
     @Test
@@ -658,19 +654,13 @@ public class WeaviateTest {
     @Test
     public void queryVectorsWithCreateNodeUsingExistingNodeFailWithNoMetadataKeyAndNoFields () {
         db.executeTransactionally("CREATE (:Test {myId: 'one'}), (:Test {myId: 'two'})");
-        Map<String, Object> conf = map(ALL_RESULTS_KEY, true,
-                HEADERS_KEY, ADMIN_AUTHORIZATION,
-                MAPPING_KEY, map(EMBEDDING_KEY, "vect",
+        Map<String, Object> params = map("host", HOST,
+                "conf", Map.of(ALL_RESULTS_KEY, true,
+                    HEADERS_KEY, ADMIN_AUTHORIZATION,
+                    MAPPING_KEY, map(EMBEDDING_KEY, "vect",
                         NODE_LABEL, "Test",
-                        ENTITY_KEY, "myId"));
-
-        try {
-            testCall(db, "CALL apoc.vectordb.weaviate.queryAndUpdate($host, 'TestCollection', [0.2, 0.1, 0.9, 0.7], null, 5, $conf) " +
-                            " YIELD score, vector, id, metadata, node RETURN * ORDER BY id",
-                    map("host", HOST, "conf", conf),
-                    r -> fail());
-        } catch (Exception e) {
-            assertThat(e.getMessage() ).contains(NO_FIELDS_ERROR_MSG);
-        }
+                        ENTITY_KEY, "myId")));
+        String query = "CALL apoc.vectordb.weaviate.queryAndUpdate($host, 'TestCollection', [0.2, 0.1, 0.9, 0.7], null, 5, $conf) YIELD score, vector, id, metadata, node RETURN * ORDER BY id";
+        ExtendedTestUtil.assertFails(db, query, params, NO_FIELDS_ERROR_MSG);
     }
 }

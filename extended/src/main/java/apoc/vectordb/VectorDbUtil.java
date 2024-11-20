@@ -140,7 +140,7 @@ public class VectorDbUtil {
 
         Map<String, Object> mapping = (Map<String, Object>) config.get(MAPPING_KEY);
 
-        String metadataKey = !MapUtils.isEmpty(mapping) ? (String) mapping.get(METADATA_KEY) : null;
+        String metadataKey = MapUtils.getString(mapping, METADATA_KEY);
 
         if (StringUtils.isNotEmpty(metadataKey)) {
             listFields.add(metadataKey);

@@ -1,6 +1,7 @@
 package apoc.vectordb;
 
 import apoc.ml.Prompt;
+import apoc.util.ExtendedTestUtil;
 import apoc.util.TestUtil;
 import apoc.util.Util;
 import org.junit.AfterClass;
@@ -524,22 +525,16 @@ public class MilvusTest {
 
     @Test
     public void queryVectorsWithNoMetadataKeyNoFields() {
-        Map<String, Object> conf = map(
+        Map<String, Object> params = map(
+                "host", HOST, "conf", Map.of(
                 ALL_RESULTS_KEY, true,
                 MAPPING_KEY, map(EMBEDDING_KEY, "vect",
                         REL_TYPE, "TEST",
                         ENTITY_KEY, "readID"
-                )
+                ))
         );
-
-        try {
-            testCall(db, "CALL apoc.vectordb.milvus.query($host, 'test_collection', [0.2, 0.1, 0.9, 0.7], null, 5, $conf)",
-                    map("host", HOST, "conf", conf),
-                    r -> fail());
-        } catch (Exception e) {
-            assertThat(e.getMessage() ).contains(NO_FIELDS_ERROR_MSG);
-        }
-
+        String query = "CALL apoc.vectordb.milvus.query($host, 'test_collection', [0.2, 0.1, 0.9, 0.7], null, 5, $conf)";
+        ExtendedTestUtil.assertFails(db, query, params, NO_FIELDS_ERROR_MSG);
     }
 
     @Test
