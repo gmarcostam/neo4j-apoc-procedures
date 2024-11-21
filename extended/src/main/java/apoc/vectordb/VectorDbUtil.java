@@ -130,4 +130,14 @@ public class VectorDbUtil {
         config.put(METHOD_KEY, null);
         config.put(BODY_KEY, null);
     }
+
+    public static String appendVersionUrlIfNeeded(VectorDbHandler.Type type, String host) {
+        if (VectorDbHandler.Type.WEAVIATE == type) {
+            String regex = ".*(/v\\d+)$";
+            if (!host.matches(regex)) {
+                host = host + "/v1";
+            }
+        }
+        return host;
+    }
 }

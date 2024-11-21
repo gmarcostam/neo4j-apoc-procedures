@@ -4,7 +4,6 @@ import apoc.ml.Prompt;
 import apoc.util.MapUtil;
 import apoc.util.TestUtil;
 import org.junit.AfterClass;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -494,6 +493,49 @@ public class WeaviateTest {
     public void queryVectorsWithSystemDbStorage() {
         String keyConfig = "weaviate-config-foo";
         String baseUrl = "http://" + HOST + "/v1";
+        assertQueryVectorsWithSystemDbStorage(keyConfig, baseUrl);
+    }
+
+    @Test
+    public void queryVectorsWithSystemDbStorageWithUrlWithoutVersion() {
+        String keyConfig = "weaviate-config-foo";
+        String baseUrl = "http://" + HOST;
+        assertQueryVectorsWithSystemDbStorage(keyConfig, baseUrl);
+    }
+
+    @Test
+    public void queryVectorsWithRag() {
+        String openAIKey = ragSetup(db);
+
+        Map<String, Object> conf = MapUtil.map(
+                FIELDS_KEY, FIELDS,
+                ALL_RESULTS_KEY, true,
+                HEADERS_KEY, READONLY_AUTHORIZATION,
+                MAPPING_KEY, MapUtil.map(EMBEDDING_KEY, "vect",
+                        NODE_LABEL, "Rag",
+                        ENTITY_KEY, "readID",
+                        METADATA_KEY, "foo")
+        );
+
+        testResult(db,
+                """
+                    CALL apoc.vectordb.weaviate.getAndUpdate($host, 'TestCollection', [$id1], $conf) YIELD score, node, metadata, id, vector
+                    WITH collect(node) as paths
+                    CALL apoc.ml.rag(paths, $attributes, "Which city has foo equals to one?", $confPrompt) YIELD value
+                    RETURN value
+                    """
+                ,
+                MapUtil.map(
+                        "host", HOST,
+                        "id1", ID_1,
+                        "conf", conf,
+                        "confPrompt", MapUtil.map(API_KEY_CONF, openAIKey),
+                        "attributes", List.of("city", "foo")
+                ),
+                VectorDbTestUtil::assertRagWithVectors);
+    }
+
+    private static void assertQueryVectorsWithSystemDbStorage(String keyConfig, String baseUrl) {
         Map<String, String> mapping = map(EMBEDDING_KEY, "vect",
                 NODE_LABEL, "Test",
                 ENTITY_KEY, "myId",
@@ -529,37 +571,5 @@ public class WeaviateTest {
                 });
 
         assertNodesCreated(db);
-    }
-
-    @Test
-    public void queryVectorsWithRag() {
-        String openAIKey = ragSetup(db);
-
-        Map<String, Object> conf = MapUtil.map(
-                FIELDS_KEY, FIELDS,
-                ALL_RESULTS_KEY, true,
-                HEADERS_KEY, READONLY_AUTHORIZATION,
-                MAPPING_KEY, MapUtil.map(EMBEDDING_KEY, "vect",
-                        NODE_LABEL, "Rag",
-                        ENTITY_KEY, "readID",
-                        METADATA_KEY, "foo")
-        );
-
-        testResult(db,
-                """
-                    CALL apoc.vectordb.weaviate.getAndUpdate($host, 'TestCollection', [$id1], $conf) YIELD score, node, metadata, id, vector
-                    WITH collect(node) as paths
-                    CALL apoc.ml.rag(paths, $attributes, "Which city has foo equals to one?", $confPrompt) YIELD value
-                    RETURN value
-                    """
-                ,
-                MapUtil.map(
-                        "host", HOST,
-                        "id1", ID_1,
-                        "conf", conf,
-                        "confPrompt", MapUtil.map(API_KEY_CONF, openAIKey),
-                        "attributes", List.of("city", "foo")
-                ),
-                VectorDbTestUtil::assertRagWithVectors);
     }
 }
