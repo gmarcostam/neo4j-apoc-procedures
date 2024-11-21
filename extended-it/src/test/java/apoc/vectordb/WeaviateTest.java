@@ -493,14 +493,21 @@ public class WeaviateTest {
     public void queryVectorsWithSystemDbStorage() {
         String keyConfig = "weaviate-config-foo";
         String baseUrl = "http://" + HOST + "/v1";
-        assertQueryVectorsWithSystemDbStorage(keyConfig, baseUrl);
+        assertQueryVectorsWithSystemDbStorage(keyConfig, baseUrl, false);
     }
 
     @Test
     public void queryVectorsWithSystemDbStorageWithUrlWithoutVersion() {
         String keyConfig = "weaviate-config-foo";
         String baseUrl = "http://" + HOST;
-        assertQueryVectorsWithSystemDbStorage(keyConfig, baseUrl);
+        assertQueryVectorsWithSystemDbStorage(keyConfig, baseUrl, false);
+    }
+
+    @Test
+    public void queryVectorsWithSystemDbStorageWithUrlV3Version() {
+        String keyConfig = "weaviate-config-foo";
+        String baseUrl = "http://" + HOST + "/v3";
+        assertQueryVectorsWithSystemDbStorage(keyConfig, baseUrl, true);
     }
 
     @Test
@@ -535,7 +542,7 @@ public class WeaviateTest {
                 VectorDbTestUtil::assertRagWithVectors);
     }
 
-    private static void assertQueryVectorsWithSystemDbStorage(String keyConfig, String baseUrl) {
+    private static void assertQueryVectorsWithSystemDbStorage(String keyConfig, String baseUrl, boolean fails) {
         Map<String, String> mapping = map(EMBEDDING_KEY, "vect",
                 NODE_LABEL, "Test",
                 ENTITY_KEY, "myId",
@@ -554,10 +561,24 @@ public class WeaviateTest {
 
         db.executeTransactionally("CREATE (:Test {myId: 'one'}), (:Test {myId: 'two'})");
 
-        testResult(db, "CALL apoc.vectordb.weaviate.queryAndUpdate($host, 'TestCollection', [0.2, 0.1, 0.9, 0.7], null, 5, $conf)",
-                map("host", keyConfig,
-                        "conf", map(FIELDS_KEY, FIELDS, ALL_RESULTS_KEY, true)
-                ),
+        String query = "CALL apoc.vectordb.weaviate.queryAndUpdate($host, 'TestCollection', [0.2, 0.1, 0.9, 0.7], null, 5, $conf)";
+        Map<String, Object> params = map("host", keyConfig,
+                "conf", map(FIELDS_KEY, FIELDS, ALL_RESULTS_KEY, true)
+        );
+
+        if (fails) {
+            assertFails(
+                    db,
+                    query,
+                    params,
+                    "Caused by: java.io.FileNotFoundException: http://127.0.0.1:" +  HOST.split(":")[1] + "/v3/graphql"
+            );
+            return;
+        }
+
+
+        testResult(db, query,
+                params,
                 r -> {
                     Map<String, Object> row = r.next();
                     assertBerlinResult(row, ID_1, NODE);
