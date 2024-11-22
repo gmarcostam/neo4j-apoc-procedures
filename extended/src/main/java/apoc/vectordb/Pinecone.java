@@ -42,12 +42,15 @@ public class Pinecone {
     @Context
     public URLAccessChecker urlAccessChecker;
 
+    // todo - cambiare `existing collection` in `existing index`
+    //  controllare e cambiare tutte le description
     @Procedure("apoc.vectordb.pinecone.info")
     @Description("apoc.vectordb.pinecone.info(hostOrKey, collection, $configuration) - Get information about the specified existing collection or throws an error if it does not exist")
     public Stream<MapResult> getInfo(@Name("hostOrKey") String hostOrKey,
                                               @Name("collection") String collection,
                                               @Name(value = "configuration", defaultValue = "{}") Map<String, Object> configuration) throws Exception {
-        String url = "%s/collections/%s";
+        // TODO - cambiare `collections` con `indexes`
+        String url = "%s/indexes/%s";
         Map<String, Object> config = getVectorDbInfo(hostOrKey, collection, configuration, url);
 
         methodAndPayloadNull(config);
@@ -58,6 +61,8 @@ public class Pinecone {
                 .map(MapResult::new);
     }
 
+    // TODO - il nome di questa procedura e di deleteCollection sarà l'unica cosa che rimarrà uguale per consistenza con le altre
+    //      cambiare giusto la documentazione ed il tag @Description
     @Procedure("apoc.vectordb.pinecone.createCollection")
     @Description("apoc.vectordb.pinecone.createCollection(hostOrKey, collection, similarity, size, $configuration) - Creates a collection, with the name specified in the 2nd parameter, and with the specified `similarity` and `size`")
     public Stream<MapResult> createCollection(@Name("hostOrKey") String hostOrKey,

@@ -52,7 +52,11 @@ task gitSubmoduleLoad {
 }
 
 dependencies {
-
+    // todo - a me senza di questi non vede bene gli import di PineconeTest, dovrebbe dipendere dalla versione di intellij
+    //      vedi se pure a te fa la stessa cosa
+    compileOnly sourceSets.main.java
+    testImplementation sourceSets.main.java
+    
     apt project(':processor')
     apt group: 'org.neo4j', name: 'neo4j', version: neo4jVersionEffective   // mandatory to run @ServiceProvider based META-INF code generation
 

@@ -46,11 +46,14 @@ import static org.junit.Assert.assertNull;
 import static org.neo4j.configuration.GraphDatabaseSettings.DEFAULT_DATABASE_NAME;
 import static org.neo4j.configuration.GraphDatabaseSettings.SYSTEM_DATABASE_NAME;
 
+// todo - vedi se riesci a creare un account su https://www.pinecone.io/ entrando con google
+
 public class PineconeTest {
     private static String API_KEY;
     private static String HOST;
     
-    private static final String collName = "test-collection";
+    // todo - mettere in env var come in API_KEY
+    private static final String collName = "example-index";
 
     @ClassRule
     public static TemporaryFolder storeDir = new TemporaryFolder();
@@ -87,7 +90,12 @@ public class PineconeTest {
                     Map value = (Map) r.get("value");
                     assertEquals(map("ready", false, "state", "Initializing"), value.get("status"));
                 });
-
+        
+        // todo - controllare che la API siano ancora valide perché mi sa che sono cambiate un po',
+        //  e nel caso provare a cambiare i test e/o l'implementazione, se fattibile 
+        //      nel caso siano troppe cose da cambiare, possiamo anche splittarle, poi vediamo
+        
+        // -- la documentazione delle API è questa: https://docs.pinecone.io/guides/get-started/overview
         testCall(db, """
                         CALL apoc.vectordb.pinecone.upsert($host, $coll,
                         [
@@ -129,8 +137,10 @@ public class PineconeTest {
 
     @Test
     public void getInfo() {
+        // todo - controllare che la API siano ancora valide, ad esempio qui ci vuole "host", null 
+        //      in modo da prendere l'host di default https://api.pinecone.io/ invece 
         testResult(db, "CALL apoc.vectordb.pinecone.info($host, $coll, $conf) ",
-                map("host", HOST, "coll", collName,
+                map("host", null, "coll", collName,
                         "conf", map(ALL_RESULTS_KEY, true, HEADERS_KEY, ADMIN_AUTHORIZATION)
                 ),
                 r -> {

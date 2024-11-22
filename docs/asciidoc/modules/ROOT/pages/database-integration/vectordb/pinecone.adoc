@@ -1,6 +1,8 @@
 
 = Pinecone
 
+// TODO - cambiare collection con index dove serve, sia in @Description che nella documentazione qui
+
 Here is a list of all available Pinecone procedures:
 
 [opts=header, cols="1, 3"]
@@ -35,6 +37,8 @@ Here is a list of all available Pinecone procedures:
 
 where the 1st parameter can be a key defined by the apoc config `apoc.pinecone.<key>.host=myHost`.
 
+
+// TODO - mettere questo blocco [NOTE] sopra la stringa `Here is a list of all available Pinecone procedures:`
 [NOTE]
 ====
 The procedures create/drop/handle an index, instead of a collection like the other vectordb procedures, 
