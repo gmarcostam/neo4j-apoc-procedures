@@ -71,12 +71,16 @@ public class VectorDbUtil {
      * Retrieve, if exists, the properties stored via `apoc.vectordb.configure` procedure
      */
     private static Map<String, Object> getSystemDbProps(String hostOrKey, VectorDbHandler handler) {
-        Map<String, Object> props = withSystemDb(transaction -> {
-            Label label = Label.label(handler.getLabel());
-            Node node = transaction.findNode(label, SystemPropertyKeys.name.name(), hostOrKey);
-            return node == null ? Map.of() : node.getAllProperties();
-        });
-        return props;
+        try {
+            Map<String, Object> props = withSystemDb(transaction -> {
+                Label label = Label.label(handler.getLabel());
+                Node node = transaction.findNode(label, SystemPropertyKeys.name.name(), hostOrKey);
+                return node == null ? Map.of() : node.getAllProperties();
+            });
+            return props;
+        } catch (Exception e) {
+            return Map.of();
+        }
     }
 
     /**

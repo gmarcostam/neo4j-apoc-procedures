@@ -47,7 +47,7 @@ public class Pinecone {
     public Stream<MapResult> getInfo(@Name("hostOrKey") String hostOrKey,
                                               @Name("collection") String collection,
                                               @Name(value = "configuration", defaultValue = "{}") Map<String, Object> configuration) throws Exception {
-        String url = "%s/collections/%s";
+        String url = "%s/indexes/%s";
         Map<String, Object> config = getVectorDbInfo(hostOrKey, collection, configuration, url);
 
         methodAndPayloadNull(config);
