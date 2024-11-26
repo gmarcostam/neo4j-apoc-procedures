@@ -79,6 +79,7 @@ public class VectorDbUtil {
             });
             return props;
         } catch (Exception e) {
+            // Fallback in case of null keys/values
             return Map.of();
         }
     }
