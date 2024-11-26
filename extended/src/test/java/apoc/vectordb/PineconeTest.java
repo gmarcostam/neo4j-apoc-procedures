@@ -16,6 +16,7 @@ import org.neo4j.test.TestDatabaseManagementServiceBuilder;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static apoc.ml.Prompt.API_KEY_CONF;
 import static apoc.ml.RestAPIConfig.HEADERS_KEY;
@@ -51,7 +52,7 @@ public class PineconeTest {
     private static String API_KEY;
     private static String HOST;
     
-    private static final String collName = "test-collection";
+    private static final String collName = UUID.randomUUID().toString();
 
     @ClassRule
     public static TemporaryFolder storeDir = new TemporaryFolder();
