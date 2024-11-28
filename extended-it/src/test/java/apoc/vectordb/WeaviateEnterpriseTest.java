@@ -3,13 +3,13 @@ package apoc.vectordb;
 import apoc.util.MapUtil;
 import apoc.util.Neo4jContainerExtension;
 import apoc.util.TestContainerUtil;
+import apoc.util.WeaviateTestUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.neo4j.driver.Session;
-import org.testcontainers.containers.wait.strategy.Wait;
 
 import java.util.List;
 import java.util.Map;
@@ -34,18 +34,13 @@ import static apoc.util.WeaviateTestUtil.WEAVIATE_DELETE_VECTOR_APOC;
 import static apoc.util.WeaviateTestUtil.WEAVIATE_PORT;
 import static apoc.util.WeaviateTestUtil.WEAVIATE_QUERY_APOC;
 import static apoc.util.WeaviateTestUtil.WEAVIATE_UPSERT_QUERY;
-import static apoc.vectordb.VectorDbTestUtil.EntityType.FALSE;
-import static apoc.vectordb.VectorDbTestUtil.assertBerlinResult;
-import static apoc.vectordb.VectorDbTestUtil.assertLondonResult;
 import static apoc.vectordb.VectorEmbeddingConfig.ALL_RESULTS_KEY;
 import static apoc.vectordb.VectorEmbeddingConfig.FIELDS_KEY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 
 
 public class WeaviateEnterpriseTest {
-
 
     @ClassRule
     public static TemporaryFolder storeDir = new TemporaryFolder();
@@ -55,14 +50,9 @@ public class WeaviateEnterpriseTest {
     @BeforeClass
     public static void setUp() throws Exception {
         // We build the project, the artifact will be placed into ./build/libs
-        neo4jContainer = createEnterpriseDB(List.of(TestContainerUtil.ApocPackage.EXTENDED), true)
-                .waitingFor(Wait.forLogMessage(".*Started..*\\n", 1))
-                .withNeo4jConfig("dbms.transaction.timeout", "60s");
+        neo4jContainer = createEnterpriseDB(List.of(TestContainerUtil.ApocPackage.EXTENDED), true);
         neo4jContainer.start();
         session = neo4jContainer.getSession();
-
-
-        WEAVIATE_CONTAINER.waitingFor(Wait.forLogMessage(".*Serving weaviate at http://.*\\n", 1));
 
         WEAVIATE_CONTAINER.start();
         HOST = "http://host.docker.internal:" + WEAVIATE_CONTAINER.getMappedPort(WEAVIATE_PORT);
@@ -113,16 +103,6 @@ public class WeaviateEnterpriseTest {
     public void queryVectors() {
         testResult(session,  WEAVIATE_QUERY_APOC,
                 map("host", HOST, "conf", map(ALL_RESULTS_KEY, true, FIELDS_KEY, FIELDS, HEADERS_KEY, ADMIN_AUTHORIZATION)),
-                r -> {
-                    Map<String, Object> row = r.next();
-                    assertBerlinResult(row, ID_1, FALSE);
-                    assertNotNull(row.get("score"));
-                    assertNotNull(row.get("vector"));
-
-                    row = r.next();
-                    assertLondonResult(row, ID_2, FALSE);
-                    assertNotNull(row.get("score"));
-                    assertNotNull(row.get("vector"));
-                });
+                WeaviateTestUtil::queryVectorsAssertions);
     }
 }

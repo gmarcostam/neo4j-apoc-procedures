@@ -3,6 +3,7 @@ package apoc.vectordb;
 import apoc.ml.Prompt;
 import apoc.util.MapUtil;
 import apoc.util.TestUtil;
+import apoc.util.WeaviateTestUtil;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -196,17 +197,7 @@ public class WeaviateTest {
     public void queryVectors() {
         testResult(db, WEAVIATE_QUERY_APOC,
                 map("host", HOST, "conf", map(ALL_RESULTS_KEY, true, FIELDS_KEY, FIELDS, HEADERS_KEY, ADMIN_AUTHORIZATION)),
-                r -> {
-                    Map<String, Object> row = r.next();
-                    assertBerlinResult(row, ID_1, FALSE);
-                    assertNotNull(row.get("score"));
-                    assertNotNull(row.get("vector"));
-
-                    row = r.next();
-                    assertLondonResult(row, ID_2, FALSE);
-                    assertNotNull(row.get("score"));
-                    assertNotNull(row.get("vector"));
-                }); 
+                WeaviateTestUtil::queryVectorsAssertions);
     }
 
     @Test

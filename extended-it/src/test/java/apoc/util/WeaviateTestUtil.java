@@ -2,12 +2,17 @@ package apoc.util;
 
 import org.testcontainers.weaviate.WeaviateContainer;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import static apoc.ml.RestAPIConfig.HEADERS_KEY;
 import static apoc.util.Util.map;
+import static apoc.vectordb.VectorDbTestUtil.EntityType.FALSE;
+import static apoc.vectordb.VectorDbTestUtil.assertBerlinResult;
+import static apoc.vectordb.VectorDbTestUtil.assertLondonResult;
 import static apoc.vectordb.VectorDbTestUtil.getAuthHeader;
+import static org.junit.Assert.assertNotNull;
 
 public class WeaviateTestUtil {
     public static final List<String> FIELDS = List.of("city", "foo");
@@ -19,7 +24,6 @@ public class WeaviateTestUtil {
             .withEnv("AUTHENTICATION_APIKEY_ENABLED", "true")
             .withEnv("AUTHENTICATION_APIKEY_ALLOWED_KEYS", ADMIN_KEY + "," + READONLY_KEY)
             .withEnv("AUTHENTICATION_APIKEY_USERS", "jane@doe.com,ian-smith")
-
             .withEnv("AUTHORIZATION_ADMINLIST_ENABLED", "true")
             .withEnv("AUTHORIZATION_ADMINLIST_USERS", "jane@doe.com,john@doe.com")
             .withEnv("AUTHORIZATION_ADMINLIST_READONLY_USERS", "ian-smith,roberta@doe.com");
@@ -52,4 +56,16 @@ public class WeaviateTestUtil {
                 ],
                 $conf)
                 """;
+
+    public static void queryVectorsAssertions(Iterator<Map<String, Object>> r) {
+        Map<String, Object> row = r.next();
+        assertBerlinResult(row, ID_1, FALSE);
+        assertNotNull(row.get("score"));
+        assertNotNull(row.get("vector"));
+
+        row = r.next();
+        assertLondonResult(row, ID_2, FALSE);
+        assertNotNull(row.get("score"));
+        assertNotNull(row.get("vector"));
+    }
 }
