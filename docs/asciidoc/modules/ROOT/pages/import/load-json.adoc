@@ -39,4 +39,3 @@ include::includes/enableFileImport.adoc[]
 == Usage Examples
 include::partial$usage/apoc.load.jsonParams.adoc[]
 
-xref::import/load-json.adoc[More documentation of apoc.load.jsonParams,role=more information]
