@@ -5,7 +5,11 @@ import apoc.util.MapUtil;
 import apoc.util.TestUtil;
 import apoc.util.Util;
 import apoc.util.collection.Iterators;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TestName;
@@ -27,8 +31,10 @@ import java.util.Map;
 import static apoc.ApocConfig.apocConfig;
 import static apoc.util.MapUtil.map;
 import static apoc.util.TestUtil.testCall;
+import static apoc.util.TestUtil.testCallEmpty;
 import static apoc.util.TestUtil.testResult;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class JdbcTest extends AbstractJdbcTest {
 
@@ -109,6 +115,16 @@ public class JdbcTest extends AbstractJdbcTest {
     public void testLoadJdbcParams() throws Exception {
         testCall(db, "CALL apoc.load.jdbc('jdbc:derby:derbyDB','SELECT * FROM PERSON WHERE NAME = ?',['John'])", //  YIELD row RETURN row
                 (row) -> assertResult(row));
+    }
+
+    @Test
+    public void testObfuscationUrlOnException() {
+        try {
+            testCallEmpty(db, "CALL apoc.load.jdbc('jdbc:ajeje://localhost:3306/data_mart?user=root&password=root','SELECT * FROM PERSON WHERE NAME = ?',['John'])", Map.of());
+        } catch (Exception e) {
+            assertTrue(e.getMessage().contains("No suitable driver found for jdbc:ajeje://*******"));
+        }
+
     }
 
     @Test
