@@ -111,8 +111,9 @@ public class Jdbc {
                 throw sqle;
             }
         } catch (Exception e) {
-            throw customException(e, query, log);
+            logsErrorAndThrowsException(e, query, log);
         }
+        return Stream.empty();
     }
 
     @Procedure(mode = Mode.DBMS)
@@ -146,11 +147,12 @@ public class Jdbc {
                 throw sqle;
             }
         } catch (Exception e) {
-            throw customException(e, query, log);
+            logsErrorAndThrowsException(e, query, log);
         }
+        return Stream.empty();
     }
 
-    private static RuntimeException customException(Exception e, String query, Log log) {
+    private static void logsErrorAndThrowsException(Exception e, String query, Log log) {
         String errorMessage = "Cannot execute SQL statement `%s`.%nError:%n%s";
         String exceptionMsg = e.getMessage();
 
@@ -161,7 +163,7 @@ public class Jdbc {
 
         Exception ex = new Exception(exceptionMsg);
         log.error(String.format("Cannot execute SQL statement `%s`.%nError:%n%s", query, exceptionMsg), ex);
-        return new RuntimeException(String.format(errorMessage, query, exceptionMsg, "Please download and copy the JDBC driver into $NEO4J_HOME/plugins, more details at https://neo4j-contrib.github.io/neo4j-apoc-procedures/#_load_jdbc_resources"), ex);
+        throw new RuntimeException(String.format(errorMessage, query, exceptionMsg, "Please download and copy the JDBC driver into $NEO4J_HOME/plugins, more details at https://neo4j-contrib.github.io/neo4j-apoc-procedures/#_load_jdbc_resources"), ex);
     }
 
     static void closeIt(Log log, AutoCloseable...closeables) {

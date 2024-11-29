@@ -10,12 +10,14 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.rules.ExpectedException;
+import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestName;
+import org.neo4j.configuration.GraphDatabaseSettings;
+import org.neo4j.dbms.api.DatabaseManagementService;
+import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.QueryExecutionException;
-import org.neo4j.test.rule.DbmsRule;
-import org.neo4j.test.rule.ImpermanentDbmsRule;
+import org.neo4j.test.TestDatabaseManagementServiceBuilder;
 
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
@@ -29,17 +31,21 @@ import java.time.ZoneId;
 import java.util.Map;
 
 import static apoc.ApocConfig.apocConfig;
+import static apoc.util.ExtendedTestUtil.assertFails;
+import static apoc.util.ExtendedTestUtil.getLogFileContent;
 import static apoc.util.MapUtil.map;
 import static apoc.util.TestUtil.testCall;
-import static apoc.util.TestUtil.testCallEmpty;
 import static apoc.util.TestUtil.testResult;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 public class JdbcTest extends AbstractJdbcTest {
 
     @Rule
-    public DbmsRule db = new ImpermanentDbmsRule();
+    public TemporaryFolder STORE_DIR = new TemporaryFolder();
+
+    private GraphDatabaseService db;
+    private DatabaseManagementService dbms;
 
     private Connection conn;
 
@@ -53,6 +59,9 @@ public class JdbcTest extends AbstractJdbcTest {
 
     @Before
     public void setUp() throws Exception {
+        dbms = new TestDatabaseManagementServiceBuilder(STORE_DIR.getRoot().toPath()).build();
+        db = dbms.database(GraphDatabaseSettings.DEFAULT_DATABASE_NAME);
+
         apocConfig().setProperty("apoc.jdbc.derby.url","jdbc:derby:derbyDB");
         apocConfig().setProperty("apoc.jdbc.test.sql","SELECT * FROM PERSON");
         apocConfig().setProperty("apoc.jdbc.testparams.sql","SELECT * FROM PERSON WHERE NAME = ?");
@@ -81,11 +90,6 @@ public class JdbcTest extends AbstractJdbcTest {
         }
         System.clearProperty("derby.connection.requireAuthentication");
         System.clearProperty("derby.user.apoc");
-    }
-
-    @AfterAll
-    public void tearDownAll() {
-        db.shutdown();
     }
 
     @Test
@@ -119,12 +123,13 @@ public class JdbcTest extends AbstractJdbcTest {
 
     @Test
     public void testObfuscationUrlOnException() {
-        try {
-            testCallEmpty(db, "CALL apoc.load.jdbc('jdbc:ajeje://localhost:3306/data_mart?user=root&password=root','SELECT * FROM PERSON WHERE NAME = ?',['John'])", Map.of());
-        } catch (Exception e) {
-            assertTrue(e.getMessage().contains("No suitable driver found for jdbc:ajeje://*******"));
-        }
+        String url = "jdbc:ajeje://localhost:3306/data_mart?user=root&password=root";
+        assertFails(db, "CALL apoc.load.jdbc($url,'SELECT * FROM PERSON WHERE NAME = ?',['John'])",
+                Map.of("url", url),
+                "No suitable driver found for jdbc:ajeje://*******"
+        );
 
+        assertFalse(getLogFileContent().contains("No suitable driver found for " + url));
     }
 
     @Test
