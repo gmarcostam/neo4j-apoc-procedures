@@ -72,7 +72,7 @@ public class DataVirtualizationCatalog {
     }
 
     // TODO - come sopra, chiamarla @Procedure(name = "apoc.dv.catalog.drop", mode = Mode.WRITE)
-    @Procedure(name = "apoc.dv.catalog.remove", mode = Mode.WRITE)
+    @Procedure(name = "apoc.dv.catalog.remove", mode = Mode.WRITE, deprecatedBy = "apoc.dv.catalog.drop")
     @Description("Remove a virtualized resource config by name")
     public Stream<VirtualizedResource.VirtualizedResourceDTO> remove(
             // todo - mettere @Name(value = "databaseName", defaultValue = "neo4j") String databaseName, come primo parametro
@@ -86,7 +86,7 @@ public class DataVirtualizationCatalog {
     }
 
     // TODO - come sopra, chiamarla @Procedure(name = "apoc.dv.catalog.show", mode = Mode.WRITE)
-    @Procedure(name = "apoc.dv.catalog.list", mode = Mode.READ)
+    @Procedure(name = "apoc.dv.catalog.list", mode = Mode.READ, deprecatedBy = "apoc.dv.catalog.show")
     @Description("List all virtualized resource configuration")
     public Stream<VirtualizedResource.VirtualizedResourceDTO> list(
             // todo - mettere @Name(value = "databaseName", defaultValue = "neo4j") String databaseName, come primo parametro
@@ -97,7 +97,7 @@ public class DataVirtualizationCatalog {
     }
 
     // TODO - come sopra, chiamarla @Procedure(name = "apoc.dv.catalog.getQuery", mode = Mode.WRITE)
-    @Procedure(name = "apoc.dv.query", mode = Mode.READ)
+    @Procedure(name = "apoc.dv.query", mode = Mode.READ, deprecatedBy = "apoc.dv.catalog.getQuery")
     @Description("Query a virtualized resource by name and return virtual nodes")
     public Stream<NodeResult> query(// todo - mettere @Name(value = "databaseName", defaultValue = "neo4j") String databaseName, come primo parametro
             @Name("name") String name,
@@ -115,7 +115,7 @@ public class DataVirtualizationCatalog {
     }
 
     // TODO - come sopra, chiamarla @Procedure(name = "apoc.dv.catalog.getQueryAndLink", mode = Mode.WRITE)
-    @Procedure(name = "apoc.dv.queryAndLink", mode = Mode.READ)
+    @Procedure(name = "apoc.dv.queryAndLink", mode = Mode.READ, deprecatedBy = "apoc.dv.catalog.getQueryAndLink")
     @Description("Query a virtualized resource by name and return virtual nodes linked using virtual rels to the node passed as first param")
     public Stream<PathResult> queryAndLink(
             // todo - mettere @Name(value = "databaseName", defaultValue = "neo4j") String databaseName, come primo parametro

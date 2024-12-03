@@ -35,17 +35,84 @@ public class DataVirtualizationCatalogNewProcedures {
     @Procedure(name = "apoc.dv.catalog.install", mode = Mode.WRITE)
     @Description("Eventually adds a virtualized resource configuration")
     public Stream<VirtualizedResource.VirtualizedResourceDTO> install(
-            @Name(value = "databaseName", defaultValue = "neo4j") String databaseName,
             @Name("name") String name,
+            @Name(value = "databaseName", defaultValue = "neo4j") String databaseName,
             @Name(value = "config", defaultValue = "{}") Map<String,Object> config) {
-        // TODO - mettere metodo checkIsValidDatabase(db.databaseName()) solo nella nuova procedura, all'inizio
         checkIsValidDatabase(databaseName);
 
-        // TODO cambiare DataVirtualizationCatalogHandler in DataVirtualizationCatalogHandlerNewProcedures
         return Stream.of(new DataVirtualizationCatalogHandlerNewProcedures()
-                        // TODO - rinominare il metodo da .add( a .install(
                         .install(databaseName, VirtualizedResource.from(name, config)))
                 .map(VirtualizedResource::toDTO);
     }
 
+    @SystemProcedure
+    @Admin
+    @Procedure(name = "apoc.dv.catalog.drop", mode = Mode.WRITE)
+    @Description("Remove a virtualized resource config by name")
+    public Stream<VirtualizedResource.VirtualizedResourceDTO> drop(
+            @Name("name") String name,
+            @Name(value = "databaseName", defaultValue = "neo4j") String databaseName
+    ) {
+        checkIsValidDatabase(databaseName);
+        return new DataVirtualizationCatalogHandlerNewProcedures()
+                .drop(databaseName, name)
+                .map(VirtualizedResource::toDTO);
+    }
+
+    @SystemProcedure
+    @Procedure(name = "apoc.dv.catalog.show", mode = Mode.READ)
+    @Description("List all virtualized resource configuration")
+    public Stream<VirtualizedResource.VirtualizedResourceDTO> show(
+            @Name(value = "databaseName", defaultValue = "neo4j") String databaseName
+    ) {
+        checkIsValidDatabase(databaseName);
+        return new DataVirtualizationCatalogHandlerNewProcedures()
+                .show(databaseName)
+                .map(VirtualizedResource::toDTO);
+    }
+
+    /*@SystemProcedure
+    @Procedure(name = "apoc.dv.catalog.getQuery", mode = Mode.READ)
+    @Description("Query a virtualized resource by name and return virtual nodes")
+    public Stream<NodeResult> getQuery(
+                                    @Name("name") String name,
+                                    @Name(value = "databaseName", defaultValue = "neo4j") String databaseName,
+                                    @Name(value = "params", defaultValue = "{}") Object params,
+                                    @Name(value = "config", defaultValue = "{}") Map<String, Object> config) {
+        checkIsValidDatabase(databaseName);
+
+        VirtualizedResource vr = new DataVirtualizationCatalogHandlerNewProcedures().query(databaseName, name);
+        final Pair<String, Map<String, Object>> procedureCallWithParams = vr.getProcedureCallWithParams(params, config);
+        return tx.execute(procedureCallWithParams.getLeft(), procedureCallWithParams.getRight())
+                .stream()
+                .map(m -> (Node) m.get(("node")))
+                .map(NodeResult::new);
+    }
+
+    @SystemProcedure
+    @Procedure(name = "apoc.dv.catalog.getQueryAndLink", mode = Mode.READ)
+    @Description("Query a virtualized resource by name and return virtual nodes linked using virtual rels to the node passed as first param")
+    public Stream<PathResult> getQueryAndLink(
+            @Name("node") Node node,
+            @Name("relName") String relName,
+            @Name("name") String name,
+            @Name(value = "databaseName", defaultValue = "neo4j") String databaseName,
+            @Name(value = "params", defaultValue = "{}") Object params,
+            @Name(value = "config", defaultValue = "{}") Map<String, Object> config) {
+        checkIsValidDatabase(databaseName);
+
+        VirtualizedResource vr = new DataVirtualizationCatalogHandlerNewProcedures().query(databaseName, name);
+        final RelationshipType relationshipType = RelationshipType.withName(relName);
+        final Pair<String, Map<String, Object>> procedureCallWithParams = vr.getProcedureCallWithParams(params, config);
+        return tx.execute(procedureCallWithParams.getLeft(), procedureCallWithParams.getRight())
+                .stream()
+                .map(m -> (Node) m.get(("node")))
+                .map(n -> new VirtualRelationship(node, n, relationshipType))
+                .map(r -> {
+                    VirtualPath virtualPath =  new VirtualPath(r.getStartNode());
+                    virtualPath.addRel(r);
+                    return virtualPath;
+                })
+                .map(PathResult::new);
+    }*/
 }

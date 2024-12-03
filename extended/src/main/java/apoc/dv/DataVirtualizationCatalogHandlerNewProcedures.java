@@ -7,6 +7,7 @@ import apoc.util.JsonUtil;
 import apoc.util.Util;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang3.tuple.Pair;
+import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
 import java.util.List;
@@ -30,10 +31,10 @@ public class DataVirtualizationCatalogHandlerNewProcedures {
         });
     }
 
-    public VirtualizedResource query(String databaseName, String name) {
+    public VirtualizedResource query(GraphDatabaseService db, String name) {
         return withSystemDb(tx -> {
             final List<Node> nodes = tx.findNodes(ExtendedSystemLabels.DataVirtualizationCatalog,
-                            SystemPropertyKeys.database.name(), databaseName,
+                            SystemPropertyKeys.database.name(), db.databaseName(),
                             SystemPropertyKeys.name.name(), name)
                     .stream()
                     .collect(Collectors.toList());

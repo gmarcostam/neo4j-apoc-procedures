@@ -40,7 +40,7 @@ image::apoc.dv.imported-graph-from-RDB.png[scaledwidth="100%"]
 == Managing a Virtualized Resource via JDBC
 
 === Creating a Virtualized Resource (JDBC)
-Before we can query a Virtualized Resource, we need to define it. We do this using the `apoc.dv.catalog.add` procedure.
+Before we can query a Virtualized Resource, we need to define it. We do this using the `apoc.dv.catalog.install` procedure.
 The procedure takes two parameters:
 
 * a name that uniquely identifies the virtualized resource and can be used to query that resource
@@ -56,7 +56,7 @@ Here is the cypher that creates such virtualized resource:
 
 [source,cypher]
 ----
-CALL apoc.dv.catalog.add("fr-towns-by-dept", {
+CALL apoc.dv.catalog.install("fr-towns-by-dept", "neo4j", {
   type: "JDBC",
   url: "jdbc:postgresql://localhost/communes?user=jb&password=jb",
   labels: ["Town","PopulatedPlace"],
@@ -118,7 +118,7 @@ The apoc.dv.catalog.list procedure returns a list with all the existing Virtuali
 
 [source,cypher]
 ----
-CALL apoc.dv.catalog.list()
+CALL apoc.dv.catalog.show()
 ----
 
 === Removing Virtualized Resources from the Catalog
@@ -126,7 +126,7 @@ When a Virtualized Resource is no longer needed it can be removed from the catal
 
 [source,cypher]
 ----
-CALL apoc.dv.catalog.remove("vr-name")
+CALL apoc.dv.catalog.drop("vr-name")
 ----
 
 === Export metadata
@@ -155,7 +155,7 @@ Here is the cypher that creates such virtualized resource:
 
 [source,cypher]
 ----
-CALL apoc.dv.catalog.add("prod-details-by-id", {
+CALL apoc.dv.catalog.install("prod-details-by-id", "neo4j", {
   type: "CSV",
   url: "http://data.neo4j.com/northwind/products.csv",
   labels: ["ProductDetails"],
