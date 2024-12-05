@@ -77,7 +77,7 @@ public class DataVirtualizationCatalogHandlerNewProcedures {
                             throw new RuntimeException(e);
                         }
                     })
-                    .collect(Collectors.toList())
+                    .toList()
                     .stream();
         });
     }

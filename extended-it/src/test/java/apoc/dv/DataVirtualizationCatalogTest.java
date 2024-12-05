@@ -1,7 +1,6 @@
 package apoc.dv;
 
 import apoc.create.Create;
-import apoc.dv.DataVirtualizationCatalog;
 import apoc.load.Jdbc;
 import apoc.load.LoadCsv;
 import apoc.util.TestUtil;
@@ -12,60 +11,71 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
-import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Path;
-import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Result;
 import org.neo4j.test.rule.DbmsRule;
 import org.neo4j.test.rule.ImpermanentDbmsRule;
-
-import org.junit.jupiter.api.AfterAll;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 import org.testcontainers.containers.MySQLContainer;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import static apoc.ApocConfig.APOC_IMPORT_FILE_ENABLED;
 import static apoc.ApocConfig.apocConfig;
+import static apoc.dv.DataVirtualizationCatalogUtil.APOC_DV_ADD_QUERY;
+import static apoc.dv.DataVirtualizationCatalogUtil.APOC_DV_JDBC_WITH_PARAMS_QUERY;
+import static apoc.dv.DataVirtualizationCatalogUtil.APOC_DV_QUERY;
+import static apoc.dv.DataVirtualizationCatalogUtil.APOC_DV_QUERY_AND_LINK_QUERY;
+import static apoc.dv.DataVirtualizationCatalogUtil.APOC_DV_QUERY_PARAMS;
+import static apoc.dv.DataVirtualizationCatalogUtil.APOC_DV_QUERY_PARAMS_KEY;
+import static apoc.dv.DataVirtualizationCatalogUtil.APOC_DV_QUERY_WITH_PARAM;
+import static apoc.dv.DataVirtualizationCatalogUtil.CONFIG_KEY;
+import static apoc.dv.DataVirtualizationCatalogUtil.CONFIG_VALUE;
+import static apoc.dv.DataVirtualizationCatalogUtil.CREATE_HOOK_PARAMS;
+import static apoc.dv.DataVirtualizationCatalogUtil.CREATE_HOOK_QUERY;
+import static apoc.dv.DataVirtualizationCatalogUtil.CSV_NAME_VALUE;
+import static apoc.dv.DataVirtualizationCatalogUtil.EXPECTED_LIST_SORTED;
+import static apoc.dv.DataVirtualizationCatalogUtil.HOOK_NODE_NAME_KEY;
+import static apoc.dv.DataVirtualizationCatalogUtil.HOOK_NODE_NAME_VALUE;
+import static apoc.dv.DataVirtualizationCatalogUtil.JDBC_LABELS;
+import static apoc.dv.DataVirtualizationCatalogUtil.JDBC_NAME;
+import static apoc.dv.DataVirtualizationCatalogUtil.JDBC_SELECT_QUERY;
+import static apoc.dv.DataVirtualizationCatalogUtil.JDBC_SELECT_QUERY_WITH_PARAM;
+import static apoc.dv.DataVirtualizationCatalogUtil.NAME_KEY;
+import static apoc.dv.DataVirtualizationCatalogUtil.NODE_KEY;
+import static apoc.dv.DataVirtualizationCatalogUtil.RELTYPE_KEY;
+import static apoc.dv.DataVirtualizationCatalogUtil.RELTYPE_VALUE;
+import static apoc.dv.DataVirtualizationCatalogUtil.VIRTUALIZE_JDBC_APOC_PARAMS;
+import static apoc.dv.DataVirtualizationCatalogUtil.VIRTUALIZE_JDBC_COUNTRY;
+import static apoc.dv.DataVirtualizationCatalogUtil.VIRTUALIZE_JDBC_QUERY;
+import static apoc.dv.DataVirtualizationCatalogUtil.VIRTUALIZE_JDBC_QUERY_PARAMS;
+import static apoc.dv.DataVirtualizationCatalogUtil.VIRTUALIZE_JDBC_WITH_PARAMS_QUERY;
+import static apoc.dv.DataVirtualizationCatalogUtil.VIRTUALIZE_JDBC_WITH_PARAMS_RELTYPE;
+import static apoc.dv.DataVirtualizationCatalogUtil.assertCatalogContent;
+import static apoc.dv.DataVirtualizationCatalogUtil.assertDvCatalogAddOrInstall;
+import static apoc.dv.DataVirtualizationCatalogUtil.assertDvQueryContent;
+import static apoc.dv.DataVirtualizationCatalogUtil.getAddQueryConfigMap;
+import static apoc.dv.DataVirtualizationCatalogUtil.getJdbcCredentials;
+import static apoc.dv.DataVirtualizationCatalogUtil.getVirtualizeJDBCParameterMap;
+import static apoc.dv.DataVirtualizationCatalogUtil.getVirtualizeJDBCUrl;
 import static apoc.util.TestUtil.getUrlFileName;
 import static apoc.util.TestUtil.testCall;
+import static apoc.util.TestUtil.testCallCountEventually;
 import static apoc.util.TestUtil.testCallEmpty;
 import static apoc.util.TestUtil.testResult;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-// TODO - creare classe DataVirtualizationCatalogNewProcedureTest con i cambiamenti sottostanti
 public class DataVirtualizationCatalogTest {
-    
-    /* TODO - 
-        private static GraphDatabaseService sysDb;
-        private static GraphDatabaseService db;
-        private static DatabaseManagementService databaseManagementService;
-     */
 
     public static JdbcDatabaseContainer mysql;
 
-    // TODO rimuovere
     @Rule
     public DbmsRule db = new ImpermanentDbmsRule();
 
-    // TODO nella nuova classe
-    /*
-        @Rule
-    public static TemporaryFolder storeDir = new TemporaryFolder();
-     */
-
     @Before
     public void setUp() throws Exception {
-        /* TODO -
-                databaseManagementService = startDbWithCustomApocConfigs(storeDir);
-                db = databaseManagementService.database(GraphDatabaseSettings.DEFAULT_DATABASE_NAME);
-                sysDb = databaseManagementService.database(GraphDatabaseSettings.SYSTEM_DATABASE_NAME);
-         */
         TestUtil.registerProcedure(db, DataVirtualizationCatalog.class, Jdbc.class, LoadCsv.class, Create.class);
         apocConfig().setProperty(APOC_IMPORT_FILE_ENABLED, true);
     }
@@ -83,254 +93,100 @@ public class DataVirtualizationCatalogTest {
 
     @Test
     public void testVirtualizeCSV() {
-        final String name = "csv_vr";
         final String url = getUrlFileName("test.csv").toString();
-        final String desc = "person's details";
-        final String query = "map.name = $name and map.age = $age";
-        List<String> labels = List.of("Person");
-        Map<String, Object> map = Map.of("type", "CSV",
-                "url", url, "query", query,
-                "desc", desc,
-                "labels", labels);
 
-        final Consumer<Map<String, Object>> assertCatalogContent = (row) -> {
-            assertEquals(name, row.get("name"));
-            assertEquals(url, row.get("url"));
-            assertEquals("CSV", row.get("type"));
-            assertEquals(List.of("Person"), row.get("labels"));
-            assertEquals(desc, row.get("desc"));
-            assertEquals(query, row.get("query"));
-            assertEquals(List.of("$name", "$age"), row.get("params"));
-        };
+        testCall(db, APOC_DV_ADD_QUERY,
+                Map.of(NAME_KEY, CSV_NAME_VALUE, "map", getAddQueryConfigMap(url)),
+                (row) -> assertCatalogContent(row, url));
 
-        // TODO - cambiare tutti i `testCall(db` in `testCallEventually(sysDb`, 
-        //  `testCallEventually` sta in TestUtil
-        
-        /* TODO - CAMBIARE i apoc.dv.catalog.add in apoc.dv.catalog.install('neo4j', ....
-              ad esempio questa diventa
-                  testCallEventually(sysDb, "CALL apoc.dv.catalog.install('neo4j', $name, $map)",
-                                  Map.of("name", name, "map", map),
-                                  assertCatalogContent); 
-        */
-        testCall(db, "CALL apoc.dv.catalog.add($name, $map)",
-                Map.of("name", name, "map", map),
-                assertCatalogContent);
-
-        // todo - stessa cosa per le altre procedure, 
-        //  quindi questo diventa testCallEventually(sysDb, 'neo4j', "CALL apoc.dv.catalog.show('neo4j')"
         testCall(db, "CALL apoc.dv.catalog.list()",
-                assertCatalogContent);
+                (row) -> assertCatalogContent(row, url));
 
-        String personName = "Rana";
-        String personAge = "11";
+        testCall(db, APOC_DV_QUERY,
+                Map.of(NAME_KEY, CSV_NAME_VALUE, APOC_DV_QUERY_PARAMS_KEY, APOC_DV_QUERY_PARAMS, CONFIG_KEY, CONFIG_VALUE),
+                DataVirtualizationCatalogUtil::assertDVQueryVirtualizeCSV);
 
-        Map<String, Object> queryParams = Map.of("name", personName, "age", personAge);
-        testCall(db, "CALL apoc.dv.query($name, $queryParams, $config)",
-                Map.of("name", name, "queryParams", queryParams, "config", Map.of("header", true)),
-                (row) -> {
-                    Node node = (Node) row.get("node");
-                    assertEquals(personName, node.getProperty("name"));
-                    assertEquals(personAge, node.getProperty("age"));
-                    assertEquals(List.of(Label.label("Person")), node.getLabels());
-                });
+        db.executeTransactionally(CREATE_HOOK_QUERY, CREATE_HOOK_PARAMS);
 
-        String hookNodeName = "node to test linking";
-
-        // TODO - i db.executeTransactionally dovrebbero rimanere tali e quali, in teoria
-        db.executeTransactionally("create (:Hook {name: $hookNodeName})", Map.of("hookNodeName", hookNodeName));
-
-        final String relType = "LINKED_TO";
-        testCall(db, "MATCH (hook:Hook) WITH hook " +
-                        "CALL apoc.dv.queryAndLink(hook, $relType, $name, $queryParams, $config) yield path " +
-                        "RETURN path ",
-                Map.of("name", name, "queryParams", queryParams, "relType", relType, "config", Map.of("header", true)),
-                (row) -> {
-                    Path path = (Path) row.get("path");
-                    Node node = path.endNode();
-                    assertEquals(personName, node.getProperty("name"));
-                    assertEquals(personAge, node.getProperty("age"));
-                    assertEquals(List.of(Label.label("Person")), node.getLabels());
-
-                    Node hook = path.startNode();
-                    assertEquals(hookNodeName, hook.getProperty("name"));
-                    assertEquals(List.of(Label.label("Hook")), hook.getLabels());
-
-                    Relationship relationship = path.lastRelationship();
-                    assertEquals(hook, relationship.getStartNode());
-                    assertEquals(node, relationship.getEndNode());
-                    assertEquals(relType, relationship.getType().name());
-                });
+        testCall(db, APOC_DV_QUERY_AND_LINK_QUERY,
+                Map.of(NAME_KEY, CSV_NAME_VALUE, APOC_DV_QUERY_PARAMS_KEY, APOC_DV_QUERY_PARAMS, RELTYPE_KEY, RELTYPE_VALUE, CONFIG_KEY, CONFIG_VALUE),
+                DataVirtualizationCatalogUtil::assertVirtualizeCSVQueryAndLinkContent);
 
     }
 
     @Test
     public void testVirtualizeJDBC() {
-        String name = "jdbc_vr";
-        String desc = "country details";
-        List<Label> labels = List.of(Label.label("Country"));
-        List<String> labelsAsString = List.of("Country");
-        final String query = "SELECT * FROM country WHERE Name = ?";
-        final String url = mysql.getJdbcUrl() + "?useSSL=false";
-        Map<String, Object> map = Map.of("type", "JDBC",
-                "url", url, "query", query,
-                "desc", desc,
-                "labels", labelsAsString);
+        final String url = getVirtualizeJDBCUrl(mysql);
 
-        testCall(db, "CALL apoc.dv.catalog.add($name, $map)",
-                Map.of("name", name, "map", map),
+        testCall(db, APOC_DV_ADD_QUERY,
+                Map.of(NAME_KEY, JDBC_NAME, "map", getVirtualizeJDBCParameterMap(mysql, VIRTUALIZE_JDBC_QUERY)),
+                (row) -> assertDvQueryContent(row, url));
+
+        testCallEmpty(db, APOC_DV_QUERY_WITH_PARAM, Map.of(NAME_KEY, JDBC_NAME,
+                CONFIG_KEY, getJdbcCredentials(mysql)));
+
+
+        testCall(db, APOC_DV_QUERY,
+                Map.of(NAME_KEY, JDBC_NAME, APOC_DV_QUERY_PARAMS_KEY, VIRTUALIZE_JDBC_APOC_PARAMS,
+                        CONFIG_KEY, getJdbcCredentials(mysql)),
                 (row) -> {
-                    assertEquals(name, row.get("name"));
-                    assertEquals(url, row.get("url"));
-                    assertEquals("JDBC", row.get("type"));
-                    assertEquals(labelsAsString, row.get("labels"));
-                    assertEquals(desc, row.get("desc"));
-                    assertEquals(List.of("?"), row.get("params"));
+                    Node node = (Node) row.get(NODE_KEY);
+                    assertEquals(VIRTUALIZE_JDBC_COUNTRY, node.getProperty("Name"));
+                    assertEquals(JDBC_LABELS, node.getLabels());
                 });
 
-        testCallEmpty(db, "CALL apoc.dv.query($name, ['Italy'], $config)", Map.of("name", name,
-                "config", Map.of("credentials", Map.of("user", mysql.getUsername(), "password", mysql.getPassword()))));
+        db.executeTransactionally(CREATE_HOOK_QUERY, CREATE_HOOK_PARAMS);
 
-        String country = "Netherlands";
-        List<String> queryParams = List.of(country);
-
-        testCall(db, "CALL apoc.dv.query($name, $queryParams, $config)",
-                Map.of("name", name, "queryParams", queryParams,
-                        "config", Map.of("credentials", Map.of("user", mysql.getUsername(), "password", mysql.getPassword()))),
-                (row) -> {
-                    Node node = (Node) row.get("node");
-                    assertEquals(country, node.getProperty("Name"));
-                    assertEquals(labels, node.getLabels());
-                });
-
-        String hookNodeName = "node to test linking";
-
-        db.executeTransactionally("create (:Hook {name: $hookNodeName})", Map.of("hookNodeName", hookNodeName));
-
-        final String relType = "LINKED_TO_NEW";
-        testCall(db, "MATCH (hook:Hook) WITH hook " +
-                        "CALL apoc.dv.queryAndLink(hook, $relType, $name, $queryParams, $config) yield path " +
-                        "RETURN path ",
-                Map.of("name", name, "queryParams", queryParams, "relType", relType,
-                        "config", Map.of("credentials", Map.of("user", mysql.getUsername(), "password", mysql.getPassword()))),
-                (row) -> {
-                    Path path = (Path) row.get("path");
-                    Node node = path.endNode();
-                    assertEquals(country, node.getProperty("Name"));
-                    assertEquals(labels, node.getLabels());
-
-                    Node hook = path.startNode();
-                    assertEquals(hookNodeName, hook.getProperty("name"));
-                    assertEquals(List.of(Label.label("Hook")), hook.getLabels());
-
-                    Relationship relationship = path.lastRelationship();
-                    assertEquals(hook, relationship.getStartNode());
-                    assertEquals(node, relationship.getEndNode());
-                    assertEquals(relType, relationship.getType().name());
-                });
+        testCall(db, APOC_DV_QUERY_AND_LINK_QUERY,
+                Map.of(NAME_KEY, JDBC_NAME, APOC_DV_QUERY_PARAMS_KEY, VIRTUALIZE_JDBC_APOC_PARAMS, RELTYPE_KEY, VIRTUALIZE_JDBC_WITH_PARAMS_RELTYPE,
+                        CONFIG_KEY, getJdbcCredentials(mysql)),
+                DataVirtualizationCatalogUtil::assertDvQueryAndLinkContent);
     }
 
     @Test
     public void testVirtualizeJDBCWithParameterMap() {
-        String name = "jdbc_vr";
-        String desc = "country details";
-        List<Label> labels = List.of(Label.label("Country"));
-        List<String> labelsAsString = List.of("Country");
-        final String query = "SELECT * FROM country WHERE Name = $name AND HeadOfState = $head_of_state AND Code2 = $CODE2";
-        final String url = mysql.getJdbcUrl() + "?useSSL=false";
-        Map<String, Object> map = Map.of("type", "JDBC",
-                "url", url, "query", query,
-                "desc", desc,
-                "labels", labelsAsString);
+        final String url = getVirtualizeJDBCUrl(mysql);
 
-        testCall(db, "CALL apoc.dv.catalog.add($name, $map)",
-                Map.of("name", name, "map", map),
+        testCall(db, APOC_DV_ADD_QUERY,
+                Map.of(NAME_KEY, JDBC_NAME, "map", getVirtualizeJDBCParameterMap(mysql, VIRTUALIZE_JDBC_WITH_PARAMS_QUERY)),
+                (row) -> assertDvCatalogAddOrInstall(row, url));
+
+        testCallEmpty(db, APOC_DV_JDBC_WITH_PARAMS_QUERY,
+                Map.of(NAME_KEY, JDBC_NAME, CONFIG_KEY, getJdbcCredentials(mysql)));
+
+        testCall(db, APOC_DV_QUERY,
+                Map.of(NAME_KEY, JDBC_NAME, APOC_DV_QUERY_PARAMS_KEY, VIRTUALIZE_JDBC_QUERY_PARAMS,
+                        CONFIG_KEY, getJdbcCredentials(mysql)),
                 (row) -> {
-                    assertEquals(name, row.get("name"));
-                    assertEquals(url, row.get("url"));
-                    assertEquals("JDBC", row.get("type"));
-                    assertEquals(labelsAsString, row.get("labels"));
-                    assertEquals(desc , row.get("desc"));
-                    assertEquals(List.of("$name", "$head_of_state", "$CODE2"), row.get("params"));
+                    Node node = (Node) row.get(NODE_KEY);
+                    assertEquals(VIRTUALIZE_JDBC_COUNTRY, node.getProperty("Name"));
+                    assertEquals(JDBC_LABELS, node.getLabels());
                 });
 
-        testCallEmpty(db, "CALL apoc.dv.query($name, {name: 'Italy', head_of_state: '', CODE2: ''}, $config)",
-                Map.of("name", name, "config", Map.of("credentials", Map.of("user", mysql.getUsername(), "password", mysql.getPassword()))));
+        db.executeTransactionally(CREATE_HOOK_QUERY, Map.of(HOOK_NODE_NAME_KEY, HOOK_NODE_NAME_VALUE));
 
-        String country = "Netherlands";
-        String code2 = "NL";
-        String headOfState = "Beatrix";
-        Map<String, Object> queryParams = Map.of("name", country, "CODE2", code2, "head_of_state", headOfState);
-
-        testCall(db, "CALL apoc.dv.query($name, $queryParams, $config)",
-                Map.of("name", name, "queryParams", queryParams,
-                        "config", Map.of("credentials", Map.of("user", mysql.getUsername(), "password", mysql.getPassword()))),
-                (row) -> {
-                    Node node = (Node) row.get("node");
-                    assertEquals(country, node.getProperty("Name"));
-                    assertEquals(labels, node.getLabels());
-                });
-
-        String hookNodeName = "node to test linking";
-
-        db.executeTransactionally("create (:Hook {name: $hookNodeName})", Map.of("hookNodeName", hookNodeName));
-
-        final String relType = "LINKED_TO_NEW";
-        testCall(db, "MATCH (hook:Hook) WITH hook " +
-                        "CALL apoc.dv.queryAndLink(hook, $relType, $name, $queryParams, $config) yield path " +
-                        "RETURN path ",
-                Map.of("name", name, "queryParams", queryParams, "relType", relType,
-                        "config", Map.of("credentials", Map.of("user", mysql.getUsername(), "password", mysql.getPassword()))),
-                (row) -> {
-                    Path path = (Path) row.get("path");
-                    Node node = path.endNode();
-                    assertEquals(country, node.getProperty("Name"));
-                    assertEquals(labels, node.getLabels());
-
-                    Node hook = path.startNode();
-                    assertEquals(hookNodeName, hook.getProperty("name"));
-                    assertEquals(List.of(Label.label("Hook")), hook.getLabels());
-
-                    Relationship relationship = path.lastRelationship();
-                    assertEquals(hook, relationship.getStartNode());
-                    assertEquals(node, relationship.getEndNode());
-                    assertEquals(relType, relationship.getType().name());
-                });
+        testCall(db, APOC_DV_QUERY_AND_LINK_QUERY,
+                Map.of(NAME_KEY, JDBC_NAME, APOC_DV_QUERY_PARAMS_KEY, VIRTUALIZE_JDBC_QUERY_PARAMS, RELTYPE_KEY, VIRTUALIZE_JDBC_WITH_PARAMS_RELTYPE,
+                        CONFIG_KEY, getJdbcCredentials(mysql)),
+                DataVirtualizationCatalogUtil::assertDvQueryAndLinkContent);
     }
 
     @Test
     public void testRemove() {
-        String name = "jdbc_vr";
-        String desc = "country details";
-        List<String> labelsAsString = List.of("Country");
-        final String query = "SELECT * FROM country WHERE Name = $name";
-        final String url = mysql.getJdbcUrl() + "?useSSL=false";
-        Map<String, Object> map = Map.of("type", "JDBC",
-                "url", url, "query", query,
-                "desc", desc,
-                "labels", labelsAsString);
+        db.executeTransactionally(APOC_DV_ADD_QUERY,
+                Map.of("name", JDBC_NAME, "map", getVirtualizeJDBCParameterMap(mysql, JDBC_SELECT_QUERY)));
 
-        db.executeTransactionally("CALL apoc.dv.catalog.add($name, $map)",
-                Map.of("name", name, "map", map));
-        
-        testCallEmpty(db, "CALL apoc.dv.catalog.remove($name)", Map.of("name", name));
+        testCallCountEventually(db, "CALL apoc.dv.catalog.remove($name)", Map.of("name", JDBC_NAME), 0, 10L);
     }
 
     @Test
     public void testNameAsKey() {
-        String name = "jdbc_vr";
-        String desc = "country details";
-        List<String> labelsAsString = List.of("Country");
-        final String query = "SELECT * FROM country WHERE Name = $name";
-        final String url = mysql.getJdbcUrl() + "?useSSL=false";
-        Map<String, Object> map = Map.of("type", "JDBC",
-                "url", url, "query", query,
-                "desc", desc,
-                "labels", labelsAsString);
+        Map<String, Object> params = Map.of(
+                NAME_KEY, JDBC_NAME, "map", getVirtualizeJDBCParameterMap(mysql, JDBC_SELECT_QUERY)
+        );
 
-        db.executeTransactionally("CALL apoc.dv.catalog.add($name, $map)",
-                Map.of("name", name, "map", map));
-        db.executeTransactionally("CALL apoc.dv.catalog.add($name, $map)",
-                Map.of("name", name, "map", map));
+        db.executeTransactionally(APOC_DV_ADD_QUERY, params);
+        db.executeTransactionally(APOC_DV_ADD_QUERY, params);
         testResult(db, "CALL apoc.dv.catalog.list()",
                 Map.of(),
                 (result) -> assertEquals(1, result.stream().count()));
@@ -339,18 +195,8 @@ public class DataVirtualizationCatalogTest {
     @Test
     public void testJDBCQueryWithMixedParamsTypes() {
         try {
-            String name = "jdbc_vr";
-            String desc = "country details";
-            List<String> labelsAsString = List.of("Country");
-            final String query = "SELECT * FROM country WHERE Name = $name AND param_with_question_mark = ? ";
-            final String url = mysql.getJdbcUrl() + "?useSSL=false";
-            Map<String, Object> map = Map.of("type", "JDBC",
-                    "url", url, "query", query,
-                    "desc", desc,
-                    "labels", labelsAsString);
-
-            db.executeTransactionally("CALL apoc.dv.catalog.add($name, $map)",
-                    Map.of("name", name, "map", map));
+            db.executeTransactionally(APOC_DV_ADD_QUERY,
+                    Map.of("name", JDBC_NAME, "map", getVirtualizeJDBCParameterMap(mysql, JDBC_SELECT_QUERY_WITH_PARAM)));
             Assert.fail("Exception is expected");
         } catch (Exception e) {
             final Throwable rootCause = ExceptionUtils.getRootCause(e);
@@ -361,31 +207,10 @@ public class DataVirtualizationCatalogTest {
 
     @Test
     public void testVirtualizeJDBCWithDifferentParameterMap() {
-        String name = "jdbc_vr";
-        String desc = "country details";
-        List<Label> labels = List.of(Label.label("Country"));
-        List<String> labelsAsString = List.of("Country");
-        final String query = "SELECT * FROM country WHERE Name = $name AND HeadOfState = $head_of_state AND Code2 = $CODE2";
         final String url = mysql.getJdbcUrl() + "?useSSL=false";
-        Map<String, Object> map = Map.of("type", "JDBC",
-                "url", url, "query", query,
-                "desc", desc,
-                "labels", labelsAsString);
-
-        final List<String> expectedParams = List.of("$name", "$head_of_state", "$CODE2");
-        final List<String> sortedExpectedParams = expectedParams.stream()
-                .sorted()
-                .collect(Collectors.toList());
-        testCall(db, "CALL apoc.dv.catalog.add($name, $map)",
-                Map.of("name", name, "map", map),
-                (row) -> {
-                    assertEquals(name, row.get("name"));
-                    assertEquals(url, row.get("url"));
-                    assertEquals("JDBC", row.get("type"));
-                    assertEquals(labelsAsString, row.get("labels"));
-                    assertEquals(desc , row.get("desc"));
-                    assertEquals(expectedParams, row.get("params"));
-                });
+        testCall(db, APOC_DV_ADD_QUERY,
+                Map.of("name", JDBC_NAME, "map", getVirtualizeJDBCParameterMap(mysql, VIRTUALIZE_JDBC_WITH_PARAMS_QUERY)),
+                (row) -> assertDvCatalogAddOrInstall(row, url));
 
         String country = "Netherlands";
         String code2 = "NL";
@@ -393,9 +218,9 @@ public class DataVirtualizationCatalogTest {
         Map<String, Object> queryParams = Map.of("foo", country, "bar", code2, "baz", headOfState);
 
         try {
-            db.executeTransactionally("CALL apoc.dv.query($name, $queryParams, $config)",
-                    Map.of("name", name, "queryParams", queryParams,
-                            "config", Map.of("credentials", Map.of("user", mysql.getUsername(), "password", mysql.getPassword()))),
+            db.executeTransactionally(APOC_DV_QUERY,
+                    Map.of(NAME_KEY, JDBC_NAME, APOC_DV_QUERY_PARAMS_KEY, queryParams,
+                            CONFIG_KEY, getJdbcCredentials(mysql)),
                     Result::resultAsString);
             Assert.fail("Exception is expected");
         } catch (Exception e) {
@@ -404,8 +229,8 @@ public class DataVirtualizationCatalogTest {
             final List<String> actualParams = queryParams.keySet().stream()
                     .map(s -> "$" + s)
                     .sorted()
-                    .collect(Collectors.toList());
-            assertEquals(String.format("Expected query parameters are %s, actual are %s", sortedExpectedParams, actualParams), rootCause.getMessage());
+                    .toList();
+            assertEquals(String.format("Expected query parameters are %s, actual are %s", EXPECTED_LIST_SORTED, actualParams), rootCause.getMessage());
         }
     }
 }
