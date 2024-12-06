@@ -275,9 +275,9 @@ public class DataVirtualizationCatalogNewProcedureTest {
         Map<String, Object> queryParams = Map.of("foo", country, "bar", code2, "baz", headOfState);
 
         try {
-            sysDb.executeTransactionally("CALL apoc.dv.catalog.getQuery($name, $databaseName, $queryParams, $config)",
-                    Map.of(DATABASE_NAME, GraphDatabaseSettings.DEFAULT_DATABASE_NAME,NAME_KEY, name, "queryParams", queryParams,
-                            "config", getJdbcCredentials(mysql)),
+            db.executeTransactionally(APOC_DV_QUERY,
+                    Map.of(NAME_KEY, name, APOC_DV_QUERY_PARAMS_KEY, queryParams,
+                            CONFIG_KEY, getJdbcCredentials(mysql)),
                     Result::resultAsString);
             Assert.fail("Exception is expected");
         } catch (Exception e) {

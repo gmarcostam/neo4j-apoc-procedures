@@ -7,12 +7,9 @@ import apoc.util.JsonUtil;
 import apoc.util.Util;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang3.tuple.Pair;
-import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static apoc.util.SystemDbUtil.withSystemDb;
@@ -28,26 +25,6 @@ public class DataVirtualizationCatalogHandlerNewProcedures {
                     Pair.of(SystemPropertyKeys.name.name(), vr.name));
             node.setProperty( ExtendedSystemPropertyKeys.data.name(), JsonUtil.writeValueAsString(vr));
             return vr;
-        });
-    }
-
-    public VirtualizedResource query(GraphDatabaseService db, String name) {
-        return withSystemDb(tx -> {
-            final List<Node> nodes = tx.findNodes(ExtendedSystemLabels.DataVirtualizationCatalog,
-                            SystemPropertyKeys.database.name(), db.databaseName(),
-                            SystemPropertyKeys.name.name(), name)
-                    .stream()
-                    .collect(Collectors.toList());
-            if (nodes.size() > 1) {
-                throw new RuntimeException("More than 1 result");
-            }
-            try {
-                Node node = nodes.get(0);
-                Map<String, Object> map = JsonUtil.OBJECT_MAPPER.readValue(node.getProperty(ExtendedSystemPropertyKeys.data.name()).toString(), Map.class);
-                return VirtualizedResource.from(name, map);
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
-            }
         });
     }
 

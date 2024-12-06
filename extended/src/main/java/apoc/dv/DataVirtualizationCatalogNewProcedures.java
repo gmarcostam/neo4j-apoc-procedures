@@ -71,48 +71,4 @@ public class DataVirtualizationCatalogNewProcedures {
                 .map(VirtualizedResource::toDTO);
     }
 
-    /*@SystemProcedure
-    @Procedure(name = "apoc.dv.catalog.getQuery", mode = Mode.READ)
-    @Description("Query a virtualized resource by name and return virtual nodes")
-    public Stream<NodeResult> getQuery(
-                                    @Name("name") String name,
-                                    @Name(value = "databaseName", defaultValue = "neo4j") String databaseName,
-                                    @Name(value = "params", defaultValue = "{}") Object params,
-                                    @Name(value = "config", defaultValue = "{}") Map<String, Object> config) {
-        checkIsValidDatabase(databaseName);
-
-        VirtualizedResource vr = new DataVirtualizationCatalogHandlerNewProcedures().query(databaseName, name);
-        final Pair<String, Map<String, Object>> procedureCallWithParams = vr.getProcedureCallWithParams(params, config);
-        return tx.execute(procedureCallWithParams.getLeft(), procedureCallWithParams.getRight())
-                .stream()
-                .map(m -> (Node) m.get(("node")))
-                .map(NodeResult::new);
-    }
-
-    @SystemProcedure
-    @Procedure(name = "apoc.dv.catalog.getQueryAndLink", mode = Mode.READ)
-    @Description("Query a virtualized resource by name and return virtual nodes linked using virtual rels to the node passed as first param")
-    public Stream<PathResult> getQueryAndLink(
-            @Name("node") Node node,
-            @Name("relName") String relName,
-            @Name("name") String name,
-            @Name(value = "databaseName", defaultValue = "neo4j") String databaseName,
-            @Name(value = "params", defaultValue = "{}") Object params,
-            @Name(value = "config", defaultValue = "{}") Map<String, Object> config) {
-        checkIsValidDatabase(databaseName);
-
-        VirtualizedResource vr = new DataVirtualizationCatalogHandlerNewProcedures().query(databaseName, name);
-        final RelationshipType relationshipType = RelationshipType.withName(relName);
-        final Pair<String, Map<String, Object>> procedureCallWithParams = vr.getProcedureCallWithParams(params, config);
-        return tx.execute(procedureCallWithParams.getLeft(), procedureCallWithParams.getRight())
-                .stream()
-                .map(m -> (Node) m.get(("node")))
-                .map(n -> new VirtualRelationship(node, n, relationshipType))
-                .map(r -> {
-                    VirtualPath virtualPath =  new VirtualPath(r.getStartNode());
-                    virtualPath.addRel(r);
-                    return virtualPath;
-                })
-                .map(PathResult::new);
-    }*/
 }

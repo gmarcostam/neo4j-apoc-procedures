@@ -22,32 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import static apoc.dv.DataVirtualizationCatalogUtil.AGE_KEY;
-import static apoc.dv.DataVirtualizationCatalogUtil.APOC_DV_DROP_PARAMS;
-import static apoc.dv.DataVirtualizationCatalogUtil.APOC_DV_DROP_QUERY;
-import static apoc.dv.DataVirtualizationCatalogUtil.APOC_DV_INSTALL_PARAMS;
-import static apoc.dv.DataVirtualizationCatalogUtil.APOC_DV_INSTALL_QUERY;
-import static apoc.dv.DataVirtualizationCatalogUtil.APOC_DV_QUERY;
-import static apoc.dv.DataVirtualizationCatalogUtil.APOC_DV_QUERY_AND_LINK_QUERY;
-import static apoc.dv.DataVirtualizationCatalogUtil.APOC_DV_QUERY_AND_LINK_QUERY_PARAMS;
-import static apoc.dv.DataVirtualizationCatalogUtil.APOC_DV_QUERY_PARAMS;
-import static apoc.dv.DataVirtualizationCatalogUtil.APOC_DV_QUERY_PARAMS_KEY;
-import static apoc.dv.DataVirtualizationCatalogUtil.CONFIG_KEY;
-import static apoc.dv.DataVirtualizationCatalogUtil.CONFIG_VALUE;
-import static apoc.dv.DataVirtualizationCatalogUtil.CREATE_HOOK_PARAMS;
-import static apoc.dv.DataVirtualizationCatalogUtil.CREATE_HOOK_QUERY;
-import static apoc.dv.DataVirtualizationCatalogUtil.CSV_NAME_VALUE;
-import static apoc.dv.DataVirtualizationCatalogUtil.CSV_TEST_FILE;
-import static apoc.dv.DataVirtualizationCatalogUtil.FILE_URL;
-import static apoc.dv.DataVirtualizationCatalogUtil.HOOK_NODE_NAME_VALUE;
-import static apoc.dv.DataVirtualizationCatalogUtil.LABELS_VALUE;
-import static apoc.dv.DataVirtualizationCatalogUtil.NAME_KEY;
-
-import static apoc.dv.DataVirtualizationCatalogUtil.NODE_KEY;
-import static apoc.dv.DataVirtualizationCatalogUtil.PERSON_AGE;
-import static apoc.dv.DataVirtualizationCatalogUtil.PERSON_NAME;
-import static apoc.dv.DataVirtualizationCatalogUtil.RELTYPE_VALUE;
-import static apoc.dv.DataVirtualizationCatalogUtil.assertCatalogContent;
+import static apoc.dv.DataVirtualizationCatalogUtil.*;
 import static apoc.util.ExtendedTestContainerUtil.dbIsWriter;
 import static apoc.util.ExtendedTestContainerUtil.getBoltAddress;
 import static apoc.util.ExtendedTestContainerUtil.getDriverIfNotReplica;
@@ -165,7 +140,7 @@ public class DataVirtualizationCatalogClusterRoutingTest {
             } else {
                 try {
                     testDv.accept(session);
-                    fail("Should fail because of non leader UUID addition");
+                    fail("Should fail because of non leader Data Virtualization addition");
                 } catch (Exception e) {
                     String errorMsg = e.getMessage();
                     assertTrue("The actual message is: " + errorMsg, errorMsg.contains(uuidNotRoutedError));

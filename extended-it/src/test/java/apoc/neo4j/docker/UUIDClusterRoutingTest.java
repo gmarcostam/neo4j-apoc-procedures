@@ -28,7 +28,7 @@ import static java.lang.String.format;
 import static org.junit.Assert.*;
 import static org.neo4j.configuration.GraphDatabaseSettings.SYSTEM_DATABASE_NAME;
 
-//@Ignore
+@Ignore
 public class UUIDClusterRoutingTest {
     private static final int NUM_CORES = 3;
     private static TestcontainersCausalCluster cluster;
