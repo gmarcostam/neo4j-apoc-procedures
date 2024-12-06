@@ -61,6 +61,7 @@ public class DataVirtualizationCatalogUtil {
     public static final String HEAD_OF_STATE = "Beatrix";
     public static final List<String> VIRTUALIZE_JDBC_APOC_PARAMS = List.of(VIRTUALIZE_JDBC_COUNTRY);
     public static final Map<String, Object> VIRTUALIZE_JDBC_QUERY_PARAMS = Map.of(NAME_KEY, VIRTUALIZE_JDBC_COUNTRY, "CODE2", CODE2, "head_of_state", HEAD_OF_STATE);
+    public static final Map<String, Object> VIRTUALIZE_JDBC_QUERY_WRONG_PARAMS = Map.of("foo", VIRTUALIZE_JDBC_COUNTRY, "bar", CODE2, "baz", HEAD_OF_STATE);
     public static final String VIRTUALIZE_JDBC_WITH_PARAMS_RELTYPE = "LINKED_TO_NEW";
     public static final String JDBC_NAME = "jdbc_vr";
     public static final String JDBC_DESC = "country details";

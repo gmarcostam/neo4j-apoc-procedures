@@ -10,7 +10,6 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -27,52 +26,11 @@ import java.io.File;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static apoc.ApocConfig.APOC_IMPORT_FILE_ENABLED;
 import static apoc.ApocConfig.apocConfig;
 import static apoc.custom.CypherProcedureTestUtil.startDbWithCustomApocConfigs;
-import static apoc.dv.DataVirtualizationCatalogUtil.AGE_KEY;
-import static apoc.dv.DataVirtualizationCatalogUtil.APOC_DV_DROP_QUERY;
-import static apoc.dv.DataVirtualizationCatalogUtil.APOC_DV_INSTALL_PARAMS;
-import static apoc.dv.DataVirtualizationCatalogUtil.APOC_DV_INSTALL_QUERY;
-import static apoc.dv.DataVirtualizationCatalogUtil.APOC_DV_JDBC_WITH_PARAMS_QUERY;
-import static apoc.dv.DataVirtualizationCatalogUtil.APOC_DV_QUERY;
-import static apoc.dv.DataVirtualizationCatalogUtil.APOC_DV_QUERY_AND_LINK_QUERY;
-import static apoc.dv.DataVirtualizationCatalogUtil.APOC_DV_QUERY_AND_LINK_QUERY_PARAMS;
-import static apoc.dv.DataVirtualizationCatalogUtil.APOC_DV_QUERY_PARAMS_KEY;
-import static apoc.dv.DataVirtualizationCatalogUtil.APOC_DV_QUERY_WITH_PARAM;
-import static apoc.dv.DataVirtualizationCatalogUtil.APOC_DV_SHOW_QUERY;
-import static apoc.dv.DataVirtualizationCatalogUtil.CONFIG_KEY;
-import static apoc.dv.DataVirtualizationCatalogUtil.CREATE_HOOK_PARAMS;
-import static apoc.dv.DataVirtualizationCatalogUtil.CREATE_HOOK_QUERY;
-import static apoc.dv.DataVirtualizationCatalogUtil.CSV_TEST_FILE;
-import static apoc.dv.DataVirtualizationCatalogUtil.FILE_URL;
-import static apoc.dv.DataVirtualizationCatalogUtil.HOOK_NODE_NAME_KEY;
-import static apoc.dv.DataVirtualizationCatalogUtil.HOOK_NODE_NAME_VALUE;
-import static apoc.dv.DataVirtualizationCatalogUtil.JDBC_LABELS;
-import static apoc.dv.DataVirtualizationCatalogUtil.JDBC_NAME;
-import static apoc.dv.DataVirtualizationCatalogUtil.JDBC_SELECT_QUERY;
-import static apoc.dv.DataVirtualizationCatalogUtil.JDBC_SELECT_QUERY_WITH_PARAM;
-import static apoc.dv.DataVirtualizationCatalogUtil.LABELS_VALUE;
-import static apoc.dv.DataVirtualizationCatalogUtil.NAME_KEY;
-import static apoc.dv.DataVirtualizationCatalogUtil.NODE_KEY;
-import static apoc.dv.DataVirtualizationCatalogUtil.PERSON_AGE;
-import static apoc.dv.DataVirtualizationCatalogUtil.PERSON_NAME;
-import static apoc.dv.DataVirtualizationCatalogUtil.RELTYPE_KEY;
-import static apoc.dv.DataVirtualizationCatalogUtil.TYPE_KEY;
-import static apoc.dv.DataVirtualizationCatalogUtil.VIRTUALIZE_JDBC_APOC_PARAMS;
-import static apoc.dv.DataVirtualizationCatalogUtil.VIRTUALIZE_JDBC_COUNTRY;
-import static apoc.dv.DataVirtualizationCatalogUtil.VIRTUALIZE_JDBC_QUERY;
-import static apoc.dv.DataVirtualizationCatalogUtil.VIRTUALIZE_JDBC_QUERY_PARAMS;
-import static apoc.dv.DataVirtualizationCatalogUtil.VIRTUALIZE_JDBC_WITH_PARAMS_QUERY;
-import static apoc.dv.DataVirtualizationCatalogUtil.VIRTUALIZE_JDBC_WITH_PARAMS_RELTYPE;
-import static apoc.dv.DataVirtualizationCatalogUtil.assertCatalogContent;
-import static apoc.dv.DataVirtualizationCatalogUtil.assertDvCatalogAddOrInstall;
-import static apoc.dv.DataVirtualizationCatalogUtil.assertDvQueryContent;
-import static apoc.dv.DataVirtualizationCatalogUtil.getJdbcCredentials;
-import static apoc.dv.DataVirtualizationCatalogUtil.getVirtualizeJDBCParameterMap;
-import static apoc.dv.DataVirtualizationCatalogUtil.getVirtualizeJDBCUrl;
+import static apoc.dv.DataVirtualizationCatalogUtil.*;
 import static apoc.util.SystemDbTestUtil.TIMEOUT;
 import static apoc.util.TestUtil.testCall;
 import static apoc.util.TestUtil.testCallCountEventually;
@@ -240,53 +198,30 @@ public class DataVirtualizationCatalogNewProcedureTest {
         }
     }
 
-    @Ignore
     @Test
     public void testVirtualizeJDBCWithDifferentParameterMap() {
-        String name = "jdbc_vr";
-        String desc = "country details";
-        List<Label> labels = List.of(Label.label("Country"));
-        List<String> labelsAsString = List.of("Country");
-        final String query = "SELECT * FROM country WHERE Name = $name AND HeadOfState = $head_of_state AND Code2 = $CODE2";
-        final String url = mysql.getJdbcUrl() + "?useSSL=false";
-        Map<String, Object> map = Map.of(TYPE_KEY, "JDBC",
-                "url", url, "query", query,
-                "desc", desc,
-                "labels", labelsAsString);
-
+        final String url = getVirtualizeJDBCUrl(mysql);
         final List<String> expectedParams = List.of("$name", "$head_of_state", "$CODE2");
         final List<String> sortedExpectedParams = expectedParams.stream()
                 .sorted()
-                .collect(Collectors.toList());
-        testCallEventually(sysDb, "CALL apoc.dv.catalog.install($name, $databaseName, $map)",
-                Map.of(DATABASE_NAME, GraphDatabaseSettings.DEFAULT_DATABASE_NAME,NAME_KEY, name, "map", map),
-                (row) -> {
-                    assertEquals(name, row.get(NAME_KEY));
-                    assertEquals(url, row.get("url"));
-                    assertEquals("JDBC", row.get(TYPE_KEY));
-                    assertEquals(labelsAsString, row.get("labels"));
-                    assertEquals(desc , row.get("desc"));
-                    assertEquals(expectedParams, row.get("params"));
-                }, TIMEOUT);
-
-        String country = "Netherlands";
-        String code2 = "NL";
-        String headOfState = "Beatrix";
-        Map<String, Object> queryParams = Map.of("foo", country, "bar", code2, "baz", headOfState);
+                .toList();
+        testCallEventually(sysDb, APOC_DV_INSTALL_QUERY,
+                Map.of(DATABASE_NAME, GraphDatabaseSettings.DEFAULT_DATABASE_NAME,NAME_KEY, JDBC_NAME, "map", getVirtualizeJDBCParameterMap(mysql, VIRTUALIZE_JDBC_WITH_PARAMS_QUERY)),
+                (row) -> assertDvCatalogAddOrInstall(row, url), TIMEOUT);
 
         try {
             db.executeTransactionally(APOC_DV_QUERY,
-                    Map.of(NAME_KEY, name, APOC_DV_QUERY_PARAMS_KEY, queryParams,
+                    Map.of(NAME_KEY, JDBC_NAME, APOC_DV_QUERY_PARAMS_KEY, VIRTUALIZE_JDBC_QUERY_WRONG_PARAMS,
                             CONFIG_KEY, getJdbcCredentials(mysql)),
                     Result::resultAsString);
             Assert.fail("Exception is expected");
         } catch (Exception e) {
             final Throwable rootCause = ExceptionUtils.getRootCause(e);
             assertTrue(rootCause instanceof IllegalArgumentException);
-            final List<String> actualParams = queryParams.keySet().stream()
+            final List<String> actualParams = VIRTUALIZE_JDBC_QUERY_WRONG_PARAMS.keySet().stream()
                     .map(s -> "$" + s)
                     .sorted()
-                    .collect(Collectors.toList());
+                    .toList();
             assertEquals(String.format("Expected query parameters are %s, actual are %s", sortedExpectedParams, actualParams), rootCause.getMessage());
         }
     }

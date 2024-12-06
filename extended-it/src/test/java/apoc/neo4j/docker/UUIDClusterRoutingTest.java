@@ -30,7 +30,7 @@ import static org.neo4j.configuration.GraphDatabaseSettings.SYSTEM_DATABASE_NAME
 
 @Ignore
 public class UUIDClusterRoutingTest {
-    private static final int NUM_CORES = 3;
+    private static final int NUM_CORES = 4;
     private static TestcontainersCausalCluster cluster;
     private static Session clusterSession;
     private static List<Neo4jContainerExtension> members;
