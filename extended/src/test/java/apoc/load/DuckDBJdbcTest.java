@@ -17,7 +17,9 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestName;
+import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.QueryExecutionException;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.test.rule.DbmsRule;
 import org.neo4j.test.rule.ImpermanentDbmsRule;
 
@@ -41,6 +43,7 @@ import static apoc.util.MapUtil.map;
 import static apoc.util.TestUtil.testCall;
 import static apoc.util.TestUtil.testResult;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 public class DuckDBJdbcTest extends AbstractJdbcTest {
 
@@ -80,10 +83,16 @@ public class DuckDBJdbcTest extends AbstractJdbcTest {
         apocConfig().setProperty("apoc.jdbc.duckdb.url", JDBC_DUCKDB);
         apocConfig().setProperty("apoc.jdbc.test.sql","SELECT * FROM PERSON");
         apocConfig().setProperty("apoc.jdbc.testparams.sql","SELECT * FROM PERSON WHERE NAME = ?");
-        TestUtil.registerProcedure(db, Jdbc.class, Periodic.class);
+        TestUtil.registerProcedure(db, Jdbc.class, Periodic.class, Analytics.class);
         
         conn = DriverManager.getConnection(JDBC_DUCKDB);
         createPersonTableAndData();
+
+        String movies = Util.readResourceFile("movies-analytics.cypher");
+        try (Transaction tx = db.beginTx()) {
+            tx.execute(movies);
+            tx.commit();
+        }
     }
 
     @After
@@ -127,11 +136,51 @@ ps.executeQuery();
     // todo - this is the test of issue 3610
     @Test
     public void testLoadJdbcAnalytics() {
-        // -- create temporary table
-        System.out.println("DuckDBJdbcTest.testLoadJdbcAnalytics");
-        
-        // -- query with temporary table
-        System.out.println("DuckDBJdbcTest.testLoadJdbcAnalytics");
+        String cypher = "MATCH (n:Movie) RETURN n.title AS title, n.released AS released, n.language AS language, n.tagline AS tagline";
+
+        String sql = """
+        SELECT
+        title,
+        released,
+        language,
+        tagline,
+        RANK() OVER (PARTITION BY language ORDER BY released DESC) AS rank
+        FROM temp_table
+        ORDER BY rank, title, tagline;
+        """;
+        testResult(db, "CALL apoc.load.jdbc.analytics($queryCypher, $url, $sql)",
+                map(
+                        "queryCypher", cypher,
+                        "sql", sql,
+                        "url", JDBC_DUCKDB
+                ),
+                r -> {
+                    Map<String, Object> row = r.next();
+                    var result = (Map) row.get("row");
+                    var rank = (long) result.get("rank");
+                    assertEquals(1, rank);
+
+                    row = r.next();
+                    result = (Map) row.get("row");
+                    rank = (long) result.get("rank");
+                    assertEquals(1, rank);
+
+                    row = r.next();
+                    result = (Map) row.get("row");
+                    rank = (long) result.get("rank");
+                    assertEquals(1, rank);
+
+                    row = r.next();
+                    result = (Map) row.get("row");
+                    rank = (long) result.get("rank");
+                    assertEquals(2, rank);
+
+                    row = r.next();
+                    result = (Map) row.get("row");
+                    rank = (long) result.get("rank");
+                    assertEquals(3, rank);
+                    assertFalse(r.hasNext());
+                });
     }
     
     // TODO:

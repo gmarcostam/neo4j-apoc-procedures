@@ -2,6 +2,8 @@ package apoc.load;
 
 import apoc.Extended;
 import apoc.result.RowResult;
+import apoc.util.Util;
+import org.apache.commons.lang3.StringUtils;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.logging.Log;
@@ -10,10 +12,18 @@ import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Name;
 import org.neo4j.procedure.Procedure;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static apoc.load.Jdbc.executeQuery;
 import static apoc.load.Jdbc.executeUpdate;
 
 
@@ -23,6 +33,11 @@ import static apoc.load.Jdbc.executeUpdate;
 @Extended
 public class Analytics {
 
+    enum Provider {
+        POSTGRES,
+        DUCKDB
+    }
+
     @Context
     public Log log;
 
@@ -31,7 +46,6 @@ public class Analytics {
 
     @Context
     public Transaction tx;
-
 
     // TODO - PRENDERE COME ESEMPI https://chatgpt.com/share/67530793-c0d0-800c-a4fc-9ae01e098de3
     // TODO - testare principalmente per DuckDB
@@ -58,8 +72,57 @@ public class Analytics {
         // TODO step 1: temp table creation partendo dalla neo4jQuery
         //  mettere al posto di query la creazione di una tabella temporanea
         //  facendo leva su tx.execute(..) o db.executeTransactionally(...) e recuperandosi i risultati
-         
+        AtomicReference<String> createTable = new AtomicReference<>("");
+        final Provider provider = Provider.valueOf((String) config.getOrDefault("provider", Provider.DUCKDB.name()));
+
+        switch (provider) {
+            case POSTGRES -> {
+                return null;
+            }
+            case DUCKDB -> createTable.set("""
+                CREATE TABLE temp_table 
+                """);
+        }
+        AtomicReference<String> columns = new AtomicReference<>();
+        Map<String, String> sqlTypes = new LinkedHashMap<>();
+        AtomicReference<String> queryInsert = new AtomicReference<>("INSERT INTO temp_table VALUES ");
+                db.executeTransactionally(neo4jQuery,
+                Map.of(),
+                r -> {
+                    List<String> sqlValues = new ArrayList<>();
+                    r.forEachRemaining(map -> {
+
+                        map.entrySet().stream()
+                                .sorted(Map.Entry.comparingByKey())
+                                .forEachOrdered(x -> sqlTypes.put(x.getKey(), mapSqlType(x.getValue())));
+
+                        final Collection<Object> values = map.entrySet().stream().sorted(Map.Entry.comparingByKey()).map(Map.Entry::getValue).toList();
+                        final String row = values.stream().map(x -> {
+                            final String stringValue = x.toString();
+                            if (x instanceof Number) return stringValue;
+                            return String.format("'%s'", stringValue.replace("'", "''"));
+                        }).collect(Collectors.joining(","));
+                        sqlValues.add("(" + row + ")");
+                    });
+//                    createTable.set(createTable.get() + StringUtils.join(sqlValues, ","));
+                    queryInsert.set(queryInsert.get() + StringUtils.join(sqlValues, ","));
+                    columns.set(r.columns().stream().sorted().collect(Collectors.joining(",")));
+//                    createTable.set(createTable.get() + " AS t("  + columns.get() + ");");
+                    return null;
+                });
+
+        createTable.set(createTable.get() + mapToString(sqlTypes));
+
+
+
         /* ad esempio, se passo la query neo4j
+
+            MATCH (n:Movie) RETURN n.actor as actor, n.genre as genre, COUNT(n) as movies_count
+
+            CREATE TEMPORARY TABLE table_name (
+                column_name datatype
+            );
+
             SELECT 
                 actor,
                 genre,
@@ -81,9 +144,26 @@ public class Analytics {
             ) AS t(actor, genre, movies_count);
             
          */
-        executeUpdate(urlOrKey, "<TODO>", config, log, params);
-        
+        final Stream<RowResult> rowResultStream = executeUpdate(urlOrKey,
+                createTable.get(), config
+                , log, params.toArray(new Object[params.size()]));
+        final RowResult rowResult = rowResultStream.findFirst().get();
+
+        final Stream<RowResult> insertResStream = executeUpdate(urlOrKey, queryInsert.get(), config, log, params.toArray(new Object[params.size()]));
+        final RowResult insertResult = insertResStream.findFirst().get();
+        // TODO: documentare che la query SQL deve avere colonne consistenti con la query neo4j
+
         // TODO step 2: fare dei test in cui passo una query che interroga la tabella temporanea
+        /*
+        SELECT
+    actor,
+    genre,
+    movies_count,
+    RANK() OVER (PARTITION BY genre ORDER BY movies_count DESC) AS rank
+        FROM temp_data
+        ORDER BY genre, rank;
+         */
+
         /* ad esempio
         WITH ranked_data AS (
             SELECT 
@@ -108,10 +188,25 @@ public class Analytics {
         /*
         
          */
-        executeUpdate(urlOrKey, sqlQuery, config, log, params);
 
         // TODO  step 3: return result
-        return null;
+        try {
+            return executeQuery(urlOrKey, sqlQuery, config, log, params.toArray(new Object[params.size()]));
+        } catch (Exception e) {
+            throw new RuntimeException(String.format("Make sure the SQL is consistent with Cypher query which has columns: %s", columns.get()));
+        }
+    }
+
+    private String mapSqlType(Object value) {
+        if (value instanceof Number) return "INTEGER";
+        else return "VARCHAR";
+    }
+
+    public String mapToString(Map<String, ?> map) {
+        String mapAsString = map.keySet().stream()
+                .map(key -> key + " " + map.get(key))
+                .collect(Collectors.joining(", ", "(", ")"));
+        return mapAsString;
     }
 
 

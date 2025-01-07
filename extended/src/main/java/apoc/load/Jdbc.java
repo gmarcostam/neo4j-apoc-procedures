@@ -65,10 +65,10 @@ public class Jdbc {
     public Stream<RowResult> jdbc(@Name("jdbc") String urlOrKey, @Name("tableOrSql") String tableOrSelect, @Name
             (value = "params", defaultValue = "[]") List<Object> params, @Name(value = "config",defaultValue = "{}") Map<String, Object> config) {
         params = params != null ? params : Collections.emptyList();
-        return executeQuery(urlOrKey, tableOrSelect, config, params.toArray(new Object[params.size()]));
+        return executeQuery(urlOrKey, tableOrSelect, config, log, params.toArray(new Object[params.size()]));
     }
 
-    private Stream<RowResult> executeQuery(String urlOrKey, String tableOrSelect, Map<String, Object> config, Object... params) {
+    public static Stream<RowResult> executeQuery(String urlOrKey, String tableOrSelect, Map<String, Object> config, Log log, Object... params) {
         LoadJdbcConfig loadJdbcConfig = new LoadJdbcConfig(config);
         String url = getUrlOrKey(urlOrKey);
         String query = getSqlOrKey(tableOrSelect);
