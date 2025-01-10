@@ -6,37 +6,26 @@ import apoc.util.TestUtil;
 import apoc.util.Util;
 import apoc.util.collection.Iterators;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
-import org.junit.rules.TestName;
-import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.QueryExecutionException;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.test.rule.DbmsRule;
 import org.neo4j.test.rule.ImpermanentDbmsRule;
 
-import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Time;
 import java.sql.Types;
 import java.time.ZoneId;
-import java.util.Calendar;
 import java.util.Map;
-import java.util.TimeZone;
-import java.util.UUID;
 
 import static apoc.ApocConfig.apocConfig;
 import static apoc.util.MapUtil.map;
@@ -44,23 +33,10 @@ import static apoc.util.TestUtil.testCall;
 import static apoc.util.TestUtil.testResult;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 
 public class DuckDBJdbcTest extends AbstractJdbcTest {
 
-    /*
-    TODO : scrivere sulla PR
-    When using the jdbc:duckdb: URL alone, an in-memory database is created. 
-    Note that for an in-memory database no data is persisted to disk (i.e., all data is lost when you exit the Java program). 
-    If you would like to access or create a persistent database, append its file name after the path. For example, if your database is stored in /tmp/my_database, use the JDBC URL jdbc:duckdb:/tmp/my_database to create a connection to it.
-     */
-    
-    
-    /*
-    PreparedStatement ps = conn.prepareStatement("CREATE TEMP TABLE movies AS SELECT * FROM rs");
-    ps.setObject(1, map("a", 1, "b", 2));
-    ps.executeQuery();
-     */
-    
     public String JDBC_DUCKDB = null;
     
     @Rule
@@ -76,9 +52,6 @@ public class DuckDBJdbcTest extends AbstractJdbcTest {
 
     @Before
     public void setUp() throws Exception {
-        // TODO - scrivere sulla PR: se mettiamo lo stesso JDBC url per tutti i test, flakily un test a caso rimane in pending senza apparente motivo 
-        //  tried also with TemporaryFolder storeDir but it fails with error: `IO Error: Could not read from file "/var/folders/kn/v9jyxl9s67z5qzf_mc8d62sm0000gp/T/junit6152729252456113118/junit894048343433219285": Is a directory`
-        //  despite here https://duckdb.org/docs/api/java#installation, defining a folder to create an embedded seems to be possible
         JDBC_DUCKDB = "jdbc:duckdb:" + temporaryFolder.newFolder() + "/testDB";// UUID.randomUUID();
         apocConfig().setProperty("apoc.jdbc.duckdb.url", JDBC_DUCKDB);
         apocConfig().setProperty("apoc.jdbc.test.sql","SELECT * FROM PERSON");
@@ -98,56 +71,22 @@ public class DuckDBJdbcTest extends AbstractJdbcTest {
     @After
     public void tearDown() throws SQLException {
         conn.close();
-//        try {
-//            DriverManager.getConnection(JDBC_DUCKDB);
-//        } catch (SQLException e) {
-//            // DerbyDB shutdown always raise a SQLException, see: http://db.apache.org/derby/docs/10.14/devguide/tdevdvlp20349.html
-//            if (((e.getErrorCode() == 45000)
-//                    && ("08006".equals(e.getSQLState())))) {
-//                // Note that for single database shutdown, the expected
-//                // SQL state is "08006", and the error code is 45000.
-//            } else {
-//                throw e;
-//            }
-//        }
-//        System.clearProperty("derby.connection.requireAuthentication");
-//        System.clearProperty("derby.user.apoc");
     }
 
-    /*
-    TODO
-    conn.createStatement().execute("""
-        CREATE TEMPORARY TABLE movies_data AS 
-SELECT * FROM 
-(VALUES
-    ('Keanu Reeves', 'Sci-Fi', 3),
-    ('Carrie-Anne Moss', 'Sci-Fi', 2),
-    ('Laurence Fishburne', 'Sci-Fi', 3),
-    ('Keanu Reeves', 'Action', 4),
-    ('Will Smith', 'Action', 5)
-) AS t(actor, genre, movies_count);
-
-        """);
-//ps.setObject(1, map("a", 1, "b", 2));
-ps.executeQuery();
-//conn.createStatement().executeQuery("CREATE TEMPORARY TABLE movies AS SELECT * FROM ?", map())
-     */
-
-    // todo - this is the test of issue 3610
     @Test
     public void testLoadJdbcAnalytics() {
         String cypher = "MATCH (n:Movie) RETURN n.title AS title, n.released AS released, n.language AS language, n.tagline AS tagline";
 
         String sql = """
-        SELECT
-        title,
-        released,
-        language,
-        tagline,
-        RANK() OVER (PARTITION BY language ORDER BY released DESC) AS rank
-        FROM temp_table
-        ORDER BY rank, title, tagline;
-        """;
+            SELECT
+            title,
+            released,
+            language,
+            tagline,
+            RANK() OVER (PARTITION BY language ORDER BY released DESC) AS rank
+            FROM temp_table
+            ORDER BY rank, title, tagline;
+            """;
         testResult(db, "CALL apoc.load.jdbc.analytics($queryCypher, $url, $sql)",
                 map(
                         "queryCypher", cypher,
@@ -179,34 +118,102 @@ ps.executeQuery();
                     result = (Map) row.get("row");
                     rank = (long) result.get("rank");
                     assertEquals(3, rank);
+
+                    row = r.next();
+                    result = (Map) row.get("row");
+                    rank = (long) result.get("rank");
+                    assertEquals(4, rank);
+
                     assertFalse(r.hasNext());
                 });
     }
-    
-    // TODO:
-        // 1: create temp table
-        // 2: rank() function by default, otherwise other, configurable?
-            // fare leva sulle apoc.db che creano dei csv???
-            // forse no, però potrei fare export e poi load csv???
-        // 3: config: default DUCKDB
 
-    /*
-    Temporary Tables
-    Temporary tables can be created using the CREATE TEMP TABLE or the CREATE TEMPORARY TABLE statement (see diagram below). Temporary tables are session scoped (similar to PostgreSQL for example), meaning that only the specific connection that created them can access them, and once the connection to DuckDB is closed they will be automatically dropped. Temporary tables reside in memory rather than on disk (even when connecting to a persistent DuckDB), but if the temp_directory configuration is set when connecting or with a SET command, data will be spilled to disk if memory becomes constrained.
-    
-    Create a temporary table from a CSV file (automatically detecting column names and types):
-    
-    CREATE TEMP TABLE t1 AS
-        SELECT *
-        FROM read_csv('path/file.csv');
-    
-    Allow temporary tables to off-load excess memory to disk:
-    
-    SET temp_directory = '/path/to/directory/';
-    
-    Temporary tables are part of the temp.main schema. While discouraged, their names can overlap with the names of the regular database tables. In these cases, use their fully qualified name, e.g., temp.main.t1, for disambiguation.
-     */
+    @Test
+    public void testLoadJdbcAnalyticsDuckDBWindow() {
+        final String ROW = "row";
+        final String IT = "it";
+        final String EN = "en";
+        final String RELEASED = "released";
 
+        String cypher = "MATCH (n:Movie) RETURN n.title AS title, n.released AS released, n.language AS language, n.tagline AS tagline, n.qty AS qty";
+
+        String sql = """
+                WITH ranked_data AS (
+                    SELECT
+                    title,
+                    released,
+                    language,
+                    tagline,
+                    qty,
+                    ROW_NUMBER() OVER (PARTITION BY language ORDER BY released DESC) AS rank
+                    FROM temp_table
+                    ORDER BY rank, title, tagline
+                )
+                
+                SELECT *
+                FROM ranked_data
+                PIVOT (
+                    sum(qty)
+                    FOR 
+                        language IN ('en', 'it')
+                    GROUP BY released
+                )
+                """;
+
+        testResult(db, "CALL apoc.load.jdbc.analytics($queryCypher, $url, $sql)",
+                map(
+                        "queryCypher", cypher,
+                        "sql", sql,
+                        "url", JDBC_DUCKDB
+                ),
+                r -> {
+                    Map<String, Object> row = r.next();
+                    var result = (Map) row.get(ROW);
+                    var released = (int) result.get(RELEASED);
+                    var it = (String) result.get(IT);
+                    var en = (String) result.get(EN);
+                    assertEquals(1986, released);
+                    assertEquals("12", it);
+                    assertNull(en);
+
+                    row = r.next();
+                    result = (Map) row.get(ROW);
+                    released = (int) result.get(RELEASED);
+                    it = (String) result.get(IT);
+                    en = (String) result.get(EN);
+                    assertEquals(1992, released);
+                    assertEquals("7", it);
+                    assertNull(en);
+
+                    row = r.next();
+                    result = (Map) row.get(ROW);
+                    released = (int) result.get(RELEASED);
+                    it = (String) result.get(IT);
+                    en = (String) result.get(EN);
+                    assertEquals(1997, released);
+                    assertEquals("3", en);
+                    assertNull(it);
+
+                    row = r.next();
+                    result = (Map) row.get(ROW);
+                    released = (int) result.get(RELEASED);
+                    it = (String) result.get(IT);
+                    en = (String) result.get(EN);
+                    assertEquals(1999, released);
+                    assertEquals("5", en);
+                    assertNull(it);
+
+                    row = r.next();
+                    result = (Map) row.get(ROW);
+                    released = (int) result.get(RELEASED);
+                    it = (String) result.get(IT);
+                    en = (String) result.get(EN);
+                    assertEquals(2003, released);
+                    assertEquals("17", en);
+                    assertNull(it);
+                    assertFalse(r.hasNext());
+                });
+    }
 
     @Test
     public void testLoadJdbc() {
@@ -238,22 +245,6 @@ ps.executeQuery();
                 (row) -> assertEquals(expected, row.get("row")));
     }
 
-    /*
-    conn.createStatement().ex("""
-        CREATE TEMPORARY TABLE movies_data AS 
-        SELECT * FROM 
-        (VALUES
-            ('Keanu Reeves', 'Sci-Fi', 3),
-            ('Carrie-Anne Moss', 'Sci-Fi', 2),
-            ('Laurence Fishburne', 'Sci-Fi', 3),
-            ('Keanu Reeves', 'Action', 4),
-            ('Will Smith', 'Action', 5)
-        ) AS t(actor, genre, movies_count);
-
-        """);
-     */
-    
-    
     @Test
     public void testLoadJdbcParams() {
         testCall(db, "CALL apoc.load.jdbc($url,'SELECT * FROM PERSON WHERE NAME = ?',['John'])", //  YIELD row RETURN row

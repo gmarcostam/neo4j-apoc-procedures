@@ -103,6 +103,41 @@ public class Jdbc {
         }
     }
 
+    public static Stream<RowResult> executeQuery(String urlOrKey, String tableOrSelect, Map<String, Object> config, Log log, Connection conn, Object... params) {
+        LoadJdbcConfig loadJdbcConfig = new LoadJdbcConfig(config);
+        String url = getUrlOrKey(urlOrKey);
+        String query = getSqlOrKey(tableOrSelect);
+        try {
+            Connection connection = conn != null ? conn : (Connection) getConnection(url, loadJdbcConfig, Connection.class);
+            // see https://jdbc.postgresql.org/documentation/91/query.html#query-with-cursors
+            connection.setAutoCommit(loadJdbcConfig.isAutoCommit());
+            try {
+                PreparedStatement stmt = connection.prepareStatement(query,ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+                stmt.setFetchSize(loadJdbcConfig.getFetchSize().intValue());
+                try {
+                    for (int i = 0; i < params.length; i++) stmt.setObject(i + 1, params[i]);
+                    ResultSet rs = stmt.executeQuery();
+                    Iterator<Map<String, Object>> supplier = new ResultSetIterator(log, rs, true, loadJdbcConfig);
+                    Spliterator<Map<String, Object>> spliterator = Spliterators.spliteratorUnknownSize(supplier, Spliterator.ORDERED);
+                    return StreamSupport.stream(spliterator, false)
+                            .map(RowResult::new)
+                            .onClose(() -> closeIt(log, stmt, connection));
+                } catch (Exception sqle) {
+                    closeIt(log, stmt);
+                    throw sqle;
+                }
+            } catch(Exception sqle) {
+                closeIt(log, connection);
+                throw sqle;
+            }
+        } catch (Exception e) {
+            log.error(String.format("Cannot execute SQL statement `%s`.%nError:%n%s", query, e.getMessage()),e);
+            String errorMessage = "Cannot execute SQL statement `%s`.%nError:%n%s";
+            if(e.getMessage().contains("No suitable driver")) errorMessage="Cannot execute SQL statement `%s`.%nError:%n%s%n%s";
+            throw new RuntimeException(String.format(errorMessage, query, e.getMessage(), "Please download and copy the JDBC driver into $NEO4J_HOME/plugins,more details at https://neo4j-contrib.github.io/neo4j-apoc-procedures/#_load_jdbc_resources"), e);
+        }
+    }
+
     @Procedure(mode = Mode.DBMS)
     @Description("apoc.load.jdbcUpdate('key or url','statement',[params],config) YIELD row - update relational database, from a SQL statement with optional parameters")
     public Stream<RowResult> jdbcUpdate(@Name("jdbc") String urlOrKey, @Name("query") String query, @Name(value = "params", defaultValue = "[]") List<Object> params,  @Name(value = "config",defaultValue = "{}") Map<String, Object> config) {
@@ -122,6 +157,37 @@ public class Jdbc {
                     for (int i = 0; i < params.length; i++) stmt.setObject(i + 1, params[i]);
                     int updateCount = stmt.executeUpdate();
                     closeIt(log, stmt, connection);
+                    Map<String, Object> result = MapUtil.map("count", updateCount);
+                    return Stream.of(result)
+                            .map(RowResult::new);
+                } catch(Exception sqle) {
+                    closeIt(log,stmt);
+                    throw sqle;
+                }
+            } catch(Exception sqle) {
+                closeIt(log,connection);
+                throw sqle;
+            }
+        } catch (Exception e) {
+            log.error(String.format("Cannot execute SQL statement `%s`.%nError:%n%s", query, e.getMessage()),e);
+            String errorMessage = "Cannot execute SQL statement `%s`.%nError:%n%s";
+            if(e.getMessage().contains("No suitable driver")) errorMessage="Cannot execute SQL statement `%s`.%nError:%n%s%n%s";
+            throw new RuntimeException(String.format(errorMessage, query, e.getMessage(), "Please download and copy the JDBC driver into $NEO4J_HOME/plugins,more details at https://neo4j-contrib.github.io/neo4j-apoc-procedures/#_load_jdbc_resources"), e);
+        }
+    }
+
+    public static Stream<RowResult> executeUpdate(String urlOrKey, String query, Map<String, Object> config, Log log, Connection conn, Object...params) {
+        String url = getUrlOrKey(urlOrKey);
+        LoadJdbcConfig jdbcConfig = new LoadJdbcConfig(config);
+        try {
+            Connection connection = conn != null ? conn : (Connection) getConnection(url,jdbcConfig, Connection.class);
+            try {
+                PreparedStatement stmt = connection.prepareStatement(query,ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+                stmt.setFetchSize(5000);
+                try {
+                    for (int i = 0; i < params.length; i++) stmt.setObject(i + 1, params[i]);
+                    int updateCount = stmt.executeUpdate();
+                    if (conn == null) closeIt(log, stmt, connection);
                     Map<String, Object> result = MapUtil.map("count", updateCount);
                     return Stream.of(result)
                             .map(RowResult::new);

@@ -10,6 +10,7 @@ import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.neo4j.graphdb.Result;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.test.rule.DbmsRule;
 import org.neo4j.test.rule.ImpermanentDbmsRule;
 import org.testcontainers.containers.JdbcDatabaseContainer;
@@ -19,6 +20,7 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static apoc.util.MapUtil.map;
 import static apoc.util.TestUtil.testCall;
 import static apoc.util.TestUtil.testResult;
 import static org.junit.Assert.assertArrayEquals;
@@ -41,8 +43,14 @@ public class PostgresJdbcTest extends AbstractJdbcTest {
     public static void setUp() throws Exception {
         postgress = new PostgreSQLContainer().withInitScript("init_postgres.sql");
         postgress.start();
-        TestUtil.registerProcedure(db,Jdbc.class, Periodic.class, Strings.class);
+        TestUtil.registerProcedure(db,Jdbc.class, Periodic.class, Strings.class, Analytics.class);
         db.executeTransactionally("CALL apoc.load.driver('org.postgresql.Driver')");
+
+        String movies = Util.readResourceFile("movies-analytics.cypher");
+        try (Transaction tx = db.beginTx()) {
+            tx.execute(movies);
+            tx.commit();
+        }
     }
 
     @AfterClass
@@ -132,6 +140,119 @@ public class PostgresJdbcTest extends AbstractJdbcTest {
         testResult(db, query, config, this::assertPeriodicIterate);
 
         assertPgStatActivityHasOnlyActiveState();
+    }
+
+    @Test
+    public void testLoadJdbcAnalytics() {
+        String cypher = "MATCH (n:Movie) RETURN n.title AS title, n.released AS released, n.language AS language, n.tagline AS tagline";
+
+        String sql = """
+            SELECT
+            title,
+            released,
+            language,
+            tagline,
+            RANK() OVER (PARTITION BY language ORDER BY released DESC) rank
+            FROM temp_table
+            ORDER BY rank, title, tagline;
+            """;
+        testResult(db, "CALL apoc.load.jdbc.analytics($queryCypher, $url, $sql, [], $config)",
+                map(
+                        "queryCypher", cypher,
+                        "sql", sql,
+                        "url", getUrl(postgress),
+                        "config", Map.of("provider", Analytics.Provider.POSTGRES.name())
+                ),
+                r -> {
+                    Map<String, Object> row = r.next();
+                    var result = (Map) row.get("row");
+                    var rank = (long) result.get("rank");
+                    assertEquals(1, rank);
+
+                    row = r.next();
+                    result = (Map) row.get("row");
+                    rank = (long) result.get("rank");
+                    assertEquals(1, rank);
+
+                    row = r.next();
+                    result = (Map) row.get("row");
+                    rank = (long) result.get("rank");
+                    assertEquals(1, rank);
+
+                    row = r.next();
+                    result = (Map) row.get("row");
+                    rank = (long) result.get("rank");
+                    assertEquals(2, rank);
+
+                    row = r.next();
+                    result = (Map) row.get("row");
+                    rank = (long) result.get("rank");
+                    assertEquals(3, rank);
+
+                    row = r.next();
+                    result = (Map) row.get("row");
+                    rank = (long) result.get("rank");
+                    assertEquals(4, rank);
+
+                    assertFalse(r.hasNext());
+                });
+    }
+
+    @Test
+    public void testLoadJdbcAnalyticsWindow() {
+        String cypher = "MATCH (n:Movie) RETURN n.title AS title, n.released AS released, n.language AS language, n.tagline AS tagline, n.qty AS qty";
+
+        String sql = """
+                SELECT
+                  title,
+                  released,
+                  language,
+                  tagline,
+                  ROW_NUMBER() OVER (PARTITION BY language ORDER BY released DESC) rank
+                FROM temp_table
+                ORDER BY rank, title, tagline
+               """;
+
+        testResult(db, "CALL apoc.load.jdbc.analytics($queryCypher, $url, $sql, [], $config)",
+                map(
+                        "queryCypher", cypher,
+                        "sql", sql,
+                        "url", getUrl(postgress),
+                        "config", Map.of("provider", Analytics.Provider.MYSQL.name())
+                ),
+                r -> {
+                    Map<String, Object> row = r.next();
+                    var result = (Map) row.get("row");
+                    var rank = (long) result.get("rank");
+                    assertEquals(1, rank);
+
+                    row = r.next();
+                    result = (Map) row.get("row");
+                    rank = (long) result.get("rank");
+                    assertEquals(1, rank);
+
+                    row = r.next();
+                    result = (Map) row.get("row");
+                    rank = (long) result.get("rank");
+                    assertEquals(2, rank);
+
+                    row = r.next();
+                    result = (Map) row.get("row");
+                    rank = (long) result.get("rank");
+                    assertEquals(2, rank);
+
+                    row = r.next();
+                    result = (Map) row.get("row");
+                    rank = (long) result.get("rank");
+                    assertEquals(3, rank);
+
+                    row = r.next();
+                    result = (Map) row.get("row");
+                    rank = (long) result.get("rank");
+                    assertEquals(4, rank);
+
+                    assertFalse(r.hasNext());
+                });
     }
 
     private static void assertPgStatActivityHasOnlyActiveState() {

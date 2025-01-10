@@ -1,0 +1,6 @@
+CREATE (:Movie {title:'The Matrix', language: 'en', released:1999, tagline:'Welcome to the Real World', qty: 5})
+CREATE (:Movie {title:'The Matrix Reloaded', language: 'en', released:2003, tagline:'Free your mind', qty: 6})
+CREATE (:Movie {title:'The Matrix Revolutions', language: 'en', released:2003, tagline:'Everything that has a beginning has an end', qty: 11})
+CREATE (:Movie {title:"The Devil's Advocate", language: 'en', released:1997, tagline:'Evil has its winning ways', qty: 3})
+CREATE (:Movie {title:"A Few Good Men", language: 'it', released:1992, tagline:"In the heart of the nation's capital, in a courthouse of the U.S. government, one man will stop at nothing to keep his honor, and one will stop at nothing to find the truth.", qty: 7})
+CREATE (:Movie {title:"Top Gun", released:1986, language: 'it', tagline:'I feel the need, the need for speed.', qty: 12})
