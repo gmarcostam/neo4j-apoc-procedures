@@ -1,14 +1,15 @@
 package apoc.load;
 
-import apoc.util.s3.MySQLContainerExtension;
 import apoc.util.TestUtil;
 import apoc.util.Util;
+import apoc.util.s3.MySQLContainerExtension;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.test.rule.DbmsRule;
 import org.neo4j.test.rule.ImpermanentDbmsRule;
 
@@ -18,8 +19,11 @@ import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.util.Map;
 
+import static apoc.util.MapUtil.map;
 import static apoc.util.TestUtil.testCall;
+import static apoc.util.TestUtil.testResult;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(Enclosed.class)
@@ -36,7 +40,12 @@ public class MySQLJdbcTest extends AbstractJdbcTest {
         @BeforeClass
         public static void setUpContainer() {
             mysql.start();
-            TestUtil.registerProcedure(db, Jdbc.class);
+            TestUtil.registerProcedure(db, Jdbc.class, Analytics.class);
+            String movies = Util.readResourceFile(MOVIES_CYPHER_FILE);
+            try (Transaction tx = db.beginTx()) {
+                tx.execute(movies);
+                tx.commit();
+            }
         }
 
         @AfterClass
@@ -53,6 +62,119 @@ public class MySQLJdbcTest extends AbstractJdbcTest {
         @Test
         public void testIssue3496() {
             MySQLJdbcTest.testIssue3496(db, mysql);
+        }
+
+        @Test
+        public void testLoadJdbcAnalytics() {
+            String cypher = "MATCH (n:Movie) RETURN n.title AS title, n.released AS released, n.language AS language, n.tagline AS tagline";
+
+            String sql = """
+                SELECT
+                  title,
+                  released,
+                  language,
+                  tagline,
+                 RANK() OVER (PARTITION BY language ORDER BY released DESC) AS 'rank'
+                FROM temp_table
+                ORDER BY title, tagline
+               """;
+            testResult(db, "CALL apoc.load.jdbc.analytics($queryCypher, $url, $sql, [], $config)",
+                    map(
+                            "queryCypher", cypher,
+                            "sql", sql,
+                            "url", mysql.getJdbcUrl(),
+                            "config", Map.of("provider", Analytics.Provider.MYSQL.name())
+                    ),
+                    r -> {
+                        Map<String, Object> row = r.next();
+                        var result = (Map) row.get("row");
+                        var rank = (String) result.get("rank");
+                        assertEquals("1", rank);
+
+                        row = r.next();
+                        result = (Map) row.get("row");
+                        rank = (String) result.get("rank");
+                        assertEquals("4", rank);
+
+                        row = r.next();
+                        result = (Map) row.get("row");
+                        rank = (String) result.get("rank");
+                        assertEquals("3", rank);
+
+                        row = r.next();
+                        result = (Map) row.get("row");
+                        rank = (String) result.get("rank");
+                        assertEquals("1", rank);
+
+                        row = r.next();
+                        result = (Map) row.get("row");
+                        rank = (String) result.get("rank");
+                        assertEquals("1", rank);
+
+                        row = r.next();
+                        result = (Map) row.get("row");
+                        rank = (String) result.get("rank");
+                        assertEquals("2", rank);
+
+                        assertFalse(r.hasNext());
+                    });
+        }
+
+        @Test
+        public void testLoadJdbcAnalyticsWindow() {
+            String cypher = "MATCH (n:Movie) RETURN n.title AS title, n.released AS released, n.language AS language, n.tagline AS tagline, n.qty AS qty";
+
+            String sql = """
+                SELECT
+                  title,
+                  released,
+                  language,
+                  tagline,
+                  ROW_NUMBER() OVER (PARTITION BY language ORDER BY released DESC) AS 'rank'
+                FROM temp_table
+                ORDER BY title, tagline
+               """;
+
+            testResult(db, "CALL apoc.load.jdbc.analytics($queryCypher, $url, $sql, [], $config)",
+                    map(
+                            "queryCypher", cypher,
+                            "sql", sql,
+                            "url", mysql.getJdbcUrl(),
+                            "config", Map.of("provider", Analytics.Provider.MYSQL.name())
+                    ),
+                    r -> {
+                        Map<String, Object> row = r.next();
+                        var result = (Map) row.get("row");
+                        var rank = (String) result.get("rank");
+                        assertEquals("1", rank);
+
+                        row = r.next();
+                        result = (Map) row.get("row");
+                        rank = (String) result.get("rank");
+                        assertEquals("4", rank);
+
+                        row = r.next();
+                        result = (Map) row.get("row");
+                        rank = (String) result.get("rank");
+                        assertEquals("3", rank);
+
+                        row = r.next();
+                        result = (Map) row.get("row");
+                        rank = (String) result.get("rank");
+                        assertEquals("1", rank);
+
+                        row = r.next();
+                        result = (Map) row.get("row");
+                        rank = (String) result.get("rank");
+                        assertEquals("2", rank);
+
+                        row = r.next();
+                        result = (Map) row.get("row");
+                        rank = (String) result.get("rank");
+                        assertEquals("2", rank);
+
+                        assertFalse(r.hasNext());
+                    });
         }
     }
     

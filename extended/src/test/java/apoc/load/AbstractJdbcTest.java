@@ -16,6 +16,8 @@ public abstract class AbstractJdbcTest {
 
     protected static java.sql.Time time = java.sql.Time.valueOf("15:37:00");
 
+    protected static final String MOVIES_CYPHER_FILE = "movies-analytics.cypher";
+
     public void assertResult(Map<String, Object> row) {
         Map<String, Object> expected = Util.map("NAME", "John", "SURNAME", null, "HIRE_DATE", hireDate.toLocalDate(), "EFFECTIVE_FROM_DATE",
                 effectiveFromDate.toLocalDateTime(), "TEST_TIME", time.toLocalTime(), "NULL_DATE", null);

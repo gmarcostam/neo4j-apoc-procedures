@@ -2,7 +2,7 @@
 = Load JDBC (RDBMS)
 :description: This section describes procedures that can be used to import data from databases that have JDBC support.
 
-
+If you want to use DuckDB you should download and import the driver from https://repo1.maven.org/maven2/org/duckdb/duckdb_jdbc/1.1.3/duckdb_jdbc-1.1.3.jar[Maven Repository]
 
 Data Integration is an important topic.
 Reading data from relational databases to create and augment data models is a very helpful exercise.
@@ -524,4 +524,141 @@ CALL apoc.load.jdbcUpdate('jdbc:derby:derbyDB','UPDATE PERSON SET NAME = ? WHERE
 [source,cypher]
 ----
 CALL apoc.load.jdbc('jdbc:derby:derbyDB', 'PERSON',[],{credentials:{user:'apoc',password:'Ap0c!#Db'}})
+----
+
+== LOAD JDBC - ANALYTICS
+
+You can use the `apoc.load.jdbc.analytics(<cypherQuery>, <jdbcUrl>, <sqlQueryOverTemporaryTable>, $config)`
+to create a temporary table starting from a Cypher query
+and delegate complex analytics to the database defined JDBC URL.
+
+Please note that the returning SQL column names have to be consistent with the one provided by the Cypher query
+
+You can reproduce the following queries using some nodes:
+
+[source, cypher]
+----
+CREATE (:Movie {title:'The Matrix', language: 'en', released:1999, tagline:'Welcome to the Real World', qty: 5})
+CREATE (:Movie {title:'The Matrix Reloaded', language: 'en', released:2003, tagline:'Free your mind', qty: 6})
+CREATE (:Movie {title:'The Matrix Revolutions', language: 'en', released:2003, tagline:'Everything that has a beginning has an end', qty: 11})
+CREATE (:Movie {title:"The Devil's Advocate", language: 'en', released:1997, tagline:'Evil has its winning ways', qty: 3})
+CREATE (:Movie {title:"A Few Good Men", language: 'it', released:1992, tagline:"In the heart of the nation's capital, in a courthouse of the U.S. government, one man will stop at nothing to keep his honor, and one will stop at nothing to find the truth.", qty: 7})
+CREATE (:Movie {title:"Top Gun", released:1986, language: 'it', tagline:'I feel the need, the need for speed.', qty: 12})
+----
+
+=== DuckDB
+
+Example to get the rank of the current row with gaps.
+Fields of the SQL query should be consistent with the Cypher query.
+For detailed information go to https://duckdb.org/docs/sql/functions/window_functions.html#rank
+
+It is possible to specify a provider in the config parameters.
+The default value is "DUCKDB".
+
+[source,cypher]
+----
+CALL apoc.load.jdbc.analytics(
+  "MATCH (n:Movie) RETURN n.title AS title, n.released AS released, n.language AS language, n.tagline AS tagline",
+  $url,
+  "SELECT
+   title,
+   released,
+   language,
+   tagline,
+   RANK() OVER (PARTITION BY language ORDER BY released DESC) AS rank
+   FROM temp_table
+   ORDER BY rank, title, tagline;"
+)
+----
+
+Another example to get a Pivot table using window functions
+
+[source,cypher]
+----
+CALL apoc.load.jdbc.analytics(
+  "MATCH (n:Movie) RETURN n.title AS title, n.released AS released, n.language AS language, n.tagline AS tagline",
+  $url,
+  "WITH ranked_data AS (
+   SELECT
+   title,
+   released,
+   language,
+   tagline,
+   qty,
+   ROW_NUMBER() OVER (PARTITION BY language ORDER BY released DESC) AS rank
+   FROM temp_table
+   ORDER BY rank, title, tagline)
+
+   SELECT *
+   FROM ranked_data
+   PIVOT (
+      sum(qty)
+      FOR
+          language IN ('en', 'it')
+      GROUP BY released
+   )"
+)
+----
+
+=== MySQL
+
+Returns the rank of the current row within its partition, with gaps.
+For further information go to
+https://dev.mysql.com/doc/refman/8.4/en/window-function-descriptions.html#function_rank
+
+[source,cypher]
+----
+CALL apoc.load.jdbc.analytics(
+ "MATCH (n:Movie) RETURN n.title AS title, n.released AS released, n.language AS language, n.tagline AS tagline",
+ $url,
+ "SELECT
+   title,
+   released,
+   language,
+   tagline,
+  RANK() OVER (PARTITION BY language ORDER BY released DESC) AS 'rank'
+ FROM temp_table
+ ORDER BY title, tagline",
+ $params,
+ { provider: "MYSQL" })
+----
+
+Here an example of ROW_NUMBER window function with MySQL:
+
+[source,cypher]
+----
+CALL apoc.load.jdbc.analytics(
+ "MATCH (n:Movie) RETURN n.title AS title, n.released AS released, n.language AS language, n.tagline AS tagline",
+ $url,
+ "SELECT
+    title,
+    released,
+    language,
+    tagline,
+    ROW_NUMBER() OVER (PARTITION BY language ORDER BY released DESC) AS 'rank'
+  FROM temp_table
+  ORDER BY title, tagline",
+ $params,
+ { provider: "MYSQL" })
+----
+
+=== PostgreSQL
+
+Here an example with Window functions.
+
+[source,cypher]
+----
+CALL apoc.load.jdbc.analytics(
+ "MATCH (n:Movie) RETURN n.title AS title, n.released AS released, n.language AS language, n.tagline AS tagline",
+ $url,
+ "SELECT
+  title,
+  released,
+  language,
+  tagline,
+  RANK() OVER (PARTITION BY language ORDER BY released DESC) rank
+  FROM temp_table
+  ORDER BY rank, title, tagline",
+ $params,
+ { provider: "POSTGRES" })
 ----
