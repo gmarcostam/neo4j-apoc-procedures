@@ -2,7 +2,7 @@
 = Load JDBC (RDBMS)
 :description: This section describes procedures that can be used to import data from databases that have JDBC support.
 
-If you want to use DuckDB you should download and import the driver from https://repo1.maven.org/maven2/org/duckdb/duckdb_jdbc/1.1.3/duckdb_jdbc-1.1.3.jar
+If you want to use DuckDB you should download and import the driver from https://repo1.maven.org/maven2/org/duckdb/duckdb_jdbc/1.1.3/duckdb_jdbc-1.1.3.jar[Maven Repository]
 
 Data Integration is an important topic.
 Reading data from relational databases to create and augment data models is a very helpful exercise.
@@ -528,6 +528,12 @@ CALL apoc.load.jdbc('jdbc:derby:derbyDB', 'PERSON',[],{credentials:{user:'apoc',
 
 == LOAD JDBC - ANALYTICS
 
+You can use the `apoc.load.jdbc.analytics(<cypherQuery>, <jdbcUrl>, <sqlQueryOverTemporaryTable>, $config)`
+to create a temporary table starting from a Cypher query
+and delegate complex analytics to the database defined JDBC URL.
+
+Please note that the returning SQL column names have to be consistent with the one provided by the Cypher query
+
 You can reproduce the following queries using some nodes:
 
 [source, cypher]
@@ -638,7 +644,7 @@ CALL apoc.load.jdbc.analytics(
 
 === PostgreSQL
 
-Here some examples with Window functions.
+Here an example with Window functions.
 
 [source,cypher]
 ----

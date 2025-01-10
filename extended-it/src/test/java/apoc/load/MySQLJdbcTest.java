@@ -41,7 +41,7 @@ public class MySQLJdbcTest extends AbstractJdbcTest {
         public static void setUpContainer() {
             mysql.start();
             TestUtil.registerProcedure(db, Jdbc.class, Analytics.class);
-            String movies = Util.readResourceFile("movies-analytics.cypher");
+            String movies = Util.readResourceFile(MOVIES_CYPHER_FILE);
             try (Transaction tx = db.beginTx()) {
                 tx.execute(movies);
                 tx.commit();

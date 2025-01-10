@@ -49,7 +49,7 @@ public class Analytics {
     public Transaction tx;
 
     @Procedure("apoc.load.jdbc.analytics")
-    @Description("TODO - DESCRIZIONE")
+    @Description("apoc.load.jdbc.analytics(<cypherQuery>, <jdbcUrl>, <sqlQueryOverTemporaryTable>, $config) - to create a temporary table starting from a Cypher query and delegate complex analytics to the database defined JDBC URL ")
     public Stream<RowResult> aggregate(
             @Name("neo4jQuery") String neo4jQuery,
             @Name("jdbc") String urlOrKey,
@@ -98,9 +98,7 @@ public class Analytics {
 
         // Insert data
         executeUpdate(urlOrKey, queryInsert.get(), config, log, connection, params.toArray(new Object[params.size()]));
-        // TODO: documentare che la query SQL deve avere colonne consistenti con la query neo4j
 
-        // TODO step 2: fare dei test in cui passo una query che interroga la tabella temporanea
         try {
             return executeQuery(urlOrKey, sqlQuery, config, log, connection, params.toArray(new Object[params.size()]));
         } catch (Exception e) {

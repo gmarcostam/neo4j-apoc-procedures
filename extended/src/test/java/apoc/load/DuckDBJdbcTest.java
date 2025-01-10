@@ -61,7 +61,7 @@ public class DuckDBJdbcTest extends AbstractJdbcTest {
         conn = DriverManager.getConnection(JDBC_DUCKDB);
         createPersonTableAndData();
 
-        String movies = Util.readResourceFile("movies-analytics.cypher");
+        String movies = Util.readResourceFile(MOVIES_CYPHER_FILE);
         try (Transaction tx = db.beginTx()) {
             tx.execute(movies);
             tx.commit();

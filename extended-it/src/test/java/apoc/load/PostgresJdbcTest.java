@@ -46,7 +46,7 @@ public class PostgresJdbcTest extends AbstractJdbcTest {
         TestUtil.registerProcedure(db,Jdbc.class, Periodic.class, Strings.class, Analytics.class);
         db.executeTransactionally("CALL apoc.load.driver('org.postgresql.Driver')");
 
-        String movies = Util.readResourceFile("movies-analytics.cypher");
+        String movies = Util.readResourceFile(MOVIES_CYPHER_FILE);
         try (Transaction tx = db.beginTx()) {
             tx.execute(movies);
             tx.commit();
